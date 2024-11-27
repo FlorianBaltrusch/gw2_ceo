@@ -1,0 +1,14 @@
+Wechsel Bers -> Assa, welche Runen sind gleichwertig?
+
+Scholar (Halfwild)
+Dragonhnter (Fullwild)
+Golem (Fullwild)
+Deadeye (Halfkraft)
+Eagle (Halfwild)
+Infil (Fullkraft)
+Ranger (Halfkraft)
+
+Infil +400 (Fullkraft)
+Deadeye = Ranger; +200 (Halfkraft)
+Scholar = Eagle; -50 (Halfwild)
+Dragonhunter = Golemancer; -200 (Fullwild)

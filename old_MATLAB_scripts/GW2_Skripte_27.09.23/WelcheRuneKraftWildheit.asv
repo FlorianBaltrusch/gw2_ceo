@@ -1,0 +1,45 @@
+
+%% Welche Rune?
+
+% Power - Ferocity
+Grenzscholar = 175 - 225; % Hat maximal Kraft (175)
+Grenzdragonhunter = 100 - 300; % Mischding
+Grenzgolemancer = -300; % Hat maximal Wildheit
+Grenzdeadeye = 175 - 100; % Hat maximal Kraft (175)
+Grenzeagle = -225; % Hat maximal Wildheit
+Grenzinfiltriation = 175; % Hat maximal Kraft (175)
+%% Warnung aus
+warning('off','MATLAB:table:ModifiedAndSavedVarnames')
+
+%% Exotische Zahlen importieren
+Daten = readtable('All_stats.xlsx');
+Pc4Maj2h = Daten.x4pcMaj2h;
+Pc4Min2h = Daten.x4pcMin2h;
+
+%% Power mit Marauder
+
+Base = 1000;
+Gearpower = sum(Pc4Maj2h);
+Might = 750;
+Power = Base + Gearpower + Might;
+Ferocity = sum(Pc4Min2h);
+Schwelle = - 2250 + Power - Ferocity; 
+% Negative Schwelle heißt, dass Power zu klein ist
+disp('Kraftwert ohne Rune:');
+disp(Schwelle);
+
+%% WVW Ranger mit Infiltration
+
+GearzuDragon = 64; % (Mehr Ferocity)
+Infiltration = 175; % (Mehr Kraft)
+Power2 = Base + Gearpower + Might + Infiltration;
+Ferocity2 = sum(Pc4Min2h) + GearzuDragon;
+Schwelle2 = - 2250 + Power2 - Ferocity2; 
+% Negative Schwelle heißt, dass Power zu klein ist
+disp('Kraftwert ohne Rune:');
+disp(Schwelle2);
+
+
+
+
+
