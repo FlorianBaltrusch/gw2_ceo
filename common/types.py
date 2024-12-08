@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import pandas as pd
 from typing import Literal
+import numpy as np
 
 @dataclass
 class BuildSuggestion:
@@ -17,7 +18,7 @@ class BuildSuggestion:
 class BuildConstraints:
     gear_environment: Literal["3p", "4p"]
     weapon_type: Literal["1h", "2h"]
-    weapon_rarity: Literal["c", "l"]
+    num_ascended: np.ndarray
 
     food: bool
     utility: bool

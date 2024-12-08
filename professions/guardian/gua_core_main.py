@@ -8,8 +8,8 @@ def calc_ep(food, build: BuildConstraints):
     target_start_value = 2995 - gd.general_buffs.base_precision - gd.general_buffs.fury * build.fury  # 1000 + 100*21 - 5*21 = 2995
     test_target_0 = target_start_value - gd.food.loc[food, "precision"] * build.food - gd.general_buffs.sigil_accuracy  # type:ignore  # und modifier
     
-    low_gear = gd.gear_stats[build.gear_environment, "Min", build.weapon_rarity, build.weapon_type]
-    high_gear = gd.gear_stats[build.gear_environment, "Maj", build.weapon_rarity, build.weapon_type]
+    low_gear = gd.gear_stats[build.gear_environment, "Min", build.num_ascended, build.weapon_type]
+    high_gear = gd.gear_stats[build.gear_environment, "Maj", build.num_ascended, build.weapon_type]
 
     test_target_1 = test_target_0 - sum(high_gear)
     test_target_2 = test_target_0 - sum(low_gear)

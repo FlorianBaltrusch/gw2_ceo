@@ -2,44 +2,37 @@ import common.general_data as gd
 from professions.guardian.gua_core_main import calculate_gua
 from common.types import BuildSuggestion, BuildConstraints
 from common.general_combinations import print_combinations
-from professions.elementalist.ele_core_main import Elementalist
+import professions.elementalist.ele_core_main as ele
 from common.calculate import Calculation
 import pandas as pd
 from argparse import Namespace
+import numpy as np
 from common.gearselect import GearSelect
 
 pd.options.mode.chained_assignment = None
 
-# constraints = BuildConstraints(
-#     gear_environment='3p',
-#     weapon_type="1h",  # 1h / 2h
-#     weapon_rarity="c",  # c / l
+constraints = BuildConstraints(
+    gear_environment='3p',
+    weapon_type='1h',
+    
+    num_ascended=np.array([1,0,0,0,0,0,0,0,0,0,0,0]),  # One-handed, Two-handed, Chest, Legs, Head, Shoulders, Gloves, Boots, Amulet, Ring, Accessory, Back item
+#    num_ascended=np.full(12, 2),
 
-#     food=True,
-#     utility=True,
+    food=True,
+    utility=True,
 
-#     fury=True,
-#     might=True
-# )
+    fury=True,
+    might=True
+)
 
-constraints = Namespace(**{
-    "gear_environment": '3p',
-    "weapon_type": "1h",  # 1h / 2h
-    "weapon_rarity": "c",  # c / l
+# gs = GearSelect(constraints)
+# for i in range(3000):
+#     print(i, gs.overshoot_values(i))
 
-    "food": True,
-    "utility": True,
-
-    "fury": True,
-    "might": True,
-
-    "zephyrs_speed": True,
-    "signet_of_fire": True,
-    "ferocious_winds": True
-})
+ele_constraints = ele.BuildConstraints()
 
 calculation = Calculation() 
-calculation.profession = Elementalist()
+calculation.profession = ele.Elementalist(ele_constraints)
 suggestion = calculation.calculate(constraints)
 
 print(suggestion)
