@@ -103,15 +103,18 @@ class Calculation:
 
 
         selection["absolute_remainder"] = np.minimum(abs(selection["remainder"] - min_stats), abs(selection["remainder"] - maj_stats))
-        selection.sort_values("absolute_remainder", inplace=True)
+        selection.sort_values("absolute_remainder", inplace=True, kind="stable")
         
-        selection.sort_values("prec_infusions", inplace=True)
+        selection.sort_values("prec_infusions", inplace=True, kind="stable")
 
         selection["food_prio"] = 0
         selection.loc[:,"food_prio"] += (selection["food"] == "truffle") * 1
         selection.loc[:,"food_prio"] += (selection["food"] == "curry") * 2
         selection.loc[:,"food_prio"] += (selection["food"] == "butternut") * 2
         selection.sort_values("food_prio", inplace=True, kind="stable")
+
+        selection["absolute_overshoot"] = [min(overshoot) for overshoot in selection["overshoot"]]
+        selection.sort_values("absolute_overshoot", inplace=True, kind="stable")
 
         return selection.iloc[0]
     
