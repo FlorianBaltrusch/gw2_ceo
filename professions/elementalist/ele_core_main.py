@@ -22,4 +22,4 @@ class Elementalist(Profession):
     
     def stat_conversion(self, vitality, power, precision, ferocity):
         ferocity += precision * self.general_buffs["ferocious_winds"] * self.build.ferocious_winds
-        return vitality, power, precision, ferocity
+        return vitality, power, ferocity

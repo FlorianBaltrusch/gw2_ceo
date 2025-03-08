@@ -21,7 +21,7 @@ class Profession:
         return 0
 
     def stat_conversion(self, vitality, power, precision, ferocity):
-        return vitality, power, precision, ferocity
+        return vitality, power, ferocity
     
     def ferocity_equivalent(self, ferocity):
         return ferocity
@@ -70,24 +70,32 @@ class Calculation:
 
         #stats = np.row_stack(np.broadcast(stat_power, stat_precision, stat_ferocity, stat_vitality)) # type: ignore
 
+        vit_prec_conversion = 0.13 # Todo: Dependent on profession!
+
+        stats["precision"] += stats["vitality"] * vit_prec_conversion
+
         stats["remainder"] = TARGET - stats["precision"] - stats["chance"]
         stats["precision"] += stats["remainder"]
+        stats["armor_precision"] = 0
 
         for i in range(NUM_OPTIONS):
-            
             if build.gear_environment == "3p":
                 stats.loc[i, "ferocity"] += min_stats
                 if stats.loc[i, "remainder"] > min_stats:
-                    stats.loc[i, "power"] += min_stats + maj_stats - stats.loc[i, "remainder"]
+                    stats.loc[i, "armor_precision"] = stats.loc[i, "remainder"]
+                    stats.loc[i, "power"] += min_stats + maj_stats - stats.loc[i, "armor_precision"]
                 else:
+                    stats.loc[i, "armor_precision"] = (stats.loc[i, "remainder"] - min_stats * vit_prec_conversion) / (1 - vit_prec_conversion)
                     stats.loc[i, "power"] += maj_stats
-                    stats.loc[i, "vitality"] += min_stats - stats.loc[i, "remainder"]
+                    stats.loc[i, "vitality"] += min_stats - stats.loc[i, "armor_precision"]
             else:
+                stats.loc[i, "armor_precision"] = stats.loc[i, "remainder"] - min_stats * vit_prec_conversion
                 stats.loc[i, "power"] += maj_stats
-                stats.loc[i, "ferocity"] += min_stats + maj_stats - stats.loc[i, "remainder"]
+                stats.loc[i, "ferocity"] += min_stats + maj_stats - stats.loc[i, "armor_precision"]
                 stats.loc[i, "vitality"] += min_stats
 
-            stats.loc[i, "vitality"], stats.loc[i, "power"], stats.loc[i, "precision"], stats.loc[i, "ferocity"] = self.profession.stat_conversion(stats.loc[i, "vitality"], stats.loc[i, "power"], stats.loc[i, "precision"], stats.loc[i, "ferocity"]) # type: ignore
+            stats.loc[i, "vitality"], stats.loc[i, "power"], stats.loc[i, "ferocity"] = self.profession.stat_conversion(stats.loc[i, "vitality"], stats.loc[i, "power"], stats.loc[i, "precision"], stats.loc[i, "ferocity"]) # type: ignore
+
 
         if build.utility:
             stats["power"] += stats["precision"] * gd.general_buffs.stones_prec
@@ -98,25 +106,28 @@ class Calculation:
         stats["effective_power"] = stats["power"] * (1.5 + stats["ferocity_equivalent"] / 1500)
 
         gs = GearSelect(build)
-        stats["overshoot"] = [gs.overshoot_values(remainder) for remainder in stats["remainder"]]
-        selection: pd.DataFrame = stats[stats["effective_power"] == stats["effective_power"].max()] # type: ignore
+        stats["overshoot"] = [gs.overshoot_values(remainder) for remainder in stats["armor_precision"]]
 
+        stats["absolute_remainder"] = np.minimum(abs(stats["armor_precision"] - min_stats), abs(stats["armor_precision"] - maj_stats))
 
-        selection["absolute_remainder"] = np.minimum(abs(selection["remainder"] - min_stats), abs(selection["remainder"] - maj_stats))
-        selection.sort_values("absolute_remainder", inplace=True, kind="stable")
+        stats["food_prio"] = 0
+        stats.loc[:,"food_prio"] += (stats["food"] == "truffle") * 1
+        stats.loc[:,"food_prio"] += (stats["food"] == "curry") * 2
+        stats.loc[:,"food_prio"] += (stats["food"] == "butternut") * 2
+
         
-        selection.sort_values("prec_infusions", inplace=True, kind="stable")
+        stats["absolute_overshoot"] = [min(overshoot) for overshoot in stats["overshoot"]]
 
-        selection["food_prio"] = 0
-        selection.loc[:,"food_prio"] += (selection["food"] == "truffle") * 1
-        selection.loc[:,"food_prio"] += (selection["food"] == "curry") * 2
-        selection.loc[:,"food_prio"] += (selection["food"] == "butternut") * 2
-        selection.sort_values("food_prio", inplace=True, kind="stable")
+        by, ascending = zip(
+            ("effective_power", False),
+            ("absolute_overshoot", True),
+            ("prec_infusions", True),
+            ("absolute_remainder", True),
+            ("food_prio", True),
+        )
 
-        selection["absolute_overshoot"] = [min(overshoot) for overshoot in selection["overshoot"]]
-        selection.sort_values("absolute_overshoot", inplace=True, kind="stable")
-
-        return selection.iloc[0]
+        stats.sort_values(by=list(by), ascending=list(ascending), inplace=True) # type: ignore
+        return stats.iloc[0]
     
     def calculate(self, constraints):
         selection = self.calc_ep(constraints)
