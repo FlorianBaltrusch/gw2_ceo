@@ -1,12 +1,12 @@
 import pandas as pd
 
 from src.calculate import Profession
-
+from src.general_data import profession_traits
 
 class Elementalist(Profession):
     def __init__(self, traits: list[str]):
         self.traits = traits
-        self.general_buffs = pd.read_excel('professions/elementalist/ele_buffs.xlsx', index_col=0)["Buffwert"].to_dict()
+        self.general_buffs = profession_traits.loc["Elementalist", "Buffwert"].to_dict()
 
     def additional_crit_chance(self):
         return self.general_buffs["zephyrs_speed"] * ("zephyrs_speed" in self.traits)

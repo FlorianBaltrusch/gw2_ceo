@@ -1,8 +1,9 @@
 import pandas as pd
 import numpy as np
 
+profession_traits = pd.read_csv("assets/profession_traits.csv", index_col=["Profession", "Buff"])
 general_buffs = pd.read_csv("assets/general_buffs.csv", index_col=0).wert
-gear_stats = pd.read_csv("assets/gear_stats.csv", index_col=[0, 1, 2, 3])
+gear_stats = pd.read_csv("assets/gear_stats.csv", index_col=[0, 1, 2, 3]).value
 runes = pd.read_csv("assets/runes.csv", index_col=0)
 food = pd.read_csv("assets/food.csv", index_col=0)
 names = [
