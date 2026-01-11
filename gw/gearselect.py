@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 from functools import cache
 
-from src.general_data import gear_stats
-from src.types import BuildConstraints
+from gw.general_data import gear_stats
+from gw.dtypes import BuildConstraints
 
 
 class GearSelect:
