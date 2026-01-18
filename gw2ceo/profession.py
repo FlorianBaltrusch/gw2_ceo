@@ -1,4 +1,4 @@
-from gw.traits import Trait
+from gw2ceo.traits import Trait
 
 
 class Profession:

@@ -1,5 +1,5 @@
-from gw.profession import Profession
-from gw.traits import Trait
+from gw2ceo.profession import Profession
+from gw2ceo.traits import Trait
 
 ZEPHYRS_SPEED = 105
 SIGNET_OF_FIRE = 180

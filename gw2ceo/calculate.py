@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
 
-import gw.general_data as gd
-from gw.profession import Profession
-from gw.dtypes import BuildConstraints
-from gw.gearselect import GearSelect
+import gw2ceo.general_data as gd
+from gw2ceo.profession import Profession
+from gw2ceo.dtypes import BuildConstraints
+from gw2ceo.gearselect import GearSelect
 
 
 
