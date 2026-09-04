@@ -45,7 +45,7 @@ def calc_ep(profession: Profession, build: BuildConstraints):
     stats["precision"] += profession.additional_precision()
     
     # calculate stats
-    stats["power"] += gd.general_buffs.base_power + gd.general_buffs.might * build.might/25 + profession.additional_power() # type: ignore
+    stats["power"] += gd.general_buffs.base_power + gd.general_buffs.might * build.might/25 + profession.additional_power() + profession.power_per_might() * build.might # type: ignore
     stats["ferocity"] += profession.additional_ferocity() # type: ignore
     stats["vitality"] = gd.general_buffs.base_vitality + gd.general_buffs.jade_bot + profession.additional_vitality()
 
