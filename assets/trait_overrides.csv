@@ -1,0 +1,94 @@
+id,kind,profession,specialization,elite,slot,tier,name,effect,source,value,note,review,description
+2177,trait,Elementalist,Weaver,True,Major,1,Superior Elements,crit_chance,,20,vs weakened foes (near-permanent via Dual Attacks),False,Dual Attack skills weaken enemies. Attacks against weakened foes have increased critical chance.
+1503,trait,Elementalist,Air,False,Major,3,Fresh Air,ferocity,,250,for 5s after attuning to air - high uptime only in Fresh Air builds,False,Recharge air attunement on a critical hit. Gain a ferocity boost when attuning to air.
+263,trait,Elementalist,Arcane,False,Major,3,Arcane Lightning,ferocity,,150,for 15s after using an arcane skill,False,Arcane skills grant increased ferocity.
+1511,trait,Elementalist,Arcane,False,Major,3,Bountiful Power,drop,,,temporary strike-damage proc since 2026 rework - no attribute bonus,False,
+222,trait,Elementalist,Air,False,Minor,2,Electric Discharge,drop,,,crit damage fact belongs to the lightning bolt proc only,False,
+5542,skill,Elementalist,,False,Utility,,Signet of Fire,precision,,180,signet passive,False,Signet Passive: Improves critical chance. Signet Active: Burn your target and nearby foes.
+5624,skill,Elementalist,,False,Utility,,Conjure Lightning Hammer,precision,,180,while wielding the conjured weapon,False,Wielders of this weapon gain increased precision and ferocity.
+5624,skill,Elementalist,,False,Utility,,Conjure Lightning Hammer,ferocity,,75,while wielding the conjured weapon,False,Wielders of this weapon gain increased precision and ferocity.
+5540,skill,Elementalist,,False,Utility,,Conjure Flame Axe,power,,180,while wielding the conjured weapon,False,Wielders of the weapon gain increased power and condition damage.
+5546,skill,Elementalist,,False,Utility,,Conjure Earth Shield,vitality,,180,while wielding the conjured weapon,False,Wielders of the weapon gain increased toughness and vitality.
+5516,skill,Elementalist,,False,Elite,,Conjure Fiery Greatsword,power,,260,while wielding the conjured weapon,False,Wielders of this weapon gain increased power and condition damage.
+2250,trait,Elementalist,Catalyst,True,Minor,,Elemental Empowerment,all_stats_pct,,10,1% per stack - 10 stacks in combat; percentage traits are not solvable,False,Gain Elemental Empowerment while in combat.
+2241,trait,Elementalist,Catalyst,True,Major,,Empowered Empowerment,all_stats_pct,,10,additional 10% at max Elemental Empowerment stacks (20% total); not solvable,False,Elemental Empowerment is more effective.
+2081,trait,Elementalist,Weaver,True,Minor,,Elemental Polyphony,power,,200,while attuned to fire (dual attunement grants both bonuses),False,Gain attributes based on your current attunement.
+2081,trait,Elementalist,Weaver,True,Minor,,Elemental Polyphony,ferocity,,200,while attuned to air (dual attunement grants both bonuses),False,Gain attributes based on your current attunement.
+692,trait,Mesmer,Dueling,False,Major,3,Superiority Complex,crit_damage_pct,,15,on-crit damage modifier - ranking-neutral and ignored by the optimizer,False,Your critical hits deal more damage.
+692,trait,Mesmer,Dueling,False,Major,3,Superiority Complex,crit_damage_pct,,10,additionally vs disabled or below-50%-health foes; on-crit damage modifier,False,Your critical hits deal more damage.
+2009,trait,Mesmer,Chronomancer,True,Major,2,Danger Time,crit_damage_pct,,5,for 10s after you inflict slow; on-crit damage modifier,False,When you inflict slow your outgoing critical-strike damage is increased.
+1927,trait,Mesmer,Chronomancer,True,Minor,2,Flow of Time,crit_chance,,15,while you have alacrity,False,Gain increased critical-strike chance for you and your illusions when you have alacrity.
+2193,trait,Mesmer,Virtuoso,True,Minor,3,Quiet Intensity,crit_chance,,15,while under fury,False,Fury gives an increased critical hit chance. Gain ferocity based on your vitality.
+2193,trait,Mesmer,Virtuoso,True,Minor,3,Quiet Intensity,ferocity,vitality,0.1,permanent conversion,False,Fury gives an increased critical hit chance. Gain ferocity based on your vitality.
+708,trait,Mesmer,Dueling,False,Major,2,Fencer's Finesse,ferocity,,150,15 per stack - 10 stacks; realistic with sword or spear strikes,False,Gain a stacking ferocity effect when you or your illusions strike with a one-handed sword or spear.
+2353,trait,Mesmer,Troubadour,True,Major,,Fortissimo,all_stats_pct,,16,4% per playing instrument - up to 4; percentage traits are not solvable,False,Increased attributes per instrument playing.
+10622,skill,Necromancer,,False,Utility,,Signet of Spite,power,,180,signet passive,False,Signet Passive: Improves power.
+810,trait,Necromancer,Curses,False,Minor,3,Target the Weak,crit_chance,,2,PER unique condition on the foe - counted once here; typically 5-7 in group PvE,False,Increases critical-hit chance for each condition on the foe.
+893,trait,Necromancer,Soul Reaping,False,Major,3,Death Perception,crit_chance,,15,unconditional,False,Gain increased critical-strike chance. Gain increased critical-strike damage while in shroud.
+893,trait,Necromancer,Soul Reaping,False,Major,3,Death Perception,crit_damage_pct,,10,while in shroud; on-crit damage modifier,False,Gain increased critical-strike chance. Gain increased critical-strike damage while in shroud.
+2188,trait,Necromancer,Harbinger,True,Major,1,Wicked Corruption,crit_damage_pct,,10,vs foes with torment; on-crit damage modifier,False,Critical strikes deal increased damage to targets with torment.
+915,trait,Necromancer,Spite,False,Minor,2,Awaken the Pain,power_per_might,,10,might grants 40 power per stack instead of 30,False,Might grants you more power. Gain might when entering shroud.
+855,trait,Necromancer,Death Magic,False,Major,2,Deadly Strength,power,,300,at max 30 Death's Carapace stacks (10 per stack),False,Carapace stacks grant power and condition damage.
+10550,skill,Necromancer,,False,Elite,,Lich Form,drop,,,20s elite transform on 120s cooldown - not a maintainable stat,False,
+568,trait,Guardian,Radiance,False,Minor,3,Radiant Power,ferocity,,150,unconditional,False,Attacks against burning foes have an increased chance to critically hit. Your ferocity is increased.
+568,trait,Guardian,Radiance,False,Minor,3,Radiant Power,crit_chance,,10,vs burning foes,False,Attacks against burning foes have an increased chance to critically hit. Your ferocity is increased.
+1683,trait,Guardian,Radiance,False,Major,3,Righteous Instincts,crit_chance,,25,while under resolution,False,Resolution increases your chances to critically strike and grants might each interval.
+2148,trait,Guardian,Firebrand,True,Minor,3,Imbued Haste,vitality,,250,while under quickness (also grants condition damage and healing power),False,Gain increased attributes while affected by quickness.
+566,trait,Guardian,Radiance,False,Major,1,Right-Hand Strength,precision,,80,unconditional,False,Your precision is increased. Gain increased power while wielding a one-handed weapon in your main hand.
+566,trait,Guardian,Radiance,False,Major,1,Right-Hand Strength,power,,80,while wielding a one-handed weapon in the main hand,False,Your precision is increased. Gain increased power while wielding a one-handed weapon in your main hand.
+9093,skill,Guardian,,False,Utility,,Bane Signet,power,,180,signet passive,False,Signet Passive: Improved Power.
+14404,skill,Warrior,,False,Utility,,Signet of Might,power,,180,signet passive,False,Signet Passive: Improves power.
+14410,skill,Warrior,,False,Utility,,Signet of Fury,precision,,180,signet passive,False,Signet Passive: Improves precision.
+1344,trait,Warrior,Arms,False,Major,,Signet Mastery,ferocity,,500,100 per signet cast - 5 stacks with 60s duration; needs signets on rotation,False,Signets grant a stacking ferocity boon on use.
+2130,trait,Warrior,Spellbreaker,True,Minor,,Attacker's Insight,power,,250,at 5 Insight stacks (50 each per disable or boon removal - 15s duration),False,Gain Insight when disabling foes or removing boons.
+2130,trait,Warrior,Spellbreaker,True,Minor,,Attacker's Insight,precision,,250,at 5 Insight stacks (50 each per disable or boon removal - 15s duration),False,Gain Insight when disabling foes or removing boons.
+2130,trait,Warrior,Spellbreaker,True,Minor,,Attacker's Insight,ferocity,,250,at 5 Insight stacks (50 each per disable or boon removal - 15s duration),False,Gain Insight when disabling foes or removing boons.
+2236,trait,Warrior,Bladesworn,True,Minor,,Guns and Glory,ferocity,,250,while hitting with explosions (flat 250 - duration extends up to 12s),False,Gain ferocity for a short duration when you hit with an explosion.
+1343,trait,Warrior,Arms,False,Minor,2,Deep Strikes,crit_chance,,5,vs bleeding foes,False,You have increased chance to critically strike against bleeding foes.
+1342,trait,Warrior,Arms,False,Minor,1,Furious Burst,crit_chance,,5,while under fury (on top of fury itself),False,Gain fury when you swap weapons. Fury gives an increased critical chance.
+1453,trait,Warrior,Strength,False,Minor,3,Pinnacle of Strength,crit_chance,,5,unconditional,False,Might applied to you grants more power. Your critical-hit chance is increased.
+1453,trait,Warrior,Strength,False,Minor,3,Pinnacle of Strength,power_per_might,,10,might grants 40 power per stack instead of 30,False,Might applied to you grants more power. Your critical-hit chance is increased.
+1336,trait,Warrior,Arms,False,Major,3,Burst Precision,drop,,,guaranteed crits on burst skills only - not a general stat,False,
+2049,trait,Warrior,Berserker,True,Major,1,Smash Brawler,crit_chance,,15,while in berserk mode,False,Critical-hit chance is increased while berserk.
+2011,trait,Warrior,Berserker,True,Major,2,Blood Reaction,ferocity,precision,0.12,doubled to 24% while in berserk mode - base value modeled,False,A percentage of precision is given as a bonus to ferocity; doubled in berserk mode.
+2107,trait,Warrior,Spellbreaker,True,Major,1,Pure Strike,crit_damage_pct,,5,base; on-crit damage modifier,False,Deal increased critical-hit damage. This bonus is doubled against boonless foes.
+2107,trait,Warrior,Spellbreaker,True,Major,1,Pure Strike,crit_damage_pct,,5,additionally vs boonless foes; on-crit damage modifier,False,Deal increased critical-hit damage. This bonus is doubled against boonless foes.
+1338,trait,Warrior,Strength,False,Major,2,Forceful Greatsword,power,,120,unconditional,False,Gain power and a chance to gain might on critical strike. Double these bonuses while wielding a greatsword or underwater spear.
+1338,trait,Warrior,Strength,False,Major,2,Forceful Greatsword,power,,120,additionally while wielding a greatsword or underwater spear,False,Gain power and a chance to gain might on critical strike. Double these bonuses while wielding a greatsword or underwater spear.
+29941,skill,Warrior,Berserker,True,Utility,,Wild Blow,drop,,,single guaranteed-crit attack - no passive stat,False,
+1770,trait,Revenant,Retribution,False,Major,3,Versed in Stone,power,toughness,0.13,permanent conversion,False,Gain power based on your toughness.
+1719,trait,Revenant,Invocation,False,Major,3,Roiling Mists,crit_chance,,25,while under fury,False,Critical-hit chance is further increased while you are under the effect of fury.
+2142,trait,Revenant,Renegade,True,Minor,3,Brutal Momentum,crit_chance,,33,at full endurance (10% when endurance is not full),False,Gain increased critical-hit chance. This bonus is increased further while your endurance is full.
+2331,trait,Revenant,Conduit,True,Minor,,Bolstered Bonds,all_stats_flat,,75,requires Legendary Entity Stance equipped; doubled during Cosmic Wisdom,False,Gain attributes based on your equipped legends.
+2331,trait,Revenant,Conduit,True,Minor,,Bolstered Bonds,power,,75,requires Legendary Assassin Stance equipped; doubled during Cosmic Wisdom,False,Gain attributes based on your equipped legends.
+2331,trait,Revenant,Conduit,True,Minor,,Bolstered Bonds,ferocity,,75,requires Legendary Assassin Stance equipped; doubled during Cosmic Wisdom,False,Gain attributes based on your equipped legends.
+536,trait,Engineer,Firearms,False,Minor,2,Hematic Focus,crit_chance,,15,while under fury (trait grants fury when you inflict bleeding),False,Fury gives an increased critical-strike chance.
+1914,trait,Engineer,Firearms,False,Major,1,High Caliber,crit_chance,,15,vs foes within 450 range,False,You have an increased critical hit chance against foes within the range threshold.
+1849,trait,Engineer,Scrapper,True,Major,3,Applied Force,power_per_might,,30,might grants 60 power per stack instead of 30,False,Might grants bonus power.
+1892,trait,Engineer,Explosives,False,Major,,Explosive Temper,ferocity,,200,20 per stack - 10 stacks from explosion hits (10s duration),False,Explosions grant stacking ferocity when they hit.
+2279,trait,Engineer,Mechanist,True,Major,1,Mech Arms: Jade Cannons,drop,,,crit chance applies to the Jade Mech only,False,
+2334,trait,Engineer,Amalgam,True,Major,,Double Helix,drop,,,Evolve is a percentage attribute buff with ~20-40% uptime - not maintainable,False,
+1011,trait,Ranger,Marksmanship,False,Minor,3,Precise Strike,drop,,,Opening Strike (one attack) only - not a sustained stat,False,
+1068,trait,Ranger,Skirmishing,False,Minor,3,Hunter's Tactics,crit_chance,,10,while flanking or vs defiant foes,False,Increased chance to critically strike while attacking from behind or the side or when striking a defiant foe.
+1016,trait,Ranger,Skirmishing,False,Major,2,Fang and Claw,drop,,,pet-only bonus (soulbeasts explicitly gain nothing),False,
+1065,trait,Ranger,Beastmastery,False,Minor,3,Pet's Prowess,drop,,,pet-only bonus (except merged soulbeast - not modeled),False,
+970,trait,Ranger,Beastmastery,False,Major,2,Honed Axes,ferocity,,120,unconditional (you and your pet),False,You and your pet gain ferocity. Gain additional ferocity while wielding an axe.
+970,trait,Ranger,Beastmastery,False,Major,2,Honed Axes,ferocity,,120,additionally while wielding an axe,False,You and your pet gain ferocity. Gain additional ferocity while wielding an axe.
+1700,trait,Ranger,Skirmishing,False,Major,2,Strider's Strength,power,,120,unconditional (you and your pet),False,You and your pet gain power. Gain additional power while wielding a sword.
+1700,trait,Ranger,Skirmishing,False,Major,2,Strider's Strength,power,,120,additionally while wielding a sword,False,You and your pet gain power. Gain additional power while wielding a sword.
+1888,trait,Ranger,Skirmishing,False,Major,3,Vicious Quarry,ferocity,,250,while under fury,False,Fury grants ferocity and additional increased critical strike chance.
+1888,trait,Ranger,Skirmishing,False,Major,3,Vicious Quarry,crit_chance,,15,while under fury (on top of fury itself),False,Fury grants ferocity and additional increased critical strike chance.
+12491,skill,Ranger,,False,Utility,,Signet of the Wild,ferocity,,180,signet passive (you and your pet),False,Signet Passive: Increases the ferocity of you and your pet.
+1281,trait,Thief,Critical Strikes,False,Minor,1,Keen Observer,crit_chance,,10,unconditional,False,Critical-hit chance is increased and further increased while your health is above the threshold.
+1281,trait,Thief,Critical Strikes,False,Minor,1,Keen Observer,crit_chance,,5,additionally while above 50% health,False,Critical-hit chance is increased and further increased while your health is above the threshold.
+1268,trait,Thief,Critical Strikes,False,Major,1,Twin Fangs,crit_chance,,7,while flanking or vs defiant foes,False,Gain bonus critical-hit chance when hitting a foe from behind or the side.
+1268,trait,Thief,Critical Strikes,False,Major,1,Twin Fangs,crit_damage_pct,,5,base; on-crit damage modifier,False,Deal increased critical damage - further increased while your health is above the threshold.
+1268,trait,Thief,Critical Strikes,False,Major,1,Twin Fangs,crit_damage_pct,,2,additionally above 50% health; on-crit damage modifier,False,Deal increased critical damage - further increased while your health is above the threshold.
+1904,trait,Thief,Critical Strikes,False,Major,3,No Quarter,ferocity,,250,while under fury,False,Gain increased ferocity while under the effects of fury.
+1272,trait,Thief,Critical Strikes,False,Major,2,Practiced Tolerance,ferocity,precision,0.1,permanent conversion,False,Gain ferocity based on your precision.
+1215,trait,Thief,Critical Strikes,False,Major,3,Hidden Killer,crit_chance,,100,while stealthed (+4s after reveal) - for stealth-attack builds,False,Gain bonus critical-hit chance while stealthed.
+1704,trait,Thief,Deadly Arts,False,Major,2,Revealed Training,power,,80,unconditional,False,Gain power then gain extra power while you are revealed.
+1704,trait,Thief,Deadly Arts,False,Major,2,Revealed Training,power,,120,additionally while under Revealed,False,Gain power then gain extra power while you are revealed.
+13046,skill,Thief,,False,Utility,,Assassin's Signet,power,,180,signet passive,False,Signet Passive: Grants increased power.
+13062,skill,Thief,,False,Utility,,Signet of Agility,precision,,180,signet passive,False,Signet Passive: Grants increased precision.
+221,trait,Elementalist,Air,False,Minor,1,Zephyr's Speed,crit_chance,,5,unconditional,False,Your chance to critically strike is increased.

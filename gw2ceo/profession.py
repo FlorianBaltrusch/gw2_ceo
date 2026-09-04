@@ -1,7 +1,6 @@
 import gw2ceo.general_data as gd
 
 CRIT_CHANCE_PRECISION_EQUIV = 21  # 21 precision = 1% critical chance at level 80
-CRIT_DAMAGE_FEROCITY_EQUIV = 15   # 15 ferocity = 1% critical damage at level 80
 BASE_TOUGHNESS = 1000
 
 
@@ -99,6 +98,9 @@ class Profession:
         return result["vitality"], result["power"], result["ferocity"]
 
     def ferocity_equivalent(self, ferocity):
-        """Ferocity plus flat critical-damage bonuses expressed as ferocity."""
-        crit_damage = self.rows[self.rows["effect"] == "crit_damage_pct"]
-        return ferocity + float(crit_damage["value"].sum()) * CRIT_DAMAGE_FEROCITY_EQUIV
+        """crit_damage_pct trait rows are multiplicative on-crit damage
+        modifiers, not additions to the ferocity attribute: they scale every
+        gear option by the same factor and cannot change the ranking, so they
+        are deliberately NOT folded into the ferocity here — doing so would
+        distort the power/ferocity trade-off."""
+        return ferocity
