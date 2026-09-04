@@ -11,10 +11,12 @@ Rows with review=True need a manual pass against the wiki:
     the API; their value is left empty and must be filled in by hand.
   - rows mentioning pets may not apply to the player at all.
 
-Manual decisions live in assets/trait_overrides.csv (same columns). Any id
-present there replaces ALL generated rows for that id; an override row with
-effect="drop" removes the id entirely. This keeps the review work stable
-across regenerations.
+Manual decisions live in assets/trait_overrides.csv (same columns, minus
+icon). Any id present there replaces ALL generated rows for that id; an
+override row with effect="drop" removes the id entirely. This keeps the
+review work stable across regenerations. Icons (official render-service
+URLs) are attached by id after the override merge, so overrides never need
+to carry them.
 
 Usage:  python generate_traits.py   (run from the repository root)
 """
@@ -112,6 +114,7 @@ def spec_name(spec_id) -> str:
 
 def main():
     rows = []
+    icons = {}
 
     for prof_name in get_api_data("professions"):
         profession = get_api_data(f"professions/{prof_name}")
@@ -120,6 +123,7 @@ def main():
             spec = get_api_data(f"specializations/{spec_id}")
             trait_ids = spec["minor_traits"] + spec["major_traits"]
             for trait in get_api_data_bulk("traits", trait_ids):
+                icons[trait["id"]] = trait.get("icon", "")
                 for effect, source, value, note, review in extract_facts(trait.get("facts", [])):
                     rows.append({
                         "id": trait["id"],
@@ -142,6 +146,7 @@ def main():
         for skill in get_api_data_bulk("skills", skill_ids):
             if skill.get("type") not in ("Heal", "Utility", "Elite"):
                 continue
+            icons[skill["id"]] = skill.get("icon", "")
             for effect, source, value, note, review in extract_facts(skill.get("facts", [])):
                 if effect == "toughness":
                     continue
@@ -177,6 +182,7 @@ def main():
         df = pd.concat([df, overrides[overrides.effect != "drop"]], ignore_index=True)
 
     df = df.sort_values(["profession", "elite", "specialization", "name", "effect"])
+    df["icon"] = df["id"].map(icons).fillna("")
     df.to_csv("assets/traits.csv", index=False)
 
     print(df.groupby(["profession", "kind"]).size().to_string())
