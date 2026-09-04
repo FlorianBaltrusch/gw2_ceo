@@ -1,6 +1,8 @@
+import os
+
 import numpy as np
 import pandas as pd
-from flask import Flask, jsonify, request, Response
+from flask import Flask, jsonify, request, Response, send_from_directory
 from collections import Counter
 
 import gw2ceo.general_data as gd
@@ -30,6 +32,13 @@ def traits():
     if profession:
         table = table[table["profession"].str.lower() == profession.lower()]
     return Response(table.to_json(orient="records"), mimetype="application/json")
+
+
+@app.route("/icons/<int:trait_id>.png")
+def icon(trait_id):
+    """Locally cached trait icon (filled by generate_traits.py)."""
+    return send_from_directory(os.path.abspath(os.path.join("assets", "icons")),
+                               f"{trait_id}.png")
 
 
 @app.route("/calculate")

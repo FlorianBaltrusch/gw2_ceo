@@ -25,6 +25,7 @@ import os
 import re
 
 import pandas as pd
+import requests
 
 from gw2ceo.api import get_api_data, get_api_data_bulk
 
@@ -106,6 +107,23 @@ def extract_facts(facts):
                 yield effect, "", None, note, True
 
 
+def download_icons(df):
+    """Cache every referenced icon locally as assets/icons/<id>.png.
+
+    Files that already exist are kept, so this only downloads new icons."""
+    icon_dir = os.path.join("assets", "icons")
+    os.makedirs(icon_dir, exist_ok=True)
+    referenced = df[df["icon"] != ""][["id", "icon"]].drop_duplicates()
+    downloaded = 0
+    for row in referenced.itertuples():
+        path = os.path.join(icon_dir, f"{row.id}.png")
+        if not os.path.isfile(path):
+            open(path, "wb").write(requests.get(row.icon).content)
+            downloaded += 1
+    print(f"icons: {len(referenced)} referenced, {downloaded} newly downloaded"
+          f" -> {icon_dir}/<id>.png")
+
+
 def spec_name(spec_id) -> str:
     if not spec_id:
         return ""
@@ -184,6 +202,7 @@ def main():
     df = df.sort_values(["profession", "elite", "specialization", "name", "effect"])
     df["icon"] = df["id"].map(icons).fillna("")
     df.to_csv("assets/traits.csv", index=False)
+    download_icons(df)
 
     print(df.groupby(["profession", "kind"]).size().to_string())
     print(f"\ntotal rows: {len(df)}, rows needing review: {int(df.review.sum())},"
