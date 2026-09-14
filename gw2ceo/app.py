@@ -16,7 +16,10 @@ pd.options.mode.chained_assignment = None
 
 # the server is started from the repository root (like the CSV loading assumes)
 app = Flask(__name__, static_folder=os.path.abspath("static"), static_url_path="/static")
-app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400  # let browsers cache images and fonts for a day
+
+# only the (many, immutable-ish) game images get a long browser cache;
+# HTML/CSS/JS must always revalidate so updates show up on a normal refresh
+IMAGE_CACHE_SECONDS = 3600
 
 ARMOR_SLOTS = ["onehanded", "twohanded", "chest", "legs", "head", "shoulders",
                "gloves", "boots", "amulet", "ring", "accessory", "back-item"]
@@ -41,7 +44,8 @@ def theme_css():
 @app.route("/profession-images/<folder>/<filename>")
 def profession_image(folder, filename):
     return send_from_directory(os.path.abspath("profession_images"),
-                               os.path.join(folder, filename))
+                               os.path.join(folder, filename),
+                               max_age=IMAGE_CACHE_SECONDS)
 
 
 @app.route("/professions")
@@ -77,7 +81,7 @@ def traits():
 def icon(filename):
     """Locally cached trait/specialization images (filled by generate_traits.py)."""
     return send_from_directory(os.path.abspath(os.path.join("assets", "icons")),
-                               filename)
+                               filename, max_age=IMAGE_CACHE_SECONDS)
 
 
 @app.route("/calculate")

@@ -102,8 +102,6 @@ button { font: inherit; cursor: pointer; }
 .brand .versal {                /* illuminated initials, like a chapter opening */
   font-size: 1.45em;
   line-height: 0;
-  color: var(--incandescent, #ffec4c);
-  text-shadow: 0 0 22px color-mix(in srgb, var(--aureus, #edb227) 55%, transparent);
 }
 .tagline { color: var(--text-dim); margin: 0 0 36px; }
 .question {
@@ -122,18 +120,6 @@ button { font: inherit; cursor: pointer; }
   position: relative;
   padding-bottom: 46px;       /* room for the name label */
 }
-.prof-lineup::after {         /* soft ground glow tying the lineup together */
-  content: "";
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  bottom: 30px;
-  height: 70px;
-  background: radial-gradient(ellipse at 50% 50%,
-              color-mix(in srgb, var(--gold) 12%, transparent) 0%, transparent 70%);
-  pointer-events: none;
-}
-
 .prof-char {
   background: none;
   border: none;
@@ -182,7 +168,6 @@ button { font: inherit; cursor: pointer; }
 
 @media (max-width: 1000px) {                 /* mobile: 3x3, still borderless */
   .prof-lineup { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 6px; padding-bottom: 0; }
-  .prof-lineup::after { display: none; }
   .prof-char { margin-inline: 0; }
   .prof-char img { height: auto; width: 100%; max-height: 30vh; object-fit: contain; }
   .prof-char .name { position: static; transform: none; opacity: 1; display: block; margin-top: 6px; }
