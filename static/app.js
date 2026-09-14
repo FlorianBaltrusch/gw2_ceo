@@ -16,6 +16,10 @@ const PROFESSIONS = [
 const professionImage = (profession) =>
   `/profession-images/freigestellt/${PROFESSIONS.find(p => p.name === profession).img}`;
 
+// the uncropped paintings; same filenames but lowercase extension
+const professionOriginal = (profession) =>
+  `/profession-images/originals/${PROFESSIONS.find(p => p.name === profession).img.replace(".PNG", ".png")}`;
+
 const state = { profession: null, spec: null };
 
 const el = (id) => document.getElementById(id);
@@ -68,7 +72,7 @@ function renderSpecGrid(profession, eliteSpecs) {
   grid.append(specTile({
     name: `Core ${profession}`,
     icon: `/icons/tango_${profession}.png`,
-    background: professionImage(profession),
+    background: professionOriginal(profession),
     coreArt: true,
   }));
 

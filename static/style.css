@@ -22,12 +22,6 @@
   font-style: italic;
   font-display: swap;
 }
-@font-face {
-  font-family: "Libertine Initials";     /* ornamental chapter initials */
-  src: local("Libertinus Serif Initials"),
-       url("/static/fonts/LibertinusSerifInitials-Regular.woff2") format("woff2");
-  font-display: swap;
-}
 
 /* ---------- base ---------- */
 
@@ -105,9 +99,8 @@ button { font: inherit; cursor: pointer; }
   font-variant: small-caps;     /* Libertine ships real small caps */
   font-weight: 400;
 }
-.brand .versal {                /* illuminated initials, like a chapter opening */
-  font-family: "Libertine Initials", "Libertine", serif;
-  font-size: 1.55em;
+.brand .versal {                /* enlarged initials, like a chapter opening */
+  font-size: 1.45em;
   line-height: 0;
 }
 .tagline { color: var(--text-dim); margin: 0 0 36px; }
@@ -221,8 +214,9 @@ button { font: inherit; cursor: pointer; }
   object-fit: contain;
   object-position: left center;    /* the banner art puts its character on the left */
 }
-.spec-tile .art.core-art img {     /* core has no banner: the character render instead */
-  object-position: right center;
+.spec-tile .art.core-art img {     /* core has no banner: the original painting, cropped to fit */
+  object-fit: cover;
+  object-position: center 22%;
 }
 .spec-tile .label {
   display: flex;
