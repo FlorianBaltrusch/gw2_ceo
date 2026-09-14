@@ -1,3 +1,28 @@
+/* ---------- font: Linux Libertine (self-hosted as Libertinus Serif) ---------- */
+
+@font-face {
+  font-family: "Libertine";
+  src: local("Linux Libertine O"), local("Libertinus Serif"),
+       url("/static/fonts/LibertinusSerif-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Libertine";
+  src: local("Linux Libertine O Semibold"), local("Libertinus Serif Semibold"),
+       url("/static/fonts/LibertinusSerif-Semibold.woff2") format("woff2");
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Libertine";
+  src: local("Linux Libertine O Italic"), local("Libertinus Serif Italic"),
+       url("/static/fonts/LibertinusSerif-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 /* ---------- base ---------- */
 
 :root {
@@ -19,7 +44,7 @@ body {
   min-height: 100vh;
   background: radial-gradient(ellipse at 50% -20%, var(--bg-glow) 0%, var(--bg) 60%);
   color: var(--text);
-  font-family: system-ui, "Segoe UI", sans-serif;
+  font-family: "Libertine", "Linux Libertine", Georgia, serif;
   padding-inline: 16px;
 }
 
@@ -98,7 +123,7 @@ button { font: inherit; cursor: pointer; }
   bottom: 30px;
   height: 70px;
   background: radial-gradient(ellipse at 50% 50%,
-              color-mix(in srgb, var(--gold) var(--alpha-soft, 30%), transparent) 0%, transparent 70%);
+              color-mix(in srgb, var(--gold) 12%, transparent) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -170,25 +195,14 @@ button { font: inherit; cursor: pointer; }
 }
 
 .spec-tile {
-  position: relative;
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
-  min-height: 140px;
-  background-color: #101014;      /* the spec banners have torn transparent edges */
-  background-size: cover;
-  background-position: left center;
+  background: var(--bg-card);
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
   padding: 0;
   transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
-}
-.spec-tile::before {          /* readability gradient over the artwork */
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, rgba(14,14,18,.15) 30%, rgba(14,14,18,.92) 100%);
-  transition: background .18s ease;
 }
 .spec-tile:hover, .spec-tile:focus-visible {
   transform: translateY(-4px);
@@ -196,35 +210,30 @@ button { font: inherit; cursor: pointer; }
   box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) var(--alpha-soft, 30%), transparent);
   outline: none;
 }
+.spec-tile .art {                /* the banners are 1024x256: 4:1 shows them uncropped */
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 1;
+  background-size: cover;
+  background-position: center;
+}
+.spec-tile .art.core-art {       /* core has no banner: the character render instead */
+  background-size: contain;
+  background-position: right center;
+  background-repeat: no-repeat;
+}
 .spec-tile .label {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
-  width: 100%;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
 }
-.spec-tile .label img { width: 42px; height: 42px; }
+.spec-tile .label img { width: 38px; height: 38px; }
 .spec-tile .label .name {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   letter-spacing: .05em;
   color: var(--text);
-}
-.spec-tile .label .kind {
-  margin-left: auto;
-  font-size: .72rem;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-}
-.spec-tile.core { background-color: var(--bg-card); }
-.spec-tile.core img.core-art {
-  position: absolute;
-  right: 8px;
-  top: 4px;
-  height: 118%;
-  object-fit: contain;
-  opacity: .85;
 }
 
 /* ---------- app shell after selection ---------- */

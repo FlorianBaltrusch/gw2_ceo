@@ -26,6 +26,7 @@ import re
 
 import pandas as pd
 import requests
+from PIL import Image
 
 from gw2ceo.api import get_api_data, get_api_data_bulk
 
@@ -131,8 +132,13 @@ def generate_specializations():
     banner; they land in assets/icons/ as spec_<id>.png and spec_bg_<id>.png
     for the website's elite-specialization picker."""
     rows = []
+    icon_dir = os.path.join("assets", "icons")
+    os.makedirs(icon_dir, exist_ok=True)
     for prof_name in get_api_data("professions"):
         profession = get_api_data(f"professions/{prof_name}")
+        prof_icon = os.path.join(icon_dir, f"prof_{prof_name}.png")
+        if profession.get("icon_big") and not os.path.isfile(prof_icon):
+            open(prof_icon, "wb").write(requests.get(profession["icon_big"]).content)
         for spec_id in profession["specializations"]:
             spec = get_api_data(f"specializations/{spec_id}")
             rows.append({
@@ -146,8 +152,6 @@ def generate_specializations():
     df = pd.DataFrame(rows)
     df.to_csv("assets/specializations.csv", index=False)
 
-    icon_dir = os.path.join("assets", "icons")
-    os.makedirs(icon_dir, exist_ok=True)
     downloaded = 0
     for row in df.itertuples():
         for prefix, url in (("spec_", row.icon), ("spec_bg_", row.background)):
@@ -155,7 +159,18 @@ def generate_specializations():
             if url and not os.path.isfile(path):
                 open(path, "wb").write(requests.get(url).content)
                 downloaded += 1
+            if prefix == "spec_bg_" and os.path.isfile(path):
+                trim_transparent_border(path)
     print(f"specializations: {len(df)} rows, {downloaded} images newly downloaded")
+
+
+def trim_transparent_border(path):
+    """The spec banners bleed into the in-game UI panel and carry large fully
+    transparent margins; crop to the painted area (idempotent)."""
+    image = Image.open(path)
+    bbox = image.getbbox()
+    if bbox and bbox != (0, 0, *image.size):
+        image.crop(bbox).save(path)
 
 
 def spec_name(spec_id) -> str:

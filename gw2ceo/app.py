@@ -16,6 +16,7 @@ pd.options.mode.chained_assignment = None
 
 # the server is started from the repository root (like the CSV loading assumes)
 app = Flask(__name__, static_folder=os.path.abspath("static"), static_url_path="/static")
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 86400  # let browsers cache images and fonts for a day
 
 ARMOR_SLOTS = ["onehanded", "twohanded", "chest", "legs", "head", "shoulders",
                "gloves", "boots", "amulet", "ring", "accessory", "back-item"]

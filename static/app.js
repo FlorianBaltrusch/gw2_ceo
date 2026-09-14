@@ -65,46 +65,39 @@ function renderSpecGrid(profession, eliteSpecs) {
   grid.innerHTML = "";
 
   // playing without an elite specialization is a valid choice
-  const core = document.createElement("button");
-  core.className = "spec-tile core";
-  core.type = "button";
-  const coreArt = document.createElement("img");
-  coreArt.className = "core-art";
-  coreArt.src = professionImage(profession);
-  coreArt.alt = "";
-  const coreLabel = specLabel(null, `Core ${profession}`, "no elite spec");
-  core.append(coreArt, coreLabel);
-  core.addEventListener("click", () => selectSpec({ name: `Core ${profession}`, icon: null }));
-  grid.append(core);
+  const professionIcon = `/icons/prof_${profession}.png`;
+  grid.append(specTile({
+    name: `Core ${profession}`,
+    icon: professionIcon,
+    background: professionImage(profession),
+    coreArt: true,
+  }));
 
-  for (const spec of eliteSpecs) {
-    const tile = document.createElement("button");
-    tile.className = "spec-tile";
-    tile.type = "button";
-    tile.style.backgroundImage = `url("${spec.background}")`;
-    tile.append(specLabel(spec.icon, spec.name, "elite spec"));
-    tile.addEventListener("click", () => selectSpec(spec));
-    grid.append(tile);
-  }
+  for (const spec of eliteSpecs) grid.append(specTile(spec));
 }
 
-function specLabel(iconSrc, name, kind) {
+function specTile(spec) {
+  const tile = document.createElement("button");
+  tile.className = "spec-tile";
+  tile.type = "button";
+
+  const art = document.createElement("span");
+  art.className = spec.coreArt ? "art core-art" : "art";
+  art.style.backgroundImage = `url("${spec.background}")`;
+
   const label = document.createElement("span");
   label.className = "label";
-  if (iconSrc) {
-    const icon = document.createElement("img");
-    icon.src = iconSrc;
-    icon.alt = "";
-    label.append(icon);
-  }
-  const nameSpan = document.createElement("span");
-  nameSpan.className = "name";
-  nameSpan.textContent = name;
-  const kindSpan = document.createElement("span");
-  kindSpan.className = "kind";
-  kindSpan.textContent = kind;
-  label.append(nameSpan, kindSpan);
-  return label;
+  const icon = document.createElement("img");
+  icon.src = spec.icon;
+  icon.alt = "";
+  const name = document.createElement("span");
+  name.className = "name";
+  name.textContent = spec.name;
+  label.append(icon, name);
+
+  tile.append(art, label);
+  tile.addEventListener("click", () => selectSpec(spec));
+  return tile;
 }
 
 function selectSpec(spec) {
@@ -117,12 +110,8 @@ function selectSpec(spec) {
 function finishSelection() {
   el("topbar-title").textContent = `${state.spec.name} (${state.profession})`;
   const icon = el("topbar-spec-icon");
-  if (state.spec.icon) {
-    icon.src = state.spec.icon;
-    icon.classList.remove("hidden");
-  } else {
-    icon.classList.add("hidden");
-  }
+  icon.src = state.spec.icon;
+  icon.classList.remove("hidden");
 
   const overlay = el("overlay");
   overlay.classList.add("closing");
