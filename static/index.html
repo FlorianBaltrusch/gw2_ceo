@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GW2 Critical Effect Optimizer</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <!-- main app shell (visible once profession + spec are chosen) -->
+  <header id="topbar" class="topbar hidden">
+    <div class="selection">
+      <img id="topbar-spec-icon" class="topbar-icon" alt="">
+      <div>
+        <div id="topbar-title" class="topbar-title"></div>
+        <div class="topbar-subtitle">Critical Effect Optimizer</div>
+      </div>
+    </div>
+    <button id="change-selection" class="ghost-button">Change</button>
+  </header>
+
+  <main id="main" class="main hidden">
+    <div class="placeholder-card">
+      <h2>Traits &amp; gear selection</h2>
+      <p>This is where trait, signet and armor selection will live — coming next.</p>
+    </div>
+  </main>
+
+  <!-- the selection popup -->
+  <div id="overlay" class="overlay">
+    <section id="profession-picker" class="picker">
+      <h1 class="brand">Critical Effect Optimizer</h1>
+      <p class="tagline">Reach exactly 100% critical chance. Waste nothing.</p>
+      <h2 class="question">Choose your profession</h2>
+      <div id="prof-grid" class="prof-grid"></div>
+    </section>
+
+    <section id="spec-picker" class="picker hidden">
+      <button id="back-to-professions" class="ghost-button back">&larr; Professions</button>
+      <h2 class="question"><span id="spec-question-prof"></span> &mdash; choose your elite specialization</h2>
+      <div id="spec-grid" class="spec-grid"></div>
+    </section>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

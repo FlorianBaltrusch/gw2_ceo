@@ -124,6 +124,40 @@ def download_icons(df):
           f" -> {icon_dir}/<id>.png")
 
 
+def generate_specializations():
+    """Write assets/specializations.csv and cache the spec images locally.
+
+    Per specialization the API provides a small icon and a wide background
+    banner; they land in assets/icons/ as spec_<id>.png and spec_bg_<id>.png
+    for the website's elite-specialization picker."""
+    rows = []
+    for prof_name in get_api_data("professions"):
+        profession = get_api_data(f"professions/{prof_name}")
+        for spec_id in profession["specializations"]:
+            spec = get_api_data(f"specializations/{spec_id}")
+            rows.append({
+                "id": spec["id"],
+                "profession": prof_name,
+                "name": spec["name"],
+                "elite": spec["elite"],
+                "icon": spec.get("icon", ""),
+                "background": spec.get("background", ""),
+            })
+    df = pd.DataFrame(rows)
+    df.to_csv("assets/specializations.csv", index=False)
+
+    icon_dir = os.path.join("assets", "icons")
+    os.makedirs(icon_dir, exist_ok=True)
+    downloaded = 0
+    for row in df.itertuples():
+        for prefix, url in (("spec_", row.icon), ("spec_bg_", row.background)):
+            path = os.path.join(icon_dir, f"{prefix}{row.id}.png")
+            if url and not os.path.isfile(path):
+                open(path, "wb").write(requests.get(url).content)
+                downloaded += 1
+    print(f"specializations: {len(df)} rows, {downloaded} images newly downloaded")
+
+
 def spec_name(spec_id) -> str:
     if not spec_id:
         return ""
@@ -203,6 +237,7 @@ def main():
     df["icon"] = df["id"].map(icons).fillna("")
     df.to_csv("assets/traits.csv", index=False)
     download_icons(df)
+    generate_specializations()
 
     print(df.groupby(["profession", "kind"]).size().to_string())
     print(f"\ntotal rows: {len(df)}, rows needing review: {int(df.review.sum())},"

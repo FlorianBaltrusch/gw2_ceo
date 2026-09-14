@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 traits = pd.read_csv("assets/traits.csv")
+specializations = pd.read_csv("assets/specializations.csv")
 general_buffs = pd.read_csv("assets/general_buffs.csv", index_col=0).wert
 gear_stats = pd.read_csv("assets/gear_stats.csv", index_col=[0, 1, 2, 3]).value
 runes = pd.read_csv("assets/runes.csv", index_col=0)

@@ -13,15 +13,41 @@ from gw2ceo.profession import Profession
 pd.options.mode.chained_assignment = None
 
 
-app = Flask(__name__)
+# the server is started from the repository root (like the CSV loading assumes)
+app = Flask(__name__, static_folder=os.path.abspath("static"), static_url_path="/static")
 
 ARMOR_SLOTS = ["onehanded", "twohanded", "chest", "legs", "head", "shoulders",
                "gloves", "boots", "amulet", "ring", "accessory", "back-item"]
 
 
+@app.route("/")
+def index():
+    return app.send_static_file("index.html")
+
+
+@app.route("/profession-images/<folder>/<filename>")
+def profession_image(folder, filename):
+    return send_from_directory(os.path.abspath("profession_images"),
+                               os.path.join(folder, filename))
+
+
 @app.route("/professions")
 def professions():
     return jsonify(sorted(gd.traits["profession"].unique()))
+
+
+@app.route("/specializations")
+def specializations():
+    """Specializations with icon/background image paths, filtered by ?profession=..."""
+    table = gd.specializations
+    profession = request.args.get("profession")
+    if profession:
+        table = table[table["profession"].str.lower() == profession.lower()]
+    table = table.assign(
+        icon="/icons/spec_" + table["id"].astype(str) + ".png",
+        background="/icons/spec_bg_" + table["id"].astype(str) + ".png",
+    )
+    return Response(table.to_json(orient="records"), mimetype="application/json")
 
 
 @app.route("/traits")
@@ -34,11 +60,11 @@ def traits():
     return Response(table.to_json(orient="records"), mimetype="application/json")
 
 
-@app.route("/icons/<int:trait_id>.png")
-def icon(trait_id):
-    """Locally cached trait icon (filled by generate_traits.py)."""
+@app.route("/icons/<filename>")
+def icon(filename):
+    """Locally cached trait/specialization images (filled by generate_traits.py)."""
     return send_from_directory(os.path.abspath(os.path.join("assets", "icons")),
-                               f"{trait_id}.png")
+                               filename)
 
 
 @app.route("/calculate")
