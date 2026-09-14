@@ -41,6 +41,8 @@ button { font: inherit; cursor: pointer; }
   position: fixed;
   inset: 0;
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   background: radial-gradient(ellipse at 50% -20%, #23232e 0%, var(--bg) 70%);
   padding: 40px 16px 60px;
   animation: overlay-in .35s ease;
@@ -54,7 +56,13 @@ button { font: inherit; cursor: pointer; }
   to { opacity: 0; visibility: hidden; }
 }
 
-.picker { max-width: 1500px; margin: 0 auto; text-align: center; }
+@media (prefers-reduced-motion: reduce) {
+  .overlay { animation: none; }
+  .overlay.closing { animation-duration: .01s; }
+  .prof-char, .spec-tile, .prof-char .name { transition: none; }
+}
+
+.picker { max-width: 1500px; width: 100%; margin: auto; text-align: center; }
 
 .brand {
   font-size: clamp(1.6rem, 4vw, 2.6rem);
@@ -71,56 +79,84 @@ button { font: inherit; cursor: pointer; }
   margin: 0 0 28px;
 }
 
-/* ---------- profession grid ---------- */
+/* ---------- profession lineup (one continuous image, like the GW2 poster) ---------- */
 
-.prof-grid {
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);   /* desktop: all nine side by side */
-  gap: 12px;
-}
-@media (max-width: 1000px) {
-  .prof-grid { grid-template-columns: repeat(3, 1fr); }   /* mobile: 3x3 */
-}
-
-.prof-tile {
-  background: linear-gradient(180deg, var(--bg-card) 0%, #101014 100%);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 14px 6px 12px;
+.prof-lineup {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  justify-content: center;
+  align-items: flex-end;      /* everyone stands on the same ground line */
+  position: relative;
+  padding-bottom: 46px;       /* room for the name label */
 }
-.prof-tile img {
-  width: 100%;
-  max-width: 130px;
-  aspect-ratio: 3 / 4;
+.prof-lineup::after {         /* soft ground glow tying the lineup together */
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 30px;
+  height: 70px;
+  background: radial-gradient(ellipse at 50% 50%, rgba(200, 170, 110, .16) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.prof-char {
+  background: none;
+  border: none;
+  padding: 0;
+  position: relative;
+  min-width: 0;               /* let the whole lineup shrink proportionally */
+  flex: 0 1 auto;
+  margin-inline: -2%;         /* characters overlap into one composition */
+  filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .55));
+  transition: transform .2s ease, filter .25s ease;
+}
+.prof-char img {
+  display: block;
+  height: clamp(220px, 50vh, 520px);
+  width: auto;
+  max-width: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, .55));
-  transition: transform .18s ease;
+  object-position: bottom;    /* keep everyone's feet on the ground line */
 }
-.prof-tile .name {
+.prof-char .name {
+  position: absolute;
+  left: 50%;
+  bottom: -38px;
+  transform: translateX(-50%);
+  white-space: nowrap;
   font-size: .85rem;
-  letter-spacing: .08em;
+  letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--text-dim);
-  transition: color .18s ease;
+  color: var(--gold);
+  opacity: 0;
+  transition: opacity .2s ease;
+  pointer-events: none;
 }
-.prof-tile:hover, .prof-tile:focus-visible {
-  transform: translateY(-6px);
-  border-color: var(--accent);
-  box-shadow: 0 10px 30px rgba(192, 47, 47, .25);
+
+/* the hovered character steps forward, the rest recede into the painting */
+.prof-lineup:has(.prof-char:hover, .prof-char:focus-visible)
+  .prof-char:not(:hover):not(:focus-visible) {
+  filter: brightness(.55) saturate(.75) drop-shadow(0 14px 22px rgba(0, 0, 0, .55));
+}
+.prof-char:hover, .prof-char:focus-visible {
+  transform: translateY(-12px) scale(1.05);
+  z-index: 2;
   outline: none;
 }
-.prof-tile:hover img { transform: scale(1.06); }
-.prof-tile:hover .name { color: var(--gold); }
+.prof-char:hover .name, .prof-char:focus-visible .name { opacity: 1; }
+
+@media (max-width: 1000px) {                 /* mobile: 3x3, still borderless */
+  .prof-lineup { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px 6px; padding-bottom: 0; }
+  .prof-lineup::after { display: none; }
+  .prof-char { margin-inline: 0; }
+  .prof-char img { height: auto; width: 100%; max-height: 30vh; object-fit: contain; }
+  .prof-char .name { position: static; transform: none; opacity: 1; display: block; margin-top: 6px; }
+}
 
 /* ---------- specialization grid ---------- */
 
-.back { position: absolute; margin-top: -6px; }
-#spec-picker { position: relative; padding-top: 48px; }
+.back { position: absolute; left: 0; top: 0; }
+#spec-picker { position: relative; padding-top: 56px; }
 
 .spec-grid {
   display: grid;
@@ -135,9 +171,10 @@ button { font: inherit; cursor: pointer; }
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
-  min-height: 130px;
+  min-height: 140px;
+  background-color: #101014;      /* the spec banners have torn transparent edges */
   background-size: cover;
-  background-position: center 25%;
+  background-position: left center;
   display: flex;
   align-items: flex-end;
   padding: 0;

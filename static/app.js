@@ -27,13 +27,12 @@ function renderProfessionGrid() {
   grid.innerHTML = "";
   for (const prof of PROFESSIONS) {
     const tile = document.createElement("button");
-    tile.className = "prof-tile";
+    tile.className = "prof-char";
     tile.type = "button";
 
     const img = document.createElement("img");
     img.src = professionImage(prof.name);
     img.alt = prof.name;
-    img.loading = "lazy";
 
     const name = document.createElement("span");
     name.className = "name";
@@ -150,3 +149,10 @@ el("back-to-professions").addEventListener("click", () => {
 el("change-selection").addEventListener("click", reopenSelection);
 
 renderProfessionGrid();
+
+// deep link: /?profession=Elementalist jumps straight to its spec picker
+const preselected = new URLSearchParams(location.search).get("profession");
+if (preselected) {
+  const match = PROFESSIONS.find(p => p.name.toLowerCase() === preselected.toLowerCase());
+  if (match) selectProfession(match.name);
+}
