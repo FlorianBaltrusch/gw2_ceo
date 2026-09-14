@@ -2,5 +2,4 @@ flask
 pandas
 numpy
 requests
-construct
 pillow

@@ -7,9 +7,10 @@ from flask import Flask, jsonify, request, Response, send_from_directory
 from collections import Counter
 
 import gw2ceo.general_data as gd
-from gw2ceo import custom_colors
+from gw2ceo import buildlink, custom_colors
 from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.calculate import calc_ep
+from gw2ceo.gearselect import GearSelect
 from gw2ceo.profession import Profession
 
 pd.options.mode.chained_assignment = None
@@ -97,6 +98,24 @@ def icon(filename):
                                filename, max_age=IMAGE_CACHE_SECONDS)
 
 
+@app.route("/chatlink/decode")
+def chatlink_decode():
+    try:
+        return jsonify(buildlink.decode(request.args.get("link", "")))
+    except (ValueError, KeyError, IndexError) as error:
+        return jsonify({"error": str(error) or "Could not decode this chat link."}), 400
+
+
+@app.route("/chatlink/encode")
+def chatlink_encode():
+    try:
+        selected = [int(trait_id) for trait_id in request.args.getlist("traits[]")]
+        link = buildlink.encode(request.args.get("profession", ""), selected)
+    except (ValueError, KeyError, IndexError) as error:
+        return jsonify({"error": str(error) or "Could not encode a chat link."}), 400
+    return jsonify({"link": link})
+
+
 @app.route("/calculate")
 def calculate():
     try:
@@ -128,4 +147,16 @@ def calculate():
     result = json.loads(suggestion.to_json())
     result["total_infusions"] = int(gd.num_infusions(constraints.num_ascended,
                                                      constraints.weapon_type))
+
+    # concrete per-slot assignment: how many pieces of each group carry
+    # precision as major stat
+    gear = GearSelect(constraints)
+    assignment = next(gear.get_equipment(suggestion["armor_precision"]), None)
+    result["equipment"] = None
+    if assignment is not None:
+        result["equipment"] = [
+            {"slot": label, "pieces": int(count), "precision_major": int(major)}
+            for (label, count), major in zip(gear.groups, assignment)
+            if count > 0
+        ]
     return jsonify(result)

@@ -85,6 +85,12 @@
       <p class="tagline">Reach exactly 100% critical chance. Waste nothing.</p>
       <h2 class="question">Choose your profession</h2>
       <div id="prof-grid" class="prof-lineup"></div>
+      <div class="chatlink-row">
+        <input id="chatlink-input" placeholder="&hellip; or paste a build template chat link: [&amp;DQ&hellip;=]"
+               spellcheck="false" autocomplete="off">
+        <button type="button" id="chatlink-load" class="ghost-button">Load build</button>
+      </div>
+      <p id="chatlink-error" class="chatlink-error hidden"></p>
     </section>
 
     <section id="spec-picker" class="picker hidden">

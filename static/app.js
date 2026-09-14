@@ -210,7 +210,43 @@ async function loadBuilder() {
   if (skills.length) {
     container.append(traitGroup("Skills", `/icons/tango_${state.profession}.png`, skills));
   }
+  state.pendingIds = null;
 }
+
+// import a build template chat link: select profession, spec and known traits
+async function loadChatlink() {
+  const link = el("chatlink-input").value.trim();
+  const errorBox = el("chatlink-error");
+  if (!link) return;
+
+  const response = await fetch(`/chatlink/decode?link=${encodeURIComponent(link)}`);
+  const body = await response.json();
+  if (!response.ok) {
+    errorBox.textContent = body.error;
+    errorBox.classList.remove("hidden");
+    return;
+  }
+  errorBox.classList.add("hidden");
+
+  state.pendingIds = new Set(body.selectable_ids);
+  await selectProfession(body.profession);
+  if (body.elite_spec) {
+    const specs = await fetch(`/specializations?profession=${encodeURIComponent(body.profession)}`)
+      .then(r => r.json());
+    selectSpec(specs.find(s => s.name === body.elite_spec));
+  } else {
+    selectSpec({
+      name: `Core ${body.profession}`,
+      icon: `/icons/tango_${body.profession}.png`,
+      coreArt: true,
+    });
+  }
+}
+
+el("chatlink-load").addEventListener("click", loadChatlink);
+el("chatlink-input").addEventListener("keydown", (event) => {
+  if (event.key === "Enter") loadChatlink();
+});
 
 function traitGroup(title, iconSrc, groupEntries) {
   const group = document.createElement("div");
@@ -239,6 +275,10 @@ function traitGroup(title, iconSrc, groupEntries) {
     const box = document.createElement("input");
     box.type = "checkbox";
     box.disabled = unsolvable;
+    if (!unsolvable && state.pendingIds?.has(entry.id)) {
+      box.checked = true;
+      state.selectedTraits.add(entry.id);
+    }
     box.addEventListener("change", () => {
       if (box.checked) state.selectedTraits.add(entry.id);
       else state.selectedTraits.delete(entry.id);
@@ -373,10 +413,26 @@ async function optimize() {
     return;
   }
   errorBox.classList.add("hidden");
-  renderResult(await response.json());
+  renderResult(await response.json(), gear.env);
 }
 
-function renderResult(r) {
+// which stat combination a precision-major / precision-minor piece is
+const PREFIX_NAMES = {
+  "3p": { major: "Assassin's", minor: "Berserker's" },
+  "4p": { major: "Marauder", minor: "Dragon's" },
+  jewels: { major: "precision", minor: "power" },
+};
+
+function equipmentLine(group, names) {
+  const parts = [];
+  if (group.precision_major > 0) parts.push(`${group.precision_major}× ${names.major}`);
+  const minor = group.pieces - group.precision_major;
+  if (minor > 0) parts.push(`${minor}× ${names.minor}`);
+  if (group.pieces === 1) return group.precision_major ? names.major : names.minor;
+  return parts.join(", ");
+}
+
+function renderResult(r, env) {
   const resultBox = el("result");
   resultBox.innerHTML = "";
 
@@ -424,12 +480,47 @@ function renderResult(r) {
 
   resultBox.append(ep, list, stats);
 
+  if (r.equipment) {
+    const heading = document.createElement("h3");
+    heading.className = "equipment-heading";
+    heading.textContent = "Equipment";
+    const equipmentList = document.createElement("dl");
+    for (const group of r.equipment) {
+      const names = group.slot.startsWith("Jewels") ? PREFIX_NAMES.jewels : PREFIX_NAMES[env];
+      const dt = document.createElement("dt");
+      dt.textContent = group.slot;
+      const dd = document.createElement("dd");
+      dd.textContent = equipmentLine(group, names);
+      equipmentList.append(dt, dd);
+    }
+    resultBox.append(heading, equipmentList);
+  }
+
   if (r.absolute_overshoot > 0) {
     const warning = document.createElement("p");
     warning.className = "warning";
     warning.textContent = `No gear split hits the crit cap exactly here — closest overshoot: ${Math.round(r.absolute_overshoot)} precision.`;
     resultBox.append(warning);
   }
+
+  const copyButton = document.createElement("button");
+  copyButton.type = "button";
+  copyButton.className = "ghost-button copy-link";
+  copyButton.textContent = "Copy build template chat link";
+  copyButton.addEventListener("click", async () => {
+    const params = new URLSearchParams({ profession: state.profession });
+    for (const id of state.selectedTraits) params.append("traits[]", id);
+    const response = await fetch(`/chatlink/encode?${params}`);
+    const body = await response.json();
+    if (!response.ok) {
+      copyButton.textContent = body.error;
+      return;
+    }
+    await navigator.clipboard.writeText(body.link);
+    copyButton.textContent = `Copied: ${body.link}`;
+  });
+  resultBox.append(copyButton);
+
   resultBox.classList.remove("hidden");
 }
 

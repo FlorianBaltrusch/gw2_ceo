@@ -173,6 +173,28 @@ button { font: inherit; cursor: pointer; }
   .prof-char .name { position: static; transform: none; opacity: 1; display: block; margin-top: 6px; }
 }
 
+/* chat link import on the landing page */
+
+.chatlink-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 30px;
+}
+.chatlink-row input {
+  width: min(420px, 70vw);
+  background: color-mix(in srgb, var(--bg-card) 70%, transparent);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font: inherit;
+  font-size: .9rem;
+  padding: 8px 12px;
+}
+.chatlink-row input::placeholder { color: var(--text-dim); }
+.chatlink-row input:focus { outline: none; border-color: var(--gold); }
+.chatlink-error { color: var(--accent); font-size: .9rem; margin-top: 10px; }
+
 /* ---------- specialization grid ---------- */
 
 .back { position: absolute; left: 0; top: 0; }
@@ -446,3 +468,17 @@ button { font: inherit; cursor: pointer; }
 .result .stats .stat-value { display: block; color: var(--text); }
 .result .stats .stat-name { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); }
 .result .warning { color: var(--gold); font-size: .85rem; margin-top: 10px; }
+.equipment-heading {
+  font-weight: 500;
+  font-variant: small-caps;
+  letter-spacing: .05em;
+  color: var(--gold);
+  border-top: 1px solid var(--border);
+  margin: 12px 0 8px;
+  padding-top: 10px;
+}
+.copy-link {
+  width: 100%;
+  margin-top: 12px;
+  overflow-wrap: anywhere;
+}

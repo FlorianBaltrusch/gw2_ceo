@@ -28,64 +28,62 @@ class GearSelect:
         maj_gear = exotic["Maj"] * num_ex + ascend["Maj"] * num_asc
            
 
+        # options per slot group, and parallel (label, piece count) metadata so
+        # a chosen assignment can be reported back as concrete gear pieces
         self.equipment = []
-        self.descriptions = ["Ascended Weapons", "Exotic Weapon", "Chest", "Legs", "Head", "Ascended S/G/B", "Exotic S/G/B", "Amulet", "Ascended Rings", "Exotic Rings", "Ascended Accessories", "Exotic Accessories", "Back item", "Jewels"]
-        
-        # Ascended Weapon
+        self.groups = []
+
+        def add_group(label, count, options):
+            self.equipment.append(options)
+            self.groups.append((label, count))
+
+        def spread(gear, slot, count):
+            """all splits of `count` pieces of one slot into Maj/Min variants"""
+            return [gear["Maj", slot] * i + gear["Min", slot] * (count - i)
+                    for i in range(count + 1)]
+
+        # Weapon
         if build.weapon_type == "1h":
-            asc_weapon = num_asc["One-handed"]
-            self.equipment.append([ascend["Maj", "One-handed"]*i + ascend["Min", "One-handed"]*(asc_weapon-i) for i in range(asc_weapon+1)])
-            ex_weapon = num_ex["One-handed"]
-            self.equipment.append([exotic["Maj", "One-handed"]*i + exotic["Min", "One-handed"]*(ex_weapon-i) for i in range(ex_weapon+1)])
+            add_group("Weapons (ascended)", num_asc["One-handed"],
+                      spread(ascend, "One-handed", num_asc["One-handed"]))
+            add_group("Weapons (exotic)", num_ex["One-handed"],
+                      spread(exotic, "One-handed", num_ex["One-handed"]))
         else:
             if num_asc["Two-handed"] == 0:
-                self.equipment.append([0])
-            self.equipment.append([min_gear["Two-handed"] , maj_gear["Two-handed"]])
+                add_group("", 0, [0])
+            add_group("Weapon", 1, [min_gear["Two-handed"], maj_gear["Two-handed"]])
             if num_ex["Two-handed"] == 0:
-                self.equipment.append([0])
+                add_group("", 0, [0])
 
         # Chest, Legs, Head
-        self.equipment.append([min_gear["Chest"] , maj_gear["Chest"]])
+        add_group("Chest", 1, [min_gear["Chest"], maj_gear["Chest"]])
+        add_group("Legs", 1, [min_gear["Legs"], maj_gear["Legs"]])
+        add_group("Head", 1, [min_gear["Head"], maj_gear["Head"]])
 
-        self.equipment.append([min_gear["Legs"] , maj_gear["Legs"]])
-
-        self.equipment.append([min_gear["Head"] , maj_gear["Head"]])
-
-        # Ascended S/G/B
+        # Shoulders/Gloves/Boots share their stat values and are interchangeable
         asc_sgb = num_asc[["Shoulders", "Gloves", "Boots"]].sum()
-        self.equipment.append([ascend["Maj", "Shoulders"]*i + ascend["Min", "Shoulders"]*(asc_sgb-i) for i in range(asc_sgb+1)])
-        # Exotic S/G/B
+        add_group("Shoulders/Gloves/Boots (ascended)", asc_sgb, spread(ascend, "Shoulders", asc_sgb))
         ex_sgb = num_ex[["Shoulders", "Gloves", "Boots"]].sum()
-        self.equipment.append([exotic["Maj", "Shoulders"]*i + exotic["Min", "Shoulders"]*(ex_sgb-i) for i in range(ex_sgb+1)])
+        add_group("Shoulders/Gloves/Boots (exotic)", ex_sgb, spread(exotic, "Shoulders", ex_sgb))
 
-        # Amulet
-        self.equipment.append([min_gear["Amulet"] , maj_gear["Amulet"]])
+        # Trinkets
+        add_group("Amulet", 1, [min_gear["Amulet"], maj_gear["Amulet"]])
+        add_group("Rings (ascended)", num_asc["Ring"], spread(ascend, "Ring", num_asc["Ring"]))
+        add_group("Rings (exotic)", num_ex["Ring"], spread(exotic, "Ring", num_ex["Ring"]))
+        add_group("Accessories (ascended)", num_asc["Accessory"], spread(ascend, "Accessory", num_asc["Accessory"]))
+        add_group("Accessories (exotic)", num_ex["Accessory"], spread(exotic, "Accessory", num_ex["Accessory"]))
+        add_group("Back item", 1, [min_gear["Back item"], maj_gear["Back item"]])
 
-        # Ascended Rings
-        asc_ring = num_asc["Ring"]
-        self.equipment.append([ascend["Maj", "Ring"]*i + ascend["Min", "Ring"]*(asc_ring-i) for i in range(asc_ring+1)])
-        # Exotic Rings 
-        ex_ring = num_ex["Ring"]
-        self.equipment.append([exotic["Maj", "Ring"]*i + exotic["Min", "Ring"]*(ex_ring-i) for i in range(ex_ring+1)])
-
-        # Ascended Accessories
-        asc_acc = num_asc["Accessory"]
-        self.equipment.append([ascend["Maj", "Accessory"]*i + ascend["Min", "Accessory"]*(asc_acc-i) for i in range(asc_acc+1)])
-        # Exotic Accessories
-        ex_acc = num_ex["Accessory"]
-        self.equipment.append([exotic["Maj", "Accessory"]*i + exotic["Min", "Accessory"]*(ex_acc-i) for i in range(ex_acc+1)])
-
-        # Back item
-        self.equipment.append([min_gear["Back item"] , maj_gear["Back item"]])
-
-        # Jewels
+        # Jewels (upgrade slots of exotic trinkets)
         num_jewels = num_ex.values[8:12].sum()
-        self.equipment.append([exotic["Maj", "Jewel"]*i + exotic["Min", "Jewel"]*(num_jewels-i) for i in range(num_jewels+1)])
-        return
+        add_group("Jewels (in exotic trinkets)", num_jewels, spread(exotic, "Jewel", num_jewels))
+
+        # memoize per instance (a class-level @cache would keep every
+        # instance alive for the lifetime of the server)
+        self.overshoot_values = cache(self._overshoot_values)
 
 
-    @cache
-    def overshoot_values(self, target, i=None):
+    def _overshoot_values(self, target, i=None):
         if i is None:
             i = len(self.equipment)
         if target <= 0:
