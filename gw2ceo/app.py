@@ -1,15 +1,15 @@
 import json
 import os
+from collections import Counter
 
 import numpy as np
 import pandas as pd
-from flask import Flask, jsonify, request, Response, send_from_directory
-from collections import Counter
+from flask import Flask, Response, jsonify, request, send_from_directory
 
 import gw2ceo.general_data as gd
 from gw2ceo import buildlink, custom_colors
-from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.calculate import calc_ep
+from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.gearselect import GearSelect
 from gw2ceo.profession import Profession
 
@@ -58,10 +58,11 @@ def professions():
 @app.route("/specializations")
 def specializations():
     """Specializations with icon/background image paths, filtered by ?profession=..."""
-    table = gd.specializations
+    table: pd.DataFrame = gd.specializations
     profession = request.args.get("profession")
     if profession:
-        table = table[table["profession"].str.lower() == profession.lower()]
+        table = table.loc[table["profession"].str.lower() == profession.lower()]
+
     def versioned_icon(filename):
         """Icon URL stamped with the file's mtime, so browsers can cache long
         but always fetch a fresh copy when the image content changes."""
@@ -84,10 +85,10 @@ def specializations():
 @app.route("/traits")
 def traits():
     """Selectable traits/skills, optionally filtered by ?profession=..."""
-    table = gd.traits
+    table: pd.DataFrame = gd.traits
     profession = request.args.get("profession")
     if profession:
-        table = table[table["profession"].str.lower() == profession.lower()]
+        table = table.loc[table["profession"].str.lower() == profession.lower()]
     return Response(table.to_json(orient="records"), mimetype="application/json")
 
 
@@ -124,12 +125,19 @@ def calculate():
 
         armor = request.args.getlist("armor[]")
         armor = [piece.replace("1", "").replace("2", "") for piece in armor]
-        armor = Counter(armor)
-        num_ascended = [armor[slot] for slot in ARMOR_SLOTS]
+        counts = Counter(armor)
+        num_ascended = [counts[slot] for slot in ARMOR_SLOTS]
+
+        gear_environment = request.args.get("parameters")
+        if gear_environment not in ("3p", "4p"):
+            raise ValueError("parameters must be '3p' or '4p'")
+        weapon_type = request.args.get("handedness")
+        if weapon_type not in ("1h", "2h"):
+            raise ValueError("handedness must be '1h' or '2h'")
 
         constraints = BuildConstraints(
-            gear_environment=request.args.get("parameters"),
-            weapon_type=request.args.get("handedness"),
+            gear_environment=gear_environment,
+            weapon_type=weapon_type,
 
             num_ascended=np.array(num_ascended),  # order as in ARMOR_SLOTS
 

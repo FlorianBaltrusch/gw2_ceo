@@ -2,10 +2,9 @@ import numpy as np
 import pandas as pd
 
 import gw2ceo.general_data as gd
-from gw2ceo.profession import Profession
 from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.gearselect import GearSelect
-
+from gw2ceo.profession import Profession
 
 
 def calc_ep(profession: Profession, build: BuildConstraints):
@@ -29,7 +28,7 @@ def calc_ep(profession: Profession, build: BuildConstraints):
     food_rune_options = pd.merge(sigils, food_rune_options, how="cross", suffixes=("_sigil", ""))
     food_rune_options = pd.merge(infusions, food_rune_options, how="cross", suffixes=("_inf", ""))
 
-    food_rune_options[["power", "precision", "ferocity"]] = food_rune_options[["power_rune", "precision_rune", "ferocity_rune"]].values + food_rune_options[["power_food", "precision_food", "ferocity_food"]].values + food_rune_options[["power_inf", "precision_inf", "ferocity_inf"]].values
+    food_rune_options[["power", "precision", "ferocity"]] = food_rune_options[["power_rune", "precision_rune", "ferocity_rune"]].values + food_rune_options[["power_food", "precision_food", "ferocity_food"]].values + food_rune_options[["power_inf", "precision_inf", "ferocity_inf"]].values  # type: ignore
     stats = food_rune_options[["prec_infusions", "sigil", "food", "rune", "power", "precision", "chance", "ferocity"]]
     stats.precision = stats.precision.astype(float)
     stats.power = stats.power.astype(float)

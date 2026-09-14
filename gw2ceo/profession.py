@@ -1,3 +1,5 @@
+import pandas as pd
+
 import gw2ceo.general_data as gd
 
 CRIT_CHANCE_PRECISION_EQUIV = 21  # 21 precision = 1% critical chance at level 80
@@ -13,8 +15,8 @@ class Profession:
     """
 
     def __init__(self, trait_ids: list[int], profession: str | None = None):
-        table = gd.traits
-        rows = table[table["id"].isin(trait_ids)]
+        table: pd.DataFrame = gd.traits
+        rows = table.loc[table["id"].isin(trait_ids)]
 
         missing = set(trait_ids) - set(rows["id"])
         if missing:
@@ -26,31 +28,31 @@ class Profession:
         if profession and len(professions) and professions[0].lower() != profession.lower():
             raise ValueError(f"Traits belong to {professions[0]}, not {profession}")
 
-        unsupported = rows[rows["effect"] == "all_stats_pct"]
+        unsupported = rows.loc[rows["effect"] == "all_stats_pct"]
         if not unsupported.empty:
             raise ValueError(
                 "Percentage attribute increases cannot hit exactly 100% critical "
                 f"chance and are not supported: {', '.join(unsupported['name'].unique())}"
             )
 
-        unvalued = rows[rows["value"].isna()]
+        unvalued = rows.loc[rows["value"].isna()]
         if not unvalued.empty:
             raise ValueError(
                 f"Trait rows without a reviewed value: {', '.join(unvalued['name'].unique())}"
             )
 
-        self.rows = rows
-        self.conversions = rows[rows["source"].notna()]
+        self.rows: pd.DataFrame = rows
+        self.conversions: pd.DataFrame = rows.loc[rows["source"].notna()]
 
-        precision_conversions = self.conversions[self.conversions["effect"] == "precision"]
+        precision_conversions = self.conversions.loc[self.conversions["effect"] == "precision"]
         if not (precision_conversions["source"] == "vitality").all():
             raise NotImplementedError(
                 "Only vitality-to-precision conversions are supported so far"
             )
 
     def _flat(self, attribute: str) -> float:
-        flat = self.rows[(self.rows["effect"] == attribute) & self.rows["source"].isna()]
-        all_stats = self.rows[self.rows["effect"] == "all_stats_flat"]
+        flat = self.rows.loc[(self.rows["effect"] == attribute) & self.rows["source"].isna()]
+        all_stats = self.rows.loc[self.rows["effect"] == "all_stats_flat"]
         return float(flat["value"].sum() + all_stats["value"].sum())
 
     def additional_power(self):
@@ -67,16 +69,17 @@ class Profession:
 
     def additional_crit_chance(self):
         """Critical chance bonuses, in precision equivalents."""
-        crit = self.rows[self.rows["effect"] == "crit_chance"]
+        crit = self.rows.loc[self.rows["effect"] == "crit_chance"]
         return float(crit["value"].sum()) * CRIT_CHANCE_PRECISION_EQUIV
 
     def power_per_might(self):
         """Extra power per stack of might (on top of might's own 30)."""
-        return float(self.rows[self.rows["effect"] == "power_per_might"]["value"].sum())
+        per_might = self.rows.loc[self.rows["effect"] == "power_per_might"]
+        return float(per_might["value"].sum())
 
     def vit_prec_conversion(self):
         rows = self.conversions
-        vit_prec = rows[(rows["effect"] == "precision") & (rows["source"] == "vitality")]
+        vit_prec = rows.loc[(rows["effect"] == "precision") & (rows["source"] == "vitality")]
         return float(vit_prec["value"].sum())
 
     def stat_conversion(self, vitality, power, precision, ferocity):
@@ -92,9 +95,9 @@ class Profession:
             "toughness": BASE_TOUGHNESS + self._flat("toughness"),
         }
         result = {key: base[key] for key in ("vitality", "power", "ferocity")}
-        for row in self.conversions.itertuples():
-            if row.effect in result:
-                result[row.effect] += base[row.source] * row.value
+        for row in self.conversions.to_dict("records"):
+            if row["effect"] in result:
+                result[row["effect"]] += base[row["source"]] * row["value"]
         return result["vitality"], result["power"], result["ferocity"]
 
     def ferocity_equivalent(self, ferocity):

@@ -1,0 +1,5 @@
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "basic"
+exclude = [".venv", "assets", "profession_images", "static"]

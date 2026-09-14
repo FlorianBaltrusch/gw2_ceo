@@ -122,7 +122,8 @@ def download_icons(df):
     for row in referenced.itertuples():
         path = os.path.join(icon_dir, f"{row.id}.png")
         if not os.path.isfile(path):
-            open(path, "wb").write(requests.get(row.icon).content)
+            with open(path, "wb") as file:
+                file.write(requests.get(row.icon).content)
             downloaded += 1
     print(f"icons: {len(referenced)} referenced, {downloaded} newly downloaded"
           f" -> {icon_dir}/<id>.png")
@@ -141,7 +142,8 @@ def generate_specializations():
         profession = get_api_data(f"professions/{prof_name}")
         prof_icon = os.path.join(icon_dir, f"prof_{prof_name}.png")
         if profession.get("icon_big") and not os.path.isfile(prof_icon):
-            open(prof_icon, "wb").write(requests.get(profession["icon_big"]).content)
+            with open(prof_icon, "wb") as file:
+                file.write(requests.get(profession["icon_big"]).content)
         for spec_id in profession["specializations"]:
             spec = get_api_data(f"specializations/{spec_id}")
             rows.append({
@@ -156,11 +158,12 @@ def generate_specializations():
     df.to_csv("assets/specializations.csv", index=False)
 
     downloaded = 0
-    for row in df.itertuples():
-        for prefix, url in (("spec_", row.icon), ("spec_bg_", row.background)):
-            path = os.path.join(icon_dir, f"{prefix}{row.id}.png")
+    for row in df.to_dict("records"):
+        for prefix, url in (("spec_", row["icon"]), ("spec_bg_", row["background"])):
+            path = os.path.join(icon_dir, f"{prefix}{row['id']}.png")
             if url and not os.path.isfile(path):
-                open(path, "wb").write(requests.get(url).content)
+                with open(path, "wb") as file:
+                    file.write(requests.get(url).content)
                 downloaded += 1
             if prefix == "spec_bg_" and os.path.isfile(path):
                 trim_banner_border(path)
@@ -216,7 +219,8 @@ def download_tango_icons(names, sizes=(200, 48)):
                 found[name] = page["imageinfo"][0]["url"]
         for name, url in found.items():
             path = os.path.join(icon_dir, f"tango_{name}.png")
-            open(path, "wb").write(requests.get(url).content)
+            with open(path, "wb") as file:
+                file.write(requests.get(url).content)
             downloaded += 1
         missing = [n for n in missing if n not in found]
     print(f"tango icons: {downloaded} newly downloaded, unresolved: {missing or 'none'}")
@@ -288,28 +292,32 @@ def main():
 
     # several distinct values for the same fact usually mean a PvE / WvW-PvP
     # split; pet-related rows may not apply to the player at all
-    split = df.groupby(["id", "effect", "source", "note"])["value"].transform("nunique") > 1
-    pets = df.description.str.contains(r"\bpets?\b", case=False, regex=True)
+    value_variants = df.groupby(["id", "effect", "source", "note"])["value"].transform("nunique")
+    split = value_variants > 1  # type: ignore
+    pets = df["description"].str.contains(r"\bpets?\b", case=False, regex=True)
     df.loc[split | pets, "review"] = True
 
     if os.path.isfile(OVERRIDES_PATH):
         overrides = pd.read_csv(OVERRIDES_PATH)
-        df = df[~df.id.isin(overrides.id)]
-        df = pd.concat([df, overrides[overrides.effect != "drop"]], ignore_index=True)
+        df = df.loc[~df["id"].isin(overrides["id"])]
+        df = pd.concat([df, overrides.loc[overrides["effect"] != "drop"]], ignore_index=True)
 
-    df = df.sort_values(["profession", "elite", "specialization", "name", "effect"])
-    df["icon"] = df["id"].map(icons).fillna("")
+    df = df.sort_values(by=["profession", "elite", "specialization", "name", "effect"])
+    df["icon"] = df["id"].map(icons).fillna("")  # type: ignore
     df.to_csv("assets/traits.csv", index=False)
     download_icons(df)
     generate_specializations()
 
     print(df.groupby(["profession", "kind"]).size().to_string())
-    print(f"\ntotal rows: {len(df)}, rows needing review: {int(df.review.sum())},"
-          f" rows without value: {int(df.value.isna().sum())}")
-    if df.review.any():
+    review_count = int(df["review"].sum())  # type: ignore
+    unvalued_count = int(df["value"].isna().sum())  # type: ignore
+    print(f"\ntotal rows: {len(df)}, rows needing review: {review_count},"
+          f" rows without value: {unvalued_count}")
+    if review_count:
+        review_columns = ["id", "profession", "name", "effect", "value", "note"]
         print("\nrows to review:")
-        print(df[df.review][["id", "profession", "name", "effect", "value", "note"]]
-              .to_string(index=False, max_colwidth=60))
+        print(df.loc[df["review"], review_columns]
+              .to_string(index=False, max_colwidth=60))  # type: ignore
 
 
 if __name__ == "__main__":

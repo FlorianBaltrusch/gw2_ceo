@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 traits = pd.read_csv("assets/traits.csv")
 specializations = pd.read_csv("assets/specializations.csv")

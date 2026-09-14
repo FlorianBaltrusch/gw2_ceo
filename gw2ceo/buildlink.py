@@ -14,6 +14,8 @@ Layout of the binary payload (see wiki: Chat_link_format):
 import struct
 from base64 import b64decode, b64encode
 
+import pandas as pd
+
 import gw2ceo.general_data as gd
 from gw2ceo.api import get_api_data
 
@@ -29,7 +31,7 @@ def decode(link: str) -> dict:
     payload = link.strip().strip("[]").removeprefix("&")
     try:
         data = b64decode(payload, validate=True)
-    except Exception:
+    except ValueError:
         raise ValueError("That does not look like a chat link (expected [&DQ...=]).")
     if len(data) < 28 or data[0] != 0x0D:
         raise ValueError("This chat link is not a build template link.")
@@ -76,17 +78,17 @@ def encode(profession: str, selected_ids: list[int]) -> str:
     contain selected traits (minors need no encoding) and the selected skills."""
     if profession not in PROFESSION_CODES:
         raise ValueError(f"Unknown profession: {profession}")
-    table = gd.traits
-    rows = table[table["id"].isin(selected_ids)].drop_duplicates("id")
+    table: pd.DataFrame = gd.traits
+    rows = table.loc[table["id"].isin(selected_ids)].drop_duplicates(subset=["id"])
 
     # trait lines with the tier choices of the selected major traits
     lines = {}
-    for spec_name in rows[rows["kind"] == "trait"]["specialization"].unique():
-        specs = gd.specializations
-        spec_id = int(specs[specs["name"] == spec_name]["id"].iloc[0])
+    for spec_name in rows.loc[rows["kind"] == "trait", "specialization"].unique():
+        specs: pd.DataFrame = gd.specializations
+        spec_id = int(specs.loc[specs["name"] == spec_name, "id"].iloc[0])
         spec = get_api_data(f"specializations/{spec_id}")
         choices = [0, 0, 0]
-        spec_rows = rows[(rows["kind"] == "trait") & (rows["specialization"] == spec_name)]
+        spec_rows = rows.loc[(rows["kind"] == "trait") & (rows["specialization"] == spec_name)]
         for trait_id in spec_rows["id"]:
             if trait_id in spec["minor_traits"]:
                 continue
@@ -106,15 +108,15 @@ def encode(profession: str, selected_ids: list[int]) -> str:
     slots = {"Heal": [0], "Utility": [0, 0, 0], "Elite": [0]}
     palette_by_skill = {skill: palette for palette, skill
                         in get_api_data(f"professions/{profession}")["skills_by_palette"]}
-    for row in rows[rows["kind"] == "skill"].itertuples():
-        palette = palette_by_skill.get(row.id)
-        slot = slots.get(row.slot)
+    for row in rows.loc[rows["kind"] == "skill"].to_dict("records"):
+        palette = palette_by_skill.get(row["id"])
+        slot = slots.get(row["slot"])
         if palette is None or slot is None:
             continue
         try:
             slot[slot.index(0)] = palette
         except ValueError:
-            raise ValueError(f"More than {len(slot)} {row.slot.lower()} skills selected.")
+            raise ValueError(f"More than {len(slot)} {row['slot'].lower()} skills selected.")
 
     data = bytearray([0x0D, PROFESSION_CODES.index(profession) + 1])
     ordered = sorted(lines.items(), key=lambda item: item[1][0])  # elite line last

@@ -1,9 +1,10 @@
-import numpy as np
-import pandas as pd
 from functools import cache
 
-from gw2ceo.general_data import gear_stats
+import numpy as np
+import pandas as pd
+
 from gw2ceo.dtypes import BuildConstraints
+from gw2ceo.general_data import gear_stats
 
 
 class GearSelect:
@@ -75,7 +76,7 @@ class GearSelect:
         add_group("Back item", 1, [min_gear["Back item"], maj_gear["Back item"]])
 
         # Jewels (upgrade slots of exotic trinkets)
-        num_jewels = num_ex.values[8:12].sum()
+        num_jewels = int(num_ex.iloc[8:12].sum())
         add_group("Jewels (in exotic trinkets)", num_jewels, spread(exotic, "Jewel", num_jewels))
 
         # memoize per instance (a class-level @cache would keep every
