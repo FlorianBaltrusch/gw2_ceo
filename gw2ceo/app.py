@@ -60,8 +60,14 @@ def specializations():
     profession = request.args.get("profession")
     if profession:
         table = table[table["profession"].str.lower() == profession.lower()]
+    def spec_icon(row):
+        tango = f"tango_{row['name']}.png"
+        if os.path.isfile(os.path.join("assets", "icons", tango)):
+            return "/icons/" + tango
+        return f"/icons/spec_{row['id']}.png"
+
     table = table.assign(
-        icon="/icons/spec_" + table["id"].astype(str) + ".png",
+        icon=table.apply(spec_icon, axis=1),
         background="/icons/spec_bg_" + table["id"].astype(str) + ".png",
     )
     return Response(table.to_json(orient="records"), mimetype="application/json")

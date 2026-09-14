@@ -26,9 +26,11 @@ import re
 
 import pandas as pd
 import requests
-from PIL import Image
+from PIL import Image, ImageChops
 
 from gw2ceo.api import get_api_data, get_api_data_bulk
+
+WIKI_API = "https://wiki.guildwars2.com/api.php"
 
 OVERRIDES_PATH = os.path.join("assets", "trait_overrides.csv")
 
@@ -160,17 +162,55 @@ def generate_specializations():
                 open(path, "wb").write(requests.get(url).content)
                 downloaded += 1
             if prefix == "spec_bg_" and os.path.isfile(path):
-                trim_transparent_border(path)
+                trim_banner_border(path)
     print(f"specializations: {len(df)} rows, {downloaded} images newly downloaded")
 
+    download_tango_icons(
+        list(get_api_data("professions")) + df[df["elite"]]["name"].tolist()
+    )
 
-def trim_transparent_border(path):
-    """The spec banners bleed into the in-game UI panel and carry large fully
-    transparent margins; crop to the painted area (idempotent)."""
-    image = Image.open(path)
-    bbox = image.getbbox()
+
+def trim_banner_border(path, threshold=16):
+    """The spec banners bleed into the in-game UI panel and pad the painted
+    area with fully transparent or pure-black margins; crop to the painted
+    area (idempotent). Only the border is inspected, so dark artwork in the
+    middle of a banner is safe."""
+    image = Image.open(path).convert("RGBA")
+    brightness = image.convert("L").point(lambda v: 255 if v > threshold else 0)
+    visible = image.getchannel("A").point(lambda v: 255 if v > 0 else 0)
+    content = ImageChops.multiply(brightness, visible)
+    bbox = content.getbbox()
     if bbox and bbox != (0, 0, *image.size):
         image.crop(bbox).save(path)
+
+
+def download_tango_icons(names, sizes=(200, 48)):
+    """Fetch the wiki's flat 'tango' icons for professions and elite
+    specializations into assets/icons/tango_<Name>.png, preferring the
+    largest available size."""
+    icon_dir = os.path.join("assets", "icons")
+    missing = [n for n in names
+               if not os.path.isfile(os.path.join(icon_dir, f"tango_{n}.png"))]
+    downloaded = 0
+    for size in sizes:
+        if not missing:
+            break
+        titles = "|".join(f"File:{name} tango icon {size}px.png" for name in missing)
+        response = requests.get(WIKI_API, params={
+            "action": "query", "format": "json", "prop": "imageinfo",
+            "iiprop": "url", "titles": titles,
+        }).json()
+        found = {}
+        for page in response["query"]["pages"].values():
+            if "imageinfo" in page:
+                name = page["title"].removeprefix("File:").removesuffix(f" tango icon {size}px.png")
+                found[name] = page["imageinfo"][0]["url"]
+        for name, url in found.items():
+            path = os.path.join(icon_dir, f"tango_{name}.png")
+            open(path, "wb").write(requests.get(url).content)
+            downloaded += 1
+        missing = [n for n in missing if n not in found]
+    print(f"tango icons: {downloaded} newly downloaded, unresolved: {missing or 'none'}")
 
 
 def spec_name(spec_id) -> str:

@@ -65,10 +65,9 @@ function renderSpecGrid(profession, eliteSpecs) {
   grid.innerHTML = "";
 
   // playing without an elite specialization is a valid choice
-  const professionIcon = `/icons/prof_${profession}.png`;
   grid.append(specTile({
     name: `Core ${profession}`,
-    icon: professionIcon,
+    icon: `/icons/tango_${profession}.png`,
     background: professionImage(profession),
     coreArt: true,
   }));
@@ -83,7 +82,10 @@ function specTile(spec) {
 
   const art = document.createElement("span");
   art.className = spec.coreArt ? "art core-art" : "art";
-  art.style.backgroundImage = `url("${spec.background}")`;
+  const artImage = document.createElement("img");
+  artImage.src = spec.background;
+  artImage.alt = "";
+  art.append(artImage);
 
   const label = document.createElement("span");
   label.className = "label";
