@@ -5,7 +5,10 @@ Created on Thu Nov 14 14:20:38 2024
 @author: baltrusch
 """
 # %% Imports
-from matplotlib.colors import LinearSegmentedColormap
+try:
+    from matplotlib.colors import LinearSegmentedColormap
+except ImportError:  # matplotlib is optional: the color constants work without it
+    LinearSegmentedColormap = None
 
 # %% Define colors
 aureus = '#edb227ff'
@@ -52,4 +55,5 @@ cmap_colors = [
     incandescent
 ]
 
-crucible = LinearSegmentedColormap.from_list("crucible", cmap_colors, N=256)
+if LinearSegmentedColormap is not None:
+    crucible = LinearSegmentedColormap.from_list("crucible", cmap_colors, N=256)

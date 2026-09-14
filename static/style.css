@@ -1,13 +1,15 @@
 /* ---------- base ---------- */
 
 :root {
-  --bg: #0e0e12;
-  --bg-card: #17171d;
-  --border: #2a2a33;
+  /* palette comes from gw2ceo/custom_colors.py, served as /theme.css */
+  --gold: var(--aureus, #c8aa6e);
+  --accent: var(--ruby-red, #c02f2f);
+  --bg: color-mix(in srgb, var(--phthalo-blue, #001c67) var(--alpha-soft, 30%), var(--shadow-abyss, #000));
+  --bg-glow: color-mix(in srgb, var(--phthalo-blue, #001c67) var(--alpha-strong, 70%), var(--shadow-abyss, #000));
+  --bg-card: #101623;
+  --border: #28304a;
   --text: #e8e4da;
   --text-dim: #9a958a;
-  --accent: #c02f2f;       /* GW2 red */
-  --gold: #c8aa6e;         /* GW2 gold */
 }
 
 * { box-sizing: border-box; }
@@ -15,7 +17,7 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(ellipse at 50% -20%, #1c1c26 0%, var(--bg) 60%);
+  background: radial-gradient(ellipse at 50% -20%, var(--bg-glow) 0%, var(--bg) 60%);
   color: var(--text);
   font-family: system-ui, "Segoe UI", sans-serif;
   padding-inline: 16px;
@@ -43,7 +45,7 @@ button { font: inherit; cursor: pointer; }
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  background: radial-gradient(ellipse at 50% -20%, #23232e 0%, var(--bg) 70%);
+  background: radial-gradient(ellipse at 50% -20%, var(--bg-glow) 0%, var(--bg) 70%);
   padding: 40px 16px 60px;
   animation: overlay-in .35s ease;
 }
@@ -95,7 +97,8 @@ button { font: inherit; cursor: pointer; }
   right: 6%;
   bottom: 30px;
   height: 70px;
-  background: radial-gradient(ellipse at 50% 50%, rgba(200, 170, 110, .16) 0%, transparent 70%);
+  background: radial-gradient(ellipse at 50% 50%,
+              color-mix(in srgb, var(--gold) var(--alpha-soft, 30%), transparent) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -190,7 +193,7 @@ button { font: inherit; cursor: pointer; }
 .spec-tile:hover, .spec-tile:focus-visible {
   transform: translateY(-4px);
   border-color: var(--accent);
-  box-shadow: 0 10px 30px rgba(192, 47, 47, .25);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) var(--alpha-soft, 30%), transparent);
   outline: none;
 }
 .spec-tile .label {

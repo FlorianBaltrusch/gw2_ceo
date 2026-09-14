@@ -6,6 +6,7 @@ from flask import Flask, jsonify, request, Response, send_from_directory
 from collections import Counter
 
 import gw2ceo.general_data as gd
+from gw2ceo import custom_colors
 from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.calculate import calc_ep
 from gw2ceo.profession import Profession
@@ -23,6 +24,17 @@ ARMOR_SLOTS = ["onehanded", "twohanded", "chest", "legs", "head", "shoulders",
 @app.route("/")
 def index():
     return app.send_static_file("index.html")
+
+
+@app.route("/theme.css")
+def theme_css():
+    """CSS variables generated from gw2ceo/custom_colors.py (single source of truth)."""
+    colors = {name: value for name, value in vars(custom_colors).items()
+              if isinstance(value, str) and value.startswith("#")}
+    lines = [f"  --{name.replace('_', '-')}: {value[:7]};" for name, value in colors.items()]
+    lines += ["  --alpha-strong: 70%;", "  --alpha-soft: 30%;"]
+    css = ":root {\n" + "\n".join(lines) + "\n}\n"
+    return Response(css, mimetype="text/css")
 
 
 @app.route("/profession-images/<folder>/<filename>")
