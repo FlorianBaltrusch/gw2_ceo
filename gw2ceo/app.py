@@ -60,15 +60,21 @@ def specializations():
     profession = request.args.get("profession")
     if profession:
         table = table[table["profession"].str.lower() == profession.lower()]
+    def versioned_icon(filename):
+        """Icon URL stamped with the file's mtime, so browsers can cache long
+        but always fetch a fresh copy when the image content changes."""
+        path = os.path.join("assets", "icons", filename)
+        return f"/icons/{filename}?v={int(os.path.getmtime(path))}"
+
     def spec_icon(row):
         tango = f"tango_{row['name']}.png"
         if os.path.isfile(os.path.join("assets", "icons", tango)):
-            return "/icons/" + tango
-        return f"/icons/spec_{row['id']}.png"
+            return versioned_icon(tango)
+        return versioned_icon(f"spec_{row['id']}.png")
 
     table = table.assign(
         icon=table.apply(spec_icon, axis=1),
-        background="/icons/spec_bg_" + table["id"].astype(str) + ".png",
+        background=table["id"].apply(lambda spec_id: versioned_icon(f"spec_bg_{spec_id}.png")),
     )
     return Response(table.to_json(orient="records"), mimetype="application/json")
 
