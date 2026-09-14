@@ -22,9 +22,59 @@
   </header>
 
   <main id="main" class="main hidden">
-    <div class="placeholder-card">
-      <h2>Traits &amp; gear selection</h2>
-      <p>This is where trait, signet and armor selection will live — coming next.</p>
+    <div class="builder">
+
+      <section class="panel">
+        <h2>Traits &amp; skills</h2>
+        <p class="hint">Tick what your build runs. Conditional bonuses count at full uptime —
+          the condition is noted, you judge whether it holds.</p>
+        <div id="trait-groups"></div>
+      </section>
+
+      <aside class="panel">
+        <h2>Gear</h2>
+
+        <div class="control-row">
+          <span class="control-label">Attributes per piece</span>
+          <div class="segmented" id="env-choice">
+            <button type="button" data-value="3p" class="active">3 stats</button>
+            <button type="button" data-value="4p">4 stats</button>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Weapon</span>
+          <div class="segmented" id="weapon-choice">
+            <button type="button" data-value="2h" class="active">Two-handed</button>
+            <button type="button" data-value="1h">Two one-handed</button>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Ascended pieces
+            <button type="button" id="all-asc" class="mini-button">all</button>
+            <button type="button" id="all-exo" class="mini-button">none</button>
+          </span>
+          <div id="slot-grid" class="slot-grid"></div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Boons &amp; consumables</span>
+          <label class="check"><input type="checkbox" id="opt-fury" checked> Fury</label>
+          <label class="check might">Might
+            <input type="range" id="opt-might" min="0" max="25" value="25">
+            <output id="might-value">25</output>
+          </label>
+          <label class="check"><input type="checkbox" id="opt-food" checked> Food</label>
+          <label class="check"><input type="checkbox" id="opt-utility" checked> Sharpening stones</label>
+        </div>
+
+        <button type="button" id="optimize" class="cta">Optimize</button>
+
+        <div id="calc-error" class="calc-error hidden"></div>
+        <div id="result" class="result hidden"></div>
+      </aside>
+
     </div>
   </main>
 

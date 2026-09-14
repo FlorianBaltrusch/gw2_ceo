@@ -1,3 +1,4 @@
+import json
 import os
 
 import numpy as np
@@ -98,27 +99,33 @@ def icon(filename):
 
 @app.route("/calculate")
 def calculate():
-    trait_ids = [int(trait_id) for trait_id in request.args.getlist("traits[]")]
-    profession = Profession(trait_ids, profession=request.args.get("profession"))
+    try:
+        trait_ids = [int(trait_id) for trait_id in request.args.getlist("traits[]")]
+        profession = Profession(trait_ids, profession=request.args.get("profession"))
 
-    armor = request.args.getlist("armor[]")
-    armor = [piece.replace("1", "").replace("2", "") for piece in armor]
-    armor = Counter(armor)
-    num_ascended = [armor[slot] for slot in ARMOR_SLOTS]
+        armor = request.args.getlist("armor[]")
+        armor = [piece.replace("1", "").replace("2", "") for piece in armor]
+        armor = Counter(armor)
+        num_ascended = [armor[slot] for slot in ARMOR_SLOTS]
 
-    constraints = BuildConstraints(
-        gear_environment=request.args.get("parameters"),
-        weapon_type=request.args.get("handedness"),
+        constraints = BuildConstraints(
+            gear_environment=request.args.get("parameters"),
+            weapon_type=request.args.get("handedness"),
 
-        num_ascended=np.array(num_ascended),  # order as in ARMOR_SLOTS
+            num_ascended=np.array(num_ascended),  # order as in ARMOR_SLOTS
 
-        food=True,
-        utility=True,
+            food=request.args.get("food", "true") == "true",
+            utility=request.args.get("utility", "true") == "true",
 
-        fury=request.args.get("fury") == "true",
-        might=int(request.args.get("might"))
-    )
+            fury=request.args.get("fury") == "true",
+            might=int(request.args.get("might", "25"))
+        )
 
-    suggestion = calc_ep(profession, constraints)
+        suggestion = calc_ep(profession, constraints)
+    except (ValueError, NotImplementedError) as error:
+        return jsonify({"error": str(error)}), 400
 
-    return Response(suggestion.to_json(), mimetype='application/json')
+    result = json.loads(suggestion.to_json())
+    result["total_infusions"] = int(gd.num_infusions(constraints.num_ascended,
+                                                     constraints.weapon_type))
+    return jsonify(result)
