@@ -200,8 +200,17 @@ async function loadBuilder() {
   container.innerHTML = "";
   const specByName = new Map(specs.map(s => [s.name, s]));
 
+  // order like the in-game trait tree: tiers left to right, within a tier
+  // the minor first, then the major choices top to bottom
+  const byTraitTree = (a, b) =>
+    (Number(a.tier) || 0) - (Number(b.tier) || 0)
+    || (a.slot === "Minor" ? 0 : 1) - (b.slot === "Minor" ? 0 : 1)
+    || (Number(a.position) || 0) - (Number(b.position) || 0);
+
   for (const section of sections) {
-    const sectionEntries = entries.filter(e => e.kind === "trait" && e.specialization === section);
+    const sectionEntries = entries
+      .filter(e => e.kind === "trait" && e.specialization === section)
+      .sort(byTraitTree);
     if (sectionEntries.length) {
       container.append(traitGroup(section, specByName.get(section)?.icon, sectionEntries));
     }

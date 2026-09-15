@@ -237,6 +237,7 @@ def main():
     icons = {}
     trait_slots = {}
     trait_tiers = {}
+    trait_positions = {}
 
     for prof_name in get_api_data("professions"):
         profession = get_api_data(f"professions/{prof_name}")
@@ -248,6 +249,7 @@ def main():
                 icons[trait["id"]] = trait.get("icon", "")
                 trait_slots[trait["id"]] = trait.get("slot", "")
                 trait_tiers[trait["id"]] = trait.get("tier", "")
+                trait_positions[trait["id"]] = trait.get("order", "")
                 for effect, source, value, note, review in extract_facts(trait.get("facts", [])):
                     rows.append({
                         "id": trait["id"],
@@ -314,6 +316,9 @@ def main():
     is_trait = df["kind"] == "trait"
     df.loc[is_trait, "slot"] = df.loc[is_trait, "id"].map(trait_slots)  # type: ignore
     df.loc[is_trait, "tier"] = df.loc[is_trait, "id"].map(trait_tiers)  # type: ignore
+    # position within the tier column (top/middle/bottom in the trait tree);
+    # skills have no position and stay empty
+    df["position"] = df["id"].map(trait_positions)  # type: ignore
     df.to_csv("assets/traits.csv", index=False)
     download_icons(df)
     generate_specializations()
