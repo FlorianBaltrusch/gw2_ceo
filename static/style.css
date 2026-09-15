@@ -232,11 +232,14 @@ button { font: inherit; cursor: pointer; }
   min-height: 0;
   padding: 6px;       /* breathing room so the art doesn't touch the edges */
 }
-.spec-tile .art img {              /* contain: the full painting, never cropped */
+.spec-tile .art img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: left center;    /* the banner art puts its character on the left */
+  /* cover: every banner fills the strip; the older (taller) banners lose a
+     little splash-fade top and bottom, the wide ones a little of the right
+     tail - the character always sits on the left and stays safe */
+  object-fit: cover;
+  object-position: left center;
 }
 .spec-tile .art.core-art {         /* core has no banner: an emblem card instead */
   display: flex;
