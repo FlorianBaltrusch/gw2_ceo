@@ -149,8 +149,16 @@ el("change-selection").addEventListener("click", reopenSelection);
 
 const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
 
+// fact labels that merely restate the stat add nothing next to "+200 power"
+const REDUNDANT_NOTES = new Set([
+  "power", "precision", "ferocity", "vitality",
+  "power increase", "precision increase", "ferocity increase", "vitality increase",
+  "attribute conversion", "critical chance increase", "critical damage increase",
+]);
+
 function effectText(row) {
-  const condition = row.note ? ` — ${row.note}` : "";
+  const meaningful = row.note && !REDUNDANT_NOTES.has(row.note.toLowerCase());
+  const condition = meaningful ? ` — ${row.note}` : "";
   switch (row.effect) {
     case "crit_chance":     return `+${row.value}% critical chance${condition}`;
     case "crit_damage_pct": return `+${row.value}% critical damage${condition}`;
@@ -167,6 +175,7 @@ function effectText(row) {
 
 async function loadBuilder() {
   state.selectedTraits = new Set();
+  state.conditionHints = [];
   el("result").classList.add("hidden");
   el("calc-error").classList.add("hidden");
 
@@ -224,6 +233,25 @@ async function loadBuilder() {
   }
   state.pendingIds = null;
   updateBuildWarnings();
+  updateConditionHints();
+}
+
+// mirror the solver's gating (requires fury / might >= 10) in the trait list
+function updateConditionHints() {
+  const furyOn = el("opt-fury").checked;
+  const might = Number(el("opt-might").value);
+  for (const hint of state.conditionHints || []) {
+    const unmet = [];
+    if (hint.requiresSet.has("fury") && !furyOn) unmet.push("Fury");
+    if (hint.requiresSet.has("might") && might < 10) unmet.push("≥10 might");
+    if (unmet.length) {
+      const scope = hint.gated === hint.total ? "Ineffective" : "Partly ineffective";
+      hint.span.textContent = `⚠ ${scope} with current settings — needs ${unmet.join(" and ")}.`;
+      hint.span.classList.remove("hidden");
+    } else {
+      hint.span.classList.add("hidden");
+    }
+  }
 }
 
 // in-game constraints the optimizer itself does not enforce: only one major
@@ -378,6 +406,20 @@ function traitGroup(title, iconSrc, groupEntries) {
     effects.textContent = entry.effects.map(effectText).join(" · ");
     info.append(nameLine, effects);
 
+    // live hint when fury/might settings deactivate (part of) this trait
+    const requiresSet = new Set(entry.effects.map(e => e.requires).filter(Boolean));
+    if (requiresSet.size) {
+      const hint = document.createElement("span");
+      hint.className = "trait-condition hidden";
+      info.append(hint);
+      state.conditionHints.push({
+        span: hint,
+        requiresSet,
+        gated: entry.effects.filter(e => e.requires).length,
+        total: entry.effects.length,
+      });
+    }
+
     label.append(box, icon, info);
     group.append(label);
   }
@@ -448,7 +490,9 @@ el("all-exo").addEventListener("click", () => {
 
 el("opt-might").addEventListener("input", () => {
   el("might-value").textContent = el("opt-might").value;
+  updateConditionHints();
 });
+el("opt-fury").addEventListener("change", updateConditionHints);
 
 renderSlotGrid();
 

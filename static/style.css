@@ -360,6 +360,11 @@ button { font: inherit; cursor: pointer; }
   color: var(--text-dim);
 }
 .trait.disabled { opacity: .45; cursor: not-allowed; }
+.trait-condition {
+  display: block;
+  font-size: .8rem;
+  color: var(--gold);
+}
 
 /* gear controls */
 
