@@ -27,3 +27,7 @@ class BuildConstraints:
 
     fury: bool
     might: int
+
+    # allow Perception/Bloodlust (25-stack sigils) in the second sigil slot;
+    # off for content where stacks are unrealistic (raids, frequent downs)
+    stacking_sigils: bool = True

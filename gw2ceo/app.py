@@ -145,7 +145,9 @@ def calculate():
             utility=request.args.get("utility", "true") == "true",
 
             fury=request.args.get("fury") == "true",
-            might=int(request.args.get("might", "25"))
+            might=int(request.args.get("might", "25")),
+
+            stacking_sigils=request.args.get("stacking", "true") == "true",
         )
 
         suggestion, sigil_fallback = calc_ep(profession, constraints)

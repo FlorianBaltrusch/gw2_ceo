@@ -29,6 +29,8 @@ def calc_ep(profession: Profession, build: BuildConstraints):
         "sigil_precision": [0.0, 0.0, float(gd.general_buffs.sigil_perception), 0.0],
         "sigil_power": [0.0, 0.0, 0.0, float(gd.general_buffs.sigil_bloodlust)],
     })
+    if not build.stacking_sigils:
+        sigils = sigils.loc[~sigils["sigil"].isin(["perception", "bloodlust"])]
     num_infusions = gd.num_infusions(build.num_ascended, build.weapon_type)
     infusions = pd.DataFrame(data={"prec_infusions": list(range(num_infusions+1)), "precision_inf": [5*i for i in range(num_infusions+1)], "power_inf": [5*(num_infusions-i) for i in range(num_infusions+1)], "ferocity_inf": [0]*(num_infusions+1)})
 

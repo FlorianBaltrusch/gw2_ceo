@@ -473,6 +473,7 @@ async function optimize() {
   params.set("might", el("opt-might").value);
   params.set("food", el("opt-food").checked);
   params.set("utility", el("opt-utility").checked);
+  params.set("stacking", el("opt-stacking").checked);
 
   const errorBox = el("calc-error");
   const resultBox = el("result");
