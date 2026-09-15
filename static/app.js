@@ -464,6 +464,21 @@ const SIGIL_SHORT = {
   bloodlust: "Bloodlust",
   impact: "Impact (or Night)",
 };
+const UTILITY_NAMES = {
+  stones: "Superior Sharpening Stone",
+  writ_accuracy: "Writ of Masterful Accuracy (+200 precision above 90% health)",
+  writ_strength: "Writ of Masterful Strength (+200 power above 90% health)",
+  none: "none",
+};
+
+// mixed rune sets from the rescue pass look like "scholar(4)+eagle(2)"
+function runeName(rune) {
+  if (!rune.includes("(")) return RUNE_NAMES[rune] || capitalize(rune);
+  return rune.split("+").map(part => {
+    const match = part.match(/(\w+)\((\d)\)/);
+    return `${match[2]}× ${RUNE_NAMES[match[1]] || capitalize(match[1])}`;
+  }).join(" + ");
+}
 
 async function optimize() {
   const button = el("optimize");
@@ -548,8 +563,9 @@ function renderResult(r, env) {
 
   const list = document.createElement("dl");
   const facts = [
-    ["Rune", RUNE_NAMES[r.rune] || capitalize(r.rune)],
+    ["Rune", runeName(r.rune)],
     ["Food", FOOD_NAMES[r.food] || capitalize(r.food)],
+    ["Utility", UTILITY_NAMES[r.utility] || capitalize(String(r.utility))],
     ["Second sigil (next to Force)", SIGIL_NAMES[r.sigil] || capitalize(String(r.sigil))],
     ["Precision infusions", `${r.prec_infusions} of ${r.total_infusions} (rest power)`],
   ];
@@ -592,6 +608,8 @@ function renderResult(r, env) {
     equipmentList.append(dt, dd);
   };
   addEquipmentRow("Sigils", `Force + ${SIGIL_SHORT[r.sigil] || capitalize(String(r.sigil))}`);
+  addEquipmentRow("Relic", "free choice — damage relics (Thief, Fireworks, Claw, …) don't affect the cap");
+  addEquipmentRow("Jade bot core", "Tier 10 (+235 vitality, already counted)");
   if (r.equipment) {
     for (const group of r.equipment) {
       const names = group.slot.startsWith("Jewels") ? PREFIX_NAMES[env].jewels : PREFIX_NAMES[env];
@@ -600,16 +618,24 @@ function renderResult(r, env) {
   }
   resultBox.append(heading, equipmentList);
 
-  if (r.sigil_fallback) {
-    const fb = r.sigil_fallback;
+  const fallbackNote = (fb, intro) => {
     const delta = ((fb.effective_power / r.effective_power - 1) * 100).toFixed(1);
     const note = document.createElement("p");
     note.className = "warning";
-    note.textContent = `Stacking sigils lose their stacks on downstate. Stack-independent ` +
-      `alternative: ${SIGIL_NAMES[fb.sigil]} — ${Math.round(fb.effective_power).toLocaleString("en-US")} EP ` +
-      `(${delta}%) with ${RUNE_NAMES[fb.rune] || fb.rune}, ${FOOD_NAMES[fb.food] || fb.food}, ` +
+    note.textContent = `${intro}: ${SIGIL_NAMES[fb.sigil]} sigil, ` +
+      `${UTILITY_NAMES[fb.utility] || fb.utility} — ` +
+      `${Math.round(fb.effective_power).toLocaleString("en-US")} EP (${delta}%) with ` +
+      `${runeName(fb.rune)}, ${FOOD_NAMES[fb.food] || fb.food}, ` +
       `${fb.prec_infusions} precision infusions.`;
     resultBox.append(note);
+  };
+  if (r.sigil_fallback) {
+    fallbackNote(r.sigil_fallback,
+      "Stacking sigils lose their stacks on downstate. Stack-independent alternative");
+  }
+  if (r.utility_fallback) {
+    fallbackNote(r.utility_fallback,
+      "The accuracy writ needs >90% health to keep the cap. Stable alternative");
   }
 
   if (r.absolute_overshoot > 0) {

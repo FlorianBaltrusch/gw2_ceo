@@ -148,22 +148,30 @@ def calculate():
             might=int(request.args.get("might", "25")),
 
             stacking_sigils=request.args.get("stacking", "true") == "true",
+            writs=request.args.get("writs", "true") == "true",
         )
 
-        suggestion, sigil_fallback = calc_ep(profession, constraints)
+        solution = calc_ep(profession, constraints)
     except (ValueError, NotImplementedError) as error:
         return jsonify({"error": str(error)}), 400
 
+    suggestion = solution["best"]
     result = json.loads(suggestion.to_json())
-    result["sigil_fallback"] = None
-    if sigil_fallback is not None:
-        result["sigil_fallback"] = {
-            "sigil": sigil_fallback["sigil"],
-            "effective_power": float(sigil_fallback["effective_power"]),
-            "rune": sigil_fallback["rune"],
-            "food": sigil_fallback["food"],
-            "prec_infusions": int(sigil_fallback["prec_infusions"]),
+
+    def fallback_summary(row):
+        if row is None:
+            return None
+        return {
+            "sigil": row["sigil"],
+            "utility": row["utility"],
+            "effective_power": float(row["effective_power"]),
+            "rune": row["rune"],
+            "food": row["food"],
+            "prec_infusions": int(row["prec_infusions"]),
         }
+
+    result["sigil_fallback"] = fallback_summary(solution["sigil_fallback"])
+    result["utility_fallback"] = fallback_summary(solution["utility_fallback"])
     result["total_infusions"] = int(gd.num_infusions(constraints.num_ascended,
                                                      constraints.weapon_type))
 

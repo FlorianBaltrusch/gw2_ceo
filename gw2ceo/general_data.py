@@ -3,6 +3,11 @@ import pandas as pd
 
 traits = pd.read_csv("assets/traits.csv")
 specializations = pd.read_csv("assets/specializations.csv")
+try:
+    # per-piece rune bonuses; optional - enables the mixed-rune rescue
+    rune_tiers = pd.read_csv("assets/rune_tiers.csv")
+except FileNotFoundError:
+    rune_tiers = None
 general_buffs = pd.read_csv("assets/general_buffs.csv", index_col=0).wert
 gear_stats = pd.read_csv("assets/gear_stats.csv", index_col=[0, 1, 2, 3]).value
 runes = pd.read_csv("assets/runes.csv", index_col=0)

@@ -31,3 +31,6 @@ class BuildConstraints:
     # allow Perception/Bloodlust (25-stack sigils) in the second sigil slot;
     # off for content where stacks are unrealistic (raids, frequent downs)
     stacking_sigils: bool = True
+
+    # allow the +200 writs (active above 90% health) in the utility slot
+    writs: bool = True

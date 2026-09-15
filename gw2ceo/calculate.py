@@ -6,23 +6,21 @@ from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.gearselect import GearSelect
 from gw2ceo.profession import Profession
 
+TARGET = 2995  # precision-equivalent for 100% critical chance at level 80
 
-def calc_ep(profession: Profession, build: BuildConstraints):
+# tie preferences at equal effective power (lower is preferred):
+# a damage sigil is a free bonus at night, stacking sigils are fragile
+SIGIL_PRIO = {"impact": 0, "accuracy": 1, "perception": 2, "bloodlust": 2}
+# sharpening stones last longer than writs; the accuracy writ additionally
+# puts the crit cap at risk below 90% health
+UTILITY_PRIO = {"none": 0, "stones": 0, "writ_strength": 1, "writ_accuracy": 2}
+FOOD_PRIO = {"truffle": 1, "curry": 2, "butternut": 2}
 
-    # target_start_value = 2995 - gd.general_buffs.base_precision - gd.general_buffs.fury * build.fury  # 1000 + 100*21 - 5*21 = 2995
-    # test_target_0 = target_start_value - gd.food.loc[food, "precision"] * build.food - gd.general_buffs.sigil_accuracy  # type:ignore  # und modifier
-    min_stats = gd.full_armor("Min", build.num_ascended, build.gear_environment, build.weapon_type)
-    maj_stats = gd.full_armor("Maj", build.num_ascended, build.gear_environment, build.weapon_type)     
 
-    if build.food:
-        food = gd.food
-    else:
-        food = pd.DataFrame(data={"power": [0], "precision": [0], "ferocity": [0]}, index=["no food"])
-        food.index.name = "food"
-
-    # candidates for the second sigil slot (the first holds a damage sigil like
-    # Force, which multiplies every option equally and cancels out of the
-    # comparison); the stacking sigils are modeled at their 25-stack maximum
+def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
+    """Candidates for the second sigil slot (the first holds a damage sigil
+    like Force, which multiplies every option equally and cancels out).
+    Stacking sigils are modeled at their 25-stack maximum."""
     sigils = pd.DataFrame(data={
         "sigil": ["none", "accuracy", "perception", "bloodlust"],
         "chance": [0.0, float(gd.general_buffs.sigil_accuracy), 0.0, 0.0],
@@ -31,106 +29,198 @@ def calc_ep(profession: Profession, build: BuildConstraints):
     })
     if not build.stacking_sigils:
         sigils = sigils.loc[~sigils["sigil"].isin(["perception", "bloodlust"])]
+    return sigils
+
+
+def _utility_candidates(build: BuildConstraints) -> pd.DataFrame:
+    """Candidates for the utility-consumable slot: sharpening stones (handled
+    as a conversion later) against the flat +200 writs (active above 90%
+    health)."""
+    if not build.utility:
+        return pd.DataFrame(data={"utility": ["none"],
+                                  "util_precision": [0.0], "util_power": [0.0]})
+    utilities = pd.DataFrame(data={
+        "utility": ["stones", "writ_accuracy", "writ_strength"],
+        "util_precision": [0.0, float(gd.general_buffs.writ_precision), 0.0],
+        "util_power": [0.0, 0.0, float(gd.general_buffs.writ_power)],
+    })
+    if not build.writs:
+        utilities = utilities.loc[utilities["utility"] == "stones"]
+    return utilities
+
+
+def _mixed_runes() -> pd.DataFrame | None:
+    """All 5+1/4+2/3+3 two-rune mixes, built from the per-piece bonuses in
+    assets/rune_tiers.csv. Used only as a rescue when no full rune set can
+    hit the crit cap exactly - mixing creates finer precision steps."""
+    tiers = gd.rune_tiers
+    if tiers is None:
+        return None
+    cumulative = {}
+    for rune, group in tiers.groupby("rune"):
+        by_count = group.sort_values(by=["tier"])[["power", "precision", "ferocity"]].cumsum()
+        cumulative[rune] = by_count.set_axis(group.sort_values(by=["tier"])["tier"].tolist())
+    names = sorted(cumulative)
+    rows = {}
+    for first_index, first in enumerate(names):
+        for second in names[first_index + 1:]:
+            for count in range(1, 6):
+                mix = cumulative[first].loc[count] + cumulative[second].loc[6 - count]
+                rows[f"{first}({count})+{second}({6 - count})"] = mix
+    mixed = pd.DataFrame(rows).T
+    mixed.index.name = "rune"
+    return pd.concat([gd.runes, mixed])
+
+
+def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame) -> pd.DataFrame:
+    """Score every food x rune x sigil x utility x infusion combination and
+    return the fully ranked table."""
+    min_stats = gd.full_armor("Min", build.num_ascended, build.gear_environment, build.weapon_type)
+    maj_stats = gd.full_armor("Maj", build.num_ascended, build.gear_environment, build.weapon_type)
+
+    if build.food:
+        food = gd.food
+    else:
+        food = pd.DataFrame(data={"power": [0], "precision": [0], "ferocity": [0]}, index=["no food"])
+        food.index.name = "food"
+
     num_infusions = gd.num_infusions(build.num_ascended, build.weapon_type)
-    infusions = pd.DataFrame(data={"prec_infusions": list(range(num_infusions+1)), "precision_inf": [5*i for i in range(num_infusions+1)], "power_inf": [5*(num_infusions-i) for i in range(num_infusions+1)], "ferocity_inf": [0]*(num_infusions+1)})
+    infusions = pd.DataFrame(data={
+        "prec_infusions": list(range(num_infusions + 1)),
+        "precision_inf": [5 * i for i in range(num_infusions + 1)],
+        "power_inf": [5 * (num_infusions - i) for i in range(num_infusions + 1)],
+    })
 
-    food_rune_options = pd.merge(food.reset_index(), gd.runes.reset_index(), how="cross", suffixes=("_food", "_rune"))
-    food_rune_options = pd.merge(sigils, food_rune_options, how="cross", suffixes=("_sigil", ""))
-    food_rune_options = pd.merge(infusions, food_rune_options, how="cross", suffixes=("_inf", ""))
+    options = pd.merge(food.reset_index(), runes.reset_index(), how="cross", suffixes=("_food", "_rune"))
+    options = pd.merge(_sigil_candidates(build), options, how="cross")
+    options = pd.merge(_utility_candidates(build), options, how="cross")
+    options = pd.merge(infusions, options, how="cross")
 
-    food_rune_options[["power", "precision", "ferocity"]] = food_rune_options[["power_rune", "precision_rune", "ferocity_rune"]].values + food_rune_options[["power_food", "precision_food", "ferocity_food"]].values + food_rune_options[["power_inf", "precision_inf", "ferocity_inf"]].values  # type: ignore
-    stats = food_rune_options[["prec_infusions", "sigil", "sigil_precision", "sigil_power", "food", "rune", "power", "precision", "chance", "ferocity"]]
-    stats.precision = stats.precision.astype(float)
-    stats.power = stats.power.astype(float)
-    stats.ferocity = stats.ferocity.astype(float)
-    stats.chance = stats.chance.astype(float)
+    options["power"] = options["power_rune"] + options["power_food"] + options["power_inf"]
+    options["precision"] = options["precision_rune"] + options["precision_food"] + options["precision_inf"]
+    options["ferocity"] = options["ferocity_rune"] + options["ferocity_food"]
 
-    NUM_OPTIONS = food_rune_options.shape[0]
+    stats = options[["prec_infusions", "sigil", "sigil_precision", "sigil_power",
+                     "utility", "util_precision", "util_power",
+                     "food", "rune", "power", "precision", "chance", "ferocity"]].copy()
+    stats[["power", "precision", "ferocity", "chance"]] = \
+        stats[["power", "precision", "ferocity", "chance"]].astype(float)
 
-    TARGET = 2995
-    stats["precision"] += gd.general_buffs.base_precision + stats["sigil_precision"]
+    stats["precision"] += gd.general_buffs.base_precision + stats["sigil_precision"] + stats["util_precision"]
     stats["chance"] += profession.additional_crit_chance()
-    if build.fury: stats["chance"] += gd.general_buffs.fury
+    if build.fury:
+        stats["chance"] += gd.general_buffs.fury
     stats["precision"] += profession.additional_precision()
-    
-    # calculate stats
-    stats["power"] += gd.general_buffs.base_power + gd.general_buffs.might * build.might/25 + profession.additional_power() + profession.power_per_might() * build.might + stats["sigil_power"] # type: ignore
-    stats["ferocity"] += profession.additional_ferocity() # type: ignore
-    stats["vitality"] = gd.general_buffs.base_vitality + gd.general_buffs.jade_bot + profession.additional_vitality()
 
-    #stats = np.row_stack(np.broadcast(stat_power, stat_precision, stat_ferocity, stat_vitality)) # type: ignore
+    stats["power"] += (gd.general_buffs.base_power
+                       + gd.general_buffs.might * build.might / 25
+                       + profession.additional_power()
+                       + profession.power_per_might() * build.might
+                       + stats["sigil_power"] + stats["util_power"])
+    stats["ferocity"] += profession.additional_ferocity()
+    stats["vitality"] = (gd.general_buffs.base_vitality + gd.general_buffs.jade_bot
+                         + profession.additional_vitality())
 
     vit_prec_conversion = profession.vit_prec_conversion()
-
     stats["precision"] += stats["vitality"] * vit_prec_conversion
 
     stats["remainder"] = TARGET - stats["precision"] - stats["chance"]
     stats["precision"] += stats["remainder"]
-    stats["armor_precision"] = 0
 
-    for i in range(NUM_OPTIONS):
-        if build.gear_environment == "3p":
-            stats.loc[i, "ferocity"] += min_stats
-            if stats.loc[i, "remainder"] > min_stats:
-                stats.loc[i, "armor_precision"] = stats.loc[i, "remainder"]
-                stats.loc[i, "power"] += min_stats + maj_stats - stats.loc[i, "armor_precision"]
-            else:
-                stats.loc[i, "armor_precision"] = (stats.loc[i, "remainder"] - min_stats * vit_prec_conversion) / (1 - vit_prec_conversion)
-                stats.loc[i, "power"] += maj_stats
-                stats.loc[i, "vitality"] += min_stats - stats.loc[i, "armor_precision"]
-        else:
-            stats.loc[i, "armor_precision"] = stats.loc[i, "remainder"] - min_stats * vit_prec_conversion
-            stats.loc[i, "power"] += maj_stats
-            stats.loc[i, "ferocity"] += min_stats + maj_stats - stats.loc[i, "armor_precision"]
-            stats.loc[i, "vitality"] += min_stats
+    # distribute the armor's Maj/Min budget: the armor must contribute the
+    # remaining precision, the rest of its budget goes into power/ferocity
+    if build.gear_environment == "3p":
+        stats["ferocity"] += min_stats
+        high = stats["remainder"] > min_stats
+        armor_precision = np.where(
+            high,
+            stats["remainder"],
+            (stats["remainder"] - min_stats * vit_prec_conversion) / (1 - vit_prec_conversion),
+        )
+        stats["armor_precision"] = armor_precision
+        stats["power"] += np.where(high, min_stats + maj_stats - armor_precision, maj_stats)
+        stats["vitality"] += np.where(high, 0, min_stats - armor_precision)
+    else:
+        stats["armor_precision"] = stats["remainder"] - min_stats * vit_prec_conversion
+        stats["power"] += maj_stats
+        stats["ferocity"] += min_stats + maj_stats - stats["armor_precision"]
+        stats["vitality"] += min_stats
 
-        stats.loc[i, "vitality"], stats.loc[i, "power"], stats.loc[i, "ferocity"] = profession.stat_conversion(stats.loc[i, "vitality"], stats.loc[i, "power"], stats.loc[i, "precision"], stats.loc[i, "ferocity"]) # type: ignore
+    stats["vitality"], stats["power"], stats["ferocity"] = profession.stat_conversion(
+        stats["vitality"], stats["power"], stats["precision"], stats["ferocity"])
 
+    # sharpening stones convert precision and ferocity into power
+    stones = (stats["utility"] == "stones").astype(float)
+    stats["power"] += stones * (stats["precision"] * gd.general_buffs.stones_prec
+                                + stats["ferocity"] * gd.general_buffs.stones_fero)
 
-    if build.utility:
-        stats["power"] += stats["precision"] * gd.general_buffs.stones_prec
-        stats["power"] += stats["ferocity"] * gd.general_buffs.stones_fero
-
-    stats["ferocity_equivalent"] = profession.ferocity_equivalent(stats["ferocity"])
-
-    stats["effective_power"] = stats["power"] * (1.5 + stats["ferocity_equivalent"] / 1500)
-
-    gs = GearSelect(build)
-    stats["overshoot"] = [gs.overshoot_values(remainder) for remainder in stats["armor_precision"]]
-
-    stats["absolute_remainder"] = np.minimum(abs(stats["armor_precision"] - min_stats), abs(stats["armor_precision"] - maj_stats))
-
-    stats["food_prio"] = 0
-    stats.loc[:,"food_prio"] += (stats["food"] == "truffle") * 1
-    stats.loc[:,"food_prio"] += (stats["food"] == "curry") * 2
-    stats.loc[:,"food_prio"] += (stats["food"] == "butternut") * 2
-
-    
+    gear = GearSelect(build)
+    stats["overshoot"] = [gear.overshoot_values(remainder) for remainder in stats["armor_precision"]]
     stats["absolute_overshoot"] = [min(overshoot) for overshoot in stats["overshoot"]]
+    stats["exact"] = stats["absolute_overshoot"] == 0
+
+    # a forced overshoot eats into the armor budget, so rank those rows with
+    # the (approximate) honest effective power instead of the ideal one
+    stats["ferocity_equivalent"] = profession.ferocity_equivalent(stats["ferocity"])
+    stats["effective_power"] = ((stats["power"] - stats["absolute_overshoot"])
+                                * (1.5 + stats["ferocity_equivalent"] / 1500))
+
+    stats["absolute_remainder"] = np.minimum(abs(stats["armor_precision"] - min_stats),
+                                             abs(stats["armor_precision"] - maj_stats))
+    stats["food_prio"] = stats["food"].map(FOOD_PRIO).fillna(0)  # type: ignore
+    stats["utility_prio"] = stats["utility"].map(UTILITY_PRIO).fillna(0)  # type: ignore
 
     # the sigil-less rows become the "3% damage sigil" branch (Impact by day,
-    # Night at night - identical 3% baseline): same gear solution, EP scaled
+    # Night at night - identical 3% baseline): same gear solution, scaled EP
     impact = stats.loc[stats["sigil"] == "none"].copy()
     impact["sigil"] = "impact"
     impact["effective_power"] *= 1 + gd.general_buffs.sigil_impact
     stats = pd.concat([stats.loc[stats["sigil"] != "none"], impact], ignore_index=True)
+    stats["sigil_prio"] = stats["sigil"].map(SIGIL_PRIO).fillna(0)  # type: ignore
 
+    # hitting the cap exactly is the point of the tool; effective power only
+    # ranks within that, and the remaining keys break ties
     by, ascending = zip(
+        ("exact", False),
         ("effective_power", False),
-        ("absolute_overshoot", True),
         ("prec_infusions", True),
         ("absolute_remainder", True),
+        ("utility_prio", True),
+        ("sigil_prio", True),
         ("food_prio", True),
     )
+    stats.sort_values(by=list(by), ascending=list(ascending), inplace=True)  # type: ignore
+    return stats
 
-    stats.sort_values(by=list(by), ascending=list(ascending), inplace=True) # type: ignore
+
+def calc_ep(profession: Profession, build: BuildConstraints) -> dict:
+    stats = _solve(profession, build, gd.runes)
+
+    # rescue: when no full rune set can hit the cap exactly, mixed rune sets
+    # provide finer precision steps (only then - mixes are never preferred)
+    if not bool(stats.iloc[0]["exact"]):
+        extended_runes = _mixed_runes()
+        if extended_runes is not None:
+            rescued = _solve(profession, build, extended_runes)
+            if bool(rescued.iloc[0]["exact"]):
+                stats = rescued
+
     best = stats.iloc[0]
 
-    # a stacking sigil assumes 25 stacks; offer the best stack-independent
-    # option as well, so a downstate does not silently cost the crit cap
-    fallback = None
+    # stacking sigils assume 25 stacks; offer the best stack-independent
+    # option too, so a downstate does not silently cost the crit cap
+    sigil_fallback = None
     if best["sigil"] in ("perception", "bloodlust"):
         stable = stats.loc[stats["sigil"].isin(["accuracy", "impact"])]
         if not stable.empty:
-            fallback = stable.iloc[0]
-    return best, fallback
+            sigil_fallback = stable.iloc[0]
+
+    # the accuracy writ only works above 90% health; offer the best option
+    # whose crit cap does not depend on it
+    utility_fallback = None
+    if best["utility"] == "writ_accuracy":
+        stable = stats.loc[stats["utility"].isin(["stones", "writ_strength", "none"])]
+        if not stable.empty:
+            utility_fallback = stable.iloc[0]
+
+    return {"best": best, "sigil_fallback": sigil_fallback, "utility_fallback": utility_fallback}
