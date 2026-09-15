@@ -452,6 +452,12 @@ const FOOD_NAMES = {
   curry: "Bowl of Curry Butternut Squash Soup",
   "no food": "none",
 };
+const SIGIL_NAMES = {
+  accuracy: "Accuracy (+7% crit)",
+  perception: "Perception (+250 precision at 25 stacks)",
+  bloodlust: "Bloodlust (+250 power at 25 stacks)",
+  impact: "Impact (+3%) — or Night, +10% at night",
+};
 
 async function optimize() {
   const button = el("optimize");
@@ -531,7 +537,7 @@ function renderResult(r, env) {
   const facts = [
     ["Rune", RUNE_NAMES[r.rune] || capitalize(r.rune)],
     ["Food", FOOD_NAMES[r.food] || capitalize(r.food)],
-    ["Sigil of Accuracy", r.sigil ? "yes" : "no"],
+    ["Second sigil (next to Force)", SIGIL_NAMES[r.sigil] || capitalize(String(r.sigil))],
     ["Precision infusions", `${r.prec_infusions} of ${r.total_infusions} (rest power)`],
   ];
   for (const [term, value] of facts) {
@@ -575,6 +581,18 @@ function renderResult(r, env) {
       equipmentList.append(dt, dd);
     }
     resultBox.append(heading, equipmentList);
+  }
+
+  if (r.sigil_fallback) {
+    const fb = r.sigil_fallback;
+    const delta = ((fb.effective_power / r.effective_power - 1) * 100).toFixed(1);
+    const note = document.createElement("p");
+    note.className = "warning";
+    note.textContent = `Stacking sigils lose their stacks on downstate. Stack-independent ` +
+      `alternative: ${SIGIL_NAMES[fb.sigil]} — ${Math.round(fb.effective_power).toLocaleString("en-US")} EP ` +
+      `(${delta}%) with ${RUNE_NAMES[fb.rune] || fb.rune}, ${FOOD_NAMES[fb.food] || fb.food}, ` +
+      `${fb.prec_infusions} precision infusions.`;
+    resultBox.append(note);
   }
 
   if (r.absolute_overshoot > 0) {

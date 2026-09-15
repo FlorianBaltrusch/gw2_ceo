@@ -9,3 +9,6 @@ jade_bot,235.0
 sigil_accuracy,147.0
 stones_prec,0.03
 stones_fero,0.06
+sigil_impact,0.03
+sigil_perception,250.0
+sigil_bloodlust,250.0

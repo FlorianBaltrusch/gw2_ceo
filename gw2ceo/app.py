@@ -148,11 +148,20 @@ def calculate():
             might=int(request.args.get("might", "25"))
         )
 
-        suggestion = calc_ep(profession, constraints)
+        suggestion, sigil_fallback = calc_ep(profession, constraints)
     except (ValueError, NotImplementedError) as error:
         return jsonify({"error": str(error)}), 400
 
     result = json.loads(suggestion.to_json())
+    result["sigil_fallback"] = None
+    if sigil_fallback is not None:
+        result["sigil_fallback"] = {
+            "sigil": sigil_fallback["sigil"],
+            "effective_power": float(sigil_fallback["effective_power"]),
+            "rune": sigil_fallback["rune"],
+            "food": sigil_fallback["food"],
+            "prec_infusions": int(sigil_fallback["prec_infusions"]),
+        }
     result["total_infusions"] = int(gd.num_infusions(constraints.num_ascended,
                                                      constraints.weapon_type))
 
