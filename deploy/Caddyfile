@@ -1,0 +1,13 @@
+# Caddy reverse proxy for the GW2 Critical Effect Optimizer.
+#
+# Replace ceo.example.com with your domain (its DNS A record must point to
+# this server), then:
+#   sudo cp deploy/Caddyfile /etc/caddy/Caddyfile
+#   sudo systemctl reload caddy
+#
+# Caddy obtains and renews the HTTPS certificate automatically.
+
+ceo.example.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:8000
+}

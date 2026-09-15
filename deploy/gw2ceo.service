@@ -1,0 +1,23 @@
+# systemd unit for the GW2 Critical Effect Optimizer.
+#
+# Fill in the two ADJUST lines, then:
+#   sudo cp deploy/gw2ceo.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now gw2ceo
+
+[Unit]
+Description=GW2 Critical Effect Optimizer
+After=network.target
+
+[Service]
+# ADJUST: the linux user that owns the checkout
+User=deploy
+# ADJUST: where the repository is cloned (gunicorn must run from the repo
+# root - the app loads assets/ via relative paths)
+WorkingDirectory=/opt/gw2_ceo
+ExecStart=/opt/gw2_ceo/.venv/bin/gunicorn --workers 2 --bind 127.0.0.1:8000 gw2ceo.app:app
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
