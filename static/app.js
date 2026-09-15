@@ -510,11 +510,17 @@ async function optimize() {
   }
 }
 
-// which stat combination a precision-major / precision-minor piece is
+// which stat combination a precision-major / precision-minor piece is;
+// jewels come in the same prefixes, named after their gem
 const PREFIX_NAMES = {
-  "3p": { major: "Assassin's", minor: "Berserker's" },
-  "4p": { major: "Marauder", minor: "Dragon's" },
-  jewels: { major: "precision", minor: "power" },
+  "3p": {
+    major: "Assassin's", minor: "Berserker's",
+    jewels: { major: "Assassin's (Opal Jewel)", minor: "Berserker's (Ruby Jewel)" },
+  },
+  "4p": {
+    major: "Marauder", minor: "Dragon's",
+    jewels: { major: "Marauder (Ebony Jewel)", minor: "Dragon's (Jade Jewel)" },
+  },
 };
 
 function equipmentLine(group, names) {
@@ -588,7 +594,7 @@ function renderResult(r, env) {
   addEquipmentRow("Sigils", `Force + ${SIGIL_SHORT[r.sigil] || capitalize(String(r.sigil))}`);
   if (r.equipment) {
     for (const group of r.equipment) {
-      const names = group.slot.startsWith("Jewels") ? PREFIX_NAMES.jewels : PREFIX_NAMES[env];
+      const names = group.slot.startsWith("Jewels") ? PREFIX_NAMES[env].jewels : PREFIX_NAMES[env];
       addEquipmentRow(group.slot, equipmentLine(group, names));
     }
   }
