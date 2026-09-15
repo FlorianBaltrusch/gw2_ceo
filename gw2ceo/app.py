@@ -162,9 +162,20 @@ def calculate():
     assignment = next(gear.get_equipment(suggestion["armor_precision"]), None)
     result["equipment"] = None
     if assignment is not None:
+        groups = [(label, int(count), int(major))
+                  for (label, count), major in zip(gear.groups, assignment)
+                  if count > 0]
+
+        # the rarity suffix only matters when a slot family actually mixes
+        # rarities (e.g. one ascended and one exotic ring); otherwise the
+        # label would just echo the user's own toggles
+        def family(label):
+            return label.removesuffix(" (ascended)").removesuffix(" (exotic)")
+
+        families = Counter(family(label) for label, _, _ in groups)
         result["equipment"] = [
-            {"slot": label, "pieces": int(count), "precision_major": int(major)}
-            for (label, count), major in zip(gear.groups, assignment)
-            if count > 0
+            {"slot": family(label) if families[family(label)] == 1 else label,
+             "pieces": pieces, "precision_major": major}
+            for label, pieces, major in groups
         ]
     return jsonify(result)
