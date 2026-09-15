@@ -501,6 +501,8 @@ renderSlotGrid();
 const RUNE_NAMES = {
   scholar: "Scholar", dragonh: "Dragonhunter", gole: "Golemancer", deadeye: "Deadeye",
   eagle: "Eagle", infil: "Infiltration", ranger: "Ranger",
+  ogre: "Ogre", spellbreaker: "Spellbreaker", vampirism: "Vampirism",
+  holosmith: "Holosmith", wurm: "Wurm", warrior: "Warrior",
 };
 const FOOD_NAMES = {
   butternut: "Bowl of Butternut Squash Soup",

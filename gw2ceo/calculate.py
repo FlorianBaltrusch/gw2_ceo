@@ -70,7 +70,7 @@ def _mixed_runes() -> pd.DataFrame | None:
         return None
     cumulative = {}
     for rune, group in tiers.groupby("rune"):
-        by_count = group.sort_values(by=["tier"])[["power", "precision", "ferocity"]].cumsum()
+        by_count = group.sort_values(by=["tier"])[["power", "precision", "ferocity", "vitality"]].cumsum()
         cumulative[rune] = by_count.set_axis(group.sort_values(by=["tier"])["tier"].tolist())
     names = sorted(cumulative)
     rows = {}
@@ -112,10 +112,13 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     options["power"] = options["power_rune"] + options["power_food"] + options["power_inf"]
     options["precision"] = options["precision_rune"] + options["precision_food"] + options["precision_inf"]
     options["ferocity"] = options["ferocity_rune"] + options["ferocity_food"]
+    # only runes carry vitality among the merged tables, so no suffix applied
+    options = options.rename(columns={"vitality": "vitality_rune"})
 
     stats = options[["prec_infusions", "sigil", "sigil_precision", "sigil_power",
                      "utility", "util_precision", "util_power", "relic", "relic_chance",
-                     "food", "rune", "power", "precision", "chance", "ferocity"]].copy()
+                     "food", "rune", "power", "precision", "chance", "ferocity",
+                     "vitality_rune"]].copy()
     stats[["power", "precision", "ferocity", "chance"]] = \
         stats[["power", "precision", "ferocity", "chance"]].astype(float)
 
@@ -132,7 +135,7 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
                        + stats["sigil_power"] + stats["util_power"])
     stats["ferocity"] += profession.additional_ferocity()
     stats["vitality"] = (gd.general_buffs.base_vitality + gd.general_buffs.jade_bot
-                         + profession.additional_vitality())
+                         + profession.additional_vitality() + stats["vitality_rune"])
 
     vit_prec_conversion = profession.vit_prec_conversion()
     stats["precision"] += stats["vitality"] * vit_prec_conversion
