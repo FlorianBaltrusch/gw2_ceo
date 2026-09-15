@@ -8,9 +8,18 @@ from gw2ceo.general_data import gear_stats
 
 
 class GearSelect:
+    """Achievable armor-precision totals per slot group.
 
-    def __init__(self, build: BuildConstraints):
+    Each piece normally comes as precision-major (Assassin's/Marauder) or
+    precision-minor (Berserker's/Dragon's). With valkyrie=True (3-stat gear
+    only) a third option per piece carries no precision at all (Valkyrie:
+    the minor precision becomes vitality) - the solver's low-remainder
+    branch prices exactly that trade, so the option is only offered there.
+    """
+
+    def __init__(self, build: BuildConstraints, valkyrie: bool = False):
         self.constraints = build
+        self.valkyrie = valkyrie and build.gear_environment == "3p"
 
         if build.weapon_type == "1h":
             full_armor = np.array([2,0,1,1,1,1,1,1,1,2,2,1])
@@ -29,55 +38,71 @@ class GearSelect:
         maj_gear = exotic["Maj"] * num_ex + ascend["Maj"] * num_asc
            
 
-        # options per slot group, and parallel (label, piece count) metadata so
-        # a chosen assignment can be reported back as concrete gear pieces
+        # options per slot group with parallel metadata: option_meta[i][j] is
+        # the (precision-major, precision-minor, no-precision) piece split
+        # behind equipment[i][j], and groups[i] the (label, piece count)
         self.equipment = []
         self.groups = []
+        self.option_meta = []
 
-        def add_group(label, count, options):
+        def add_group(label, count, options, meta):
             self.equipment.append(options)
             self.groups.append((label, count))
+            self.option_meta.append(meta)
 
         def spread(gear, slot, count):
-            """all splits of `count` pieces of one slot into Maj/Min variants"""
-            return [gear["Maj", slot] * i + gear["Min", slot] * (count - i)
-                    for i in range(count + 1)]
+            """all splits of `count` pieces of one slot across the variants"""
+            options, meta = [], []
+            for none_count in (range(count + 1) if self.valkyrie else [0]):
+                for major in range(count - none_count + 1):
+                    minor = count - none_count - major
+                    options.append(gear["Maj", slot] * major + gear["Min", slot] * minor)
+                    meta.append((major, minor, none_count))
+            return options, meta
+
+        def single(label, min_value, maj_value):
+            options = [min_value, maj_value]
+            meta = [(0, 1, 0), (1, 0, 0)]
+            if self.valkyrie:
+                options.append(0)
+                meta.append((0, 0, 1))
+            add_group(label, 1, options, meta)
 
         # Weapon
         if build.weapon_type == "1h":
             add_group("Weapons (ascended)", num_asc["One-handed"],
-                      spread(ascend, "One-handed", num_asc["One-handed"]))
+                      *spread(ascend, "One-handed", num_asc["One-handed"]))
             add_group("Weapons (exotic)", num_ex["One-handed"],
-                      spread(exotic, "One-handed", num_ex["One-handed"]))
+                      *spread(exotic, "One-handed", num_ex["One-handed"]))
         else:
             if num_asc["Two-handed"] == 0:
-                add_group("", 0, [0])
-            add_group("Weapon", 1, [min_gear["Two-handed"], maj_gear["Two-handed"]])
+                add_group("", 0, [0], [(0, 0, 0)])
+            single("Weapon", min_gear["Two-handed"], maj_gear["Two-handed"])
             if num_ex["Two-handed"] == 0:
-                add_group("", 0, [0])
+                add_group("", 0, [0], [(0, 0, 0)])
 
         # Chest, Legs, Head
-        add_group("Chest", 1, [min_gear["Chest"], maj_gear["Chest"]])
-        add_group("Legs", 1, [min_gear["Legs"], maj_gear["Legs"]])
-        add_group("Head", 1, [min_gear["Head"], maj_gear["Head"]])
+        single("Chest", min_gear["Chest"], maj_gear["Chest"])
+        single("Legs", min_gear["Legs"], maj_gear["Legs"])
+        single("Head", min_gear["Head"], maj_gear["Head"])
 
         # Shoulders/Gloves/Boots share their stat values and are interchangeable
         asc_sgb = num_asc[["Shoulders", "Gloves", "Boots"]].sum()
-        add_group("Shoulders/Gloves/Boots (ascended)", asc_sgb, spread(ascend, "Shoulders", asc_sgb))
+        add_group("Shoulders/Gloves/Boots (ascended)", asc_sgb, *spread(ascend, "Shoulders", asc_sgb))
         ex_sgb = num_ex[["Shoulders", "Gloves", "Boots"]].sum()
-        add_group("Shoulders/Gloves/Boots (exotic)", ex_sgb, spread(exotic, "Shoulders", ex_sgb))
+        add_group("Shoulders/Gloves/Boots (exotic)", ex_sgb, *spread(exotic, "Shoulders", ex_sgb))
 
         # Trinkets
-        add_group("Amulet", 1, [min_gear["Amulet"], maj_gear["Amulet"]])
-        add_group("Rings (ascended)", num_asc["Ring"], spread(ascend, "Ring", num_asc["Ring"]))
-        add_group("Rings (exotic)", num_ex["Ring"], spread(exotic, "Ring", num_ex["Ring"]))
-        add_group("Accessories (ascended)", num_asc["Accessory"], spread(ascend, "Accessory", num_asc["Accessory"]))
-        add_group("Accessories (exotic)", num_ex["Accessory"], spread(exotic, "Accessory", num_ex["Accessory"]))
-        add_group("Back item", 1, [min_gear["Back item"], maj_gear["Back item"]])
+        single("Amulet", min_gear["Amulet"], maj_gear["Amulet"])
+        add_group("Rings (ascended)", num_asc["Ring"], *spread(ascend, "Ring", num_asc["Ring"]))
+        add_group("Rings (exotic)", num_ex["Ring"], *spread(exotic, "Ring", num_ex["Ring"]))
+        add_group("Accessories (ascended)", num_asc["Accessory"], *spread(ascend, "Accessory", num_asc["Accessory"]))
+        add_group("Accessories (exotic)", num_ex["Accessory"], *spread(exotic, "Accessory", num_ex["Accessory"]))
+        single("Back item", min_gear["Back item"], maj_gear["Back item"])
 
         # Jewels (upgrade slots of exotic trinkets)
         num_jewels = int(num_ex.iloc[8:12].sum())
-        add_group("Jewels (in exotic trinkets)", num_jewels, spread(exotic, "Jewel", num_jewels))
+        add_group("Jewels (in exotic trinkets)", num_jewels, *spread(exotic, "Jewel", num_jewels))
 
         # memoize per instance (a class-level @cache would keep every
         # instance alive for the lifetime of the server)

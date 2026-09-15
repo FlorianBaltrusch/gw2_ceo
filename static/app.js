@@ -589,8 +589,9 @@ async function optimize() {
 // jewels come in the same prefixes, named after their gem
 const PREFIX_NAMES = {
   "3p": {
-    major: "Assassin's", minor: "Berserker's",
-    jewels: { major: "Assassin's (Opal Jewel)", minor: "Berserker's (Ruby Jewel)" },
+    major: "Assassin's", minor: "Berserker's", none: "Valkyrie",
+    jewels: { major: "Assassin's (Opal Jewel)", minor: "Berserker's (Ruby Jewel)",
+              none: "Valkyrie (Beryl Jewel)" },
   },
   "4p": {
     major: "Marauder", minor: "Dragon's",
@@ -599,11 +600,13 @@ const PREFIX_NAMES = {
 };
 
 function equipmentLine(group, names) {
+  const noPrecision = group.no_precision || 0;
+  const minor = group.pieces - group.precision_major - noPrecision;
   const parts = [];
   if (group.precision_major > 0) parts.push(`${group.precision_major}× ${names.major}`);
-  const minor = group.pieces - group.precision_major;
   if (minor > 0) parts.push(`${minor}× ${names.minor}`);
-  if (group.pieces === 1) return group.precision_major ? names.major : names.minor;
+  if (noPrecision > 0) parts.push(`${noPrecision}× ${names.none}`);
+  if (group.pieces === 1) return parts[0].replace("1× ", "");
   return parts.join(", ");
 }
 
@@ -697,9 +700,13 @@ function renderResult(r, env) {
     const warning = document.createElement("p");
     warning.className = "warning cap-miss";
     warning.textContent = overcapped
-      ? `Crit chance already exceeds 100% before gear: even full power-major pieces overshoot ` +
-        `by ${Math.round(r.absolute_overshoot)} precision — deselect a crit source ` +
-        `(trait, sigil, writ or relic).`
+      ? (env === "4p"
+          ? `Crit chance exceeds the cap and 4-stat gear cannot shed precision (every prefix ` +
+            `carries it) — switch to the 3-stat environment (Valkyrie pieces) or deselect ` +
+            `a crit source. Overshoot: ${Math.round(r.absolute_overshoot)} precision.`
+          : `Crit chance exceeds 100% even with zero precision from gear — deselect a crit ` +
+            `source (trait, sigil, writ or relic). ` +
+            `Overshoot: ${Math.round(r.absolute_overshoot)} precision.`)
       : `No gear split hits the crit cap exactly here — closest overshoot: ` +
         `${Math.round(r.absolute_overshoot)} precision.`;
     resultBox.append(warning);

@@ -167,8 +167,16 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     stats["power"] += stones * (stats["precision"] * gd.general_buffs.stones_prec
                                 + stats["ferocity"] * gd.general_buffs.stones_fero)
 
+    # the low-remainder region (armor precision below the all-minor floor) is
+    # priced with the Valkyrie trade in 3-stat gear, so the gear check gets
+    # the Valkyrie-capable options there; 4-stat gear has no such prefix
     gear = GearSelect(build)
-    stats["overshoot"] = [gear.overshoot_values(remainder) for remainder in stats["armor_precision"]]
+    gear_low = GearSelect(build, valkyrie=True) if build.gear_environment == "3p" else gear
+    low_region = stats["remainder"] <= min_stats
+    stats["overshoot"] = [
+        (gear_low if low else gear).overshoot_values(remainder)
+        for remainder, low in zip(stats["armor_precision"], low_region)
+    ]
     stats["absolute_overshoot"] = [min(overshoot) for overshoot in stats["overshoot"]]
     stats["exact"] = stats["absolute_overshoot"] == 0
 

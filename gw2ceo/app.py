@@ -184,17 +184,22 @@ def calculate():
     result["total_infusions"] = int(gd.num_infusions(constraints.num_ascended,
                                                      constraints.weapon_type))
 
-    # concrete per-slot assignment: how many pieces of each group carry
-    # precision as major stat
-    gear = GearSelect(constraints)
-    # the least precision the gear can possibly give (all power-major pieces):
-    # below this the crit chance was already over the cap before gear
+    # concrete per-slot assignment: which piece variants make up each group;
+    # the low-remainder region of 3-stat gear may use Valkyrie pieces
+    min_stats = gd.full_armor("Min", constraints.num_ascended,
+                              constraints.gear_environment, constraints.weapon_type)
+    low_region = (constraints.gear_environment == "3p"
+                  and suggestion["remainder"] <= min_stats)
+    gear = GearSelect(constraints, valkyrie=low_region)
+    # the least precision the gear can possibly give: below this the crit
+    # chance was already over the cap before gear (0 with Valkyrie pieces)
     result["armor_floor"] = float(sum(min(options) for options in gear.equipment))
     assignment = next(gear.get_equipment(suggestion["armor_precision"]), None)
     result["equipment"] = None
     if assignment is not None:
-        groups = [(label, int(count), int(major))
-                  for (label, count), major in zip(gear.groups, assignment)
+        groups = [(label, int(count), meta[choice])
+                  for (label, count), meta, choice
+                  in zip(gear.groups, gear.option_meta, assignment)
                   if count > 0]
 
         # the rarity suffix only matters when a slot family actually mixes
@@ -206,7 +211,7 @@ def calculate():
         families = Counter(family(label) for label, _, _ in groups)
         result["equipment"] = [
             {"slot": family(label) if families[family(label)] == 1 else label,
-             "pieces": pieces, "precision_major": major}
-            for label, pieces, major in groups
+             "pieces": pieces, "precision_major": int(major), "no_precision": int(none_count)}
+            for label, pieces, (major, _, none_count) in groups
         ]
     return jsonify(result)
