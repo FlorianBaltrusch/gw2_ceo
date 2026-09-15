@@ -27,7 +27,7 @@ class Profession:
         # the corresponding toggle satisfies the condition
         if conditions is None:
             conditions = {"fury", "might"}
-        requires = rows["requires"].fillna("") if "requires" in rows else ""
+        requires = rows["requires"].fillna("")
         rows = rows.loc[(requires == "") | requires.isin(conditions)]
 
         professions = rows["profession"].unique()
