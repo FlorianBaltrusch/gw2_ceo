@@ -459,6 +459,9 @@ const FOOD_NAMES = {
 };
 
 async function optimize() {
+  const button = el("optimize");
+  if (button.disabled) return;  // ignore double clicks while a request runs
+
   const params = new URLSearchParams();
   params.set("profession", state.profession);
   for (const id of state.selectedTraits) params.append("traits[]", id);
@@ -470,19 +473,33 @@ async function optimize() {
   params.set("food", el("opt-food").checked);
   params.set("utility", el("opt-utility").checked);
 
-  const response = await fetch(`/calculate?${params}`);
   const errorBox = el("calc-error");
   const resultBox = el("result");
+  const idleLabel = button.textContent;
+  button.disabled = true;
+  button.classList.add("busy");
+  button.textContent = "Optimizing…";
 
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    errorBox.textContent = body.error || `The optimizer failed (${response.status}).`;
+  try {
+    const response = await fetch(`/calculate?${params}`);
+    if (!response.ok) {
+      const body = await response.json().catch(() => ({}));
+      errorBox.textContent = body.error || `The optimizer failed (${response.status}).`;
+      errorBox.classList.remove("hidden");
+      resultBox.classList.add("hidden");
+      return;
+    }
+    errorBox.classList.add("hidden");
+    renderResult(await response.json(), gear.env);
+  } catch {
+    errorBox.textContent = "Could not reach the optimizer — check your connection and try again.";
     errorBox.classList.remove("hidden");
     resultBox.classList.add("hidden");
-    return;
+  } finally {
+    button.disabled = false;
+    button.classList.remove("busy");
+    button.textContent = idleLabel;
   }
-  errorBox.classList.add("hidden");
-  renderResult(await response.json(), gear.env);
 }
 
 // which stat combination a precision-major / precision-minor piece is

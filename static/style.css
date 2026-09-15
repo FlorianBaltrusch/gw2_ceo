@@ -420,6 +420,23 @@ button { font: inherit; cursor: pointer; }
   transition: background .15s ease;
 }
 .cta:hover { background: var(--accent); }
+.cta:disabled { opacity: .75; cursor: wait; }
+.cta.busy::before {           /* loading circle while the optimizer runs */
+  content: "";
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  margin-right: 10px;
+  vertical-align: -2px;
+  border: 2px solid color-mix(in srgb, var(--text) 40%, transparent);
+  border-top-color: var(--text);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .cta.busy::before { animation: none; border-top-color: inherit; }
+}
 
 .slot-hint { margin: 8px 0 0; }
 
