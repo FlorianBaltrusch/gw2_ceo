@@ -192,10 +192,9 @@ async function loadBuilder() {
   const entries = [...byId.values()];
   state.entries = byId;
 
-  // sections: chosen elite spec first, then core lines, then skills
-  const sections = [];
+  // sections: core lines first, the chosen elite spec last, then skills
+  const sections = [...coreSpecs];
   if (!state.spec.coreArt) sections.push(state.spec.name);
-  sections.push(...coreSpecs);
 
   const container = el("trait-groups");
   container.innerHTML = "";
