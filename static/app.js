@@ -472,7 +472,7 @@ const UTILITY_NAMES = {
 };
 const RELIC_NAMES = {
   mistburn: "Mistburn (+10% crit while at ≥10 might)",
-  damage: "damage relic of your choice (Fireworks +7%, Thief, Claw)",
+  damage: "damage relic of your choice (Thief, Eagle, Fireworks — ~5% effective)",
 };
 
 // mixed rune sets from the rescue pass look like "scholar(4)+eagle(2)"
@@ -613,7 +613,7 @@ function renderResult(r, env) {
     equipmentList.append(dt, dd);
   };
   addEquipmentRow("Sigils", `Force + ${SIGIL_SHORT[r.sigil] || capitalize(String(r.sigil))}`);
-  addEquipmentRow("Relic", r.relic === "mistburn" ? "Mistburn" : "Fireworks / Thief / Claw (free choice)");
+  addEquipmentRow("Relic", r.relic === "mistburn" ? "Mistburn" : "Thief / Eagle / Fireworks (free choice)");
   addEquipmentRow("Jade bot core", "Tier 10 (+235 vitality, already counted)");
   if (r.equipment) {
     for (const group of r.equipment) {
