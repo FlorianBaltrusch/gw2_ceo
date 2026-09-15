@@ -206,7 +206,10 @@ async function loadBuilder() {
       container.append(traitGroup(section, specByName.get(section)?.icon, sectionEntries));
     }
   }
-  const skills = entries.filter(e => e.kind === "skill");
+  const SKILL_SLOT_ORDER = { Heal: 0, Utility: 1, Elite: 2 };
+  const skills = entries.filter(e => e.kind === "skill")
+    .sort((a, b) => (SKILL_SLOT_ORDER[a.slot] ?? 9) - (SKILL_SLOT_ORDER[b.slot] ?? 9)
+                    || a.name.localeCompare(b.name));
   if (skills.length) {
     container.append(traitGroup("Skills", `/icons/tango_${state.profession}.png`, skills));
   }
