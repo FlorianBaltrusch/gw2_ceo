@@ -236,9 +236,17 @@ button { font: inherit; cursor: pointer; }
   object-fit: contain;
   object-position: left center;    /* the banner art puts its character on the left */
 }
-.spec-tile .art.core-art img {     /* core has no banner: the original painting, cropped to fit */
-  object-fit: cover;
-  object-position: center 22%;
+.spec-tile .art.core-art {         /* core has no banner: an emblem card instead */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 50%, var(--bg-glow) 0%,
+              color-mix(in srgb, var(--phthalo-blue, #001c67) 15%, var(--shadow-abyss, #000)) 78%);
+}
+.spec-tile .art.core-art img {
+  width: auto;
+  height: 82%;
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--aureus, #edb227) 45%, transparent));
 }
 .spec-tile .label {
   display: flex;
