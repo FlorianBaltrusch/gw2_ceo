@@ -121,10 +121,14 @@ function finishSelection() {
   icon.classList.remove("hidden");
 
   const overlay = el("overlay");
-  overlay.classList.add("closing");
   const hide = () => overlay.classList.add("hidden");
-  overlay.addEventListener("animationend", hide, { once: true });
-  setTimeout(hide, 350);  // fallback: reduced motion / browsers that skip the animation
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    hide();
+  } else {
+    overlay.classList.add("closing");
+    overlay.addEventListener("animationend", hide, { once: true });
+    setTimeout(hide, 350);  // fallback for browsers that skip the animation
+  }
 
   el("topbar").classList.remove("hidden");
   el("main").classList.remove("hidden");
@@ -216,17 +220,30 @@ async function loadBuilder() {
 }
 
 // in-game constraints the optimizer itself does not enforce: only one major
-// trait per tier of a line, and at most three trait lines per build
+// trait per tier of a line, at most three trait lines per build, and one
+// heal / three utility / one elite skill slot
 const TIER_NAMES = { 1: "adept", 2: "master", 3: "grandmaster" };
+const SKILL_SLOTS = { Heal: ["heal", 1], Utility: ["utility", 3], Elite: ["elite", 1] };
+
+const joinNames = (names) =>
+  names.length > 1
+    ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`
+    : names[0];
 
 function updateBuildWarnings() {
   const warnings = [];
   const majorsPerTier = new Map();
   const lines = new Set();
+  const skillsPerSlot = new Map();
 
   for (const id of state.selectedTraits) {
     const entry = state.entries?.get(id);
-    if (!entry || entry.kind !== "trait") continue;
+    if (!entry) continue;
+    if (entry.kind === "skill") {
+      if (!skillsPerSlot.has(entry.slot)) skillsPerSlot.set(entry.slot, []);
+      skillsPerSlot.get(entry.slot).push(entry.name);
+      continue;
+    }
     lines.add(entry.specialization);
     if (entry.slot === "Major" && entry.tier) {
       const key = `${entry.specialization}|${Number(entry.tier)}`;
@@ -238,13 +255,20 @@ function updateBuildWarnings() {
   for (const [key, names] of majorsPerTier) {
     if (names.length > 1) {
       const [spec, tier] = key.split("|");
-      warnings.push(`${names.join(" and ")} are competing ${spec} ${TIER_NAMES[tier] || ""} ` +
+      warnings.push(`${joinNames(names)} are competing ${spec} ${TIER_NAMES[tier] || ""} ` +
                     "choices — the game lets you slot only one of them.");
     }
   }
   if (lines.size > 3) {
     warnings.push(`Your traits span ${lines.size} trait lines ` +
                   `(${[...lines].join(", ")}) — a build holds only three.`);
+  }
+  for (const [slot, [label, limit]] of Object.entries(SKILL_SLOTS)) {
+    const names = skillsPerSlot.get(slot) || [];
+    if (names.length > limit) {
+      warnings.push(`${joinNames(names)} are ${names.length} ${label} skills — ` +
+                    `a build has only ${limit === 1 ? "one" : limit} ${label} slot${limit > 1 ? "s" : ""}.`);
+    }
   }
 
   const box = el("build-warnings");
