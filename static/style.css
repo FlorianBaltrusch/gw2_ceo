@@ -421,6 +421,19 @@ button { font: inherit; cursor: pointer; }
 }
 .cta:hover { background: var(--accent); }
 
+.slot-hint { margin: 8px 0 0; }
+
+.build-warnings {
+  border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  background: color-mix(in srgb, var(--gold) 8%, transparent);
+  border-radius: 8px;
+  padding: 4px 12px;
+  margin-bottom: 12px;
+  font-size: .88rem;
+}
+.build-warnings p { margin: 8px 0; }
+.build-warnings p::before { content: "⚠ "; color: var(--gold); }
+
 .calc-error {
   margin-top: 12px;
   border: 1px solid var(--accent);

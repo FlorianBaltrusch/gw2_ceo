@@ -190,6 +190,7 @@ async function loadBuilder() {
     byId.get(row.id).effects.push(row);
   }
   const entries = [...byId.values()];
+  state.entries = byId;
 
   // sections: chosen elite spec first, then core lines, then skills
   const sections = [];
@@ -211,6 +212,49 @@ async function loadBuilder() {
     container.append(traitGroup("Skills", `/icons/tango_${state.profession}.png`, skills));
   }
   state.pendingIds = null;
+  updateBuildWarnings();
+}
+
+// in-game constraints the optimizer itself does not enforce: only one major
+// trait per tier of a line, and at most three trait lines per build
+const TIER_NAMES = { 1: "adept", 2: "master", 3: "grandmaster" };
+
+function updateBuildWarnings() {
+  const warnings = [];
+  const majorsPerTier = new Map();
+  const lines = new Set();
+
+  for (const id of state.selectedTraits) {
+    const entry = state.entries?.get(id);
+    if (!entry || entry.kind !== "trait") continue;
+    lines.add(entry.specialization);
+    if (entry.slot === "Major" && entry.tier) {
+      const key = `${entry.specialization}|${Number(entry.tier)}`;
+      if (!majorsPerTier.has(key)) majorsPerTier.set(key, []);
+      majorsPerTier.get(key).push(entry.name);
+    }
+  }
+
+  for (const [key, names] of majorsPerTier) {
+    if (names.length > 1) {
+      const [spec, tier] = key.split("|");
+      warnings.push(`${names.join(" and ")} are competing ${spec} ${TIER_NAMES[tier] || ""} ` +
+                    "choices — the game lets you slot only one of them.");
+    }
+  }
+  if (lines.size > 3) {
+    warnings.push(`Your traits span ${lines.size} trait lines ` +
+                  `(${[...lines].join(", ")}) — a build holds only three.`);
+  }
+
+  const box = el("build-warnings");
+  box.innerHTML = "";
+  for (const text of warnings) {
+    const paragraph = document.createElement("p");
+    paragraph.textContent = text;
+    box.append(paragraph);
+  }
+  box.classList.toggle("hidden", warnings.length === 0);
 }
 
 // import a build template chat link: select profession, spec and known traits
@@ -282,6 +326,7 @@ function traitGroup(title, iconSrc, groupEntries) {
     box.addEventListener("change", () => {
       if (box.checked) state.selectedTraits.add(entry.id);
       else state.selectedTraits.delete(entry.id);
+      updateBuildWarnings();
     });
 
     const icon = document.createElement("img");

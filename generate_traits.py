@@ -235,6 +235,8 @@ def spec_name(spec_id) -> str:
 def main():
     rows = []
     icons = {}
+    trait_slots = {}
+    trait_tiers = {}
 
     for prof_name in get_api_data("professions"):
         profession = get_api_data(f"professions/{prof_name}")
@@ -244,6 +246,8 @@ def main():
             trait_ids = spec["minor_traits"] + spec["major_traits"]
             for trait in get_api_data_bulk("traits", trait_ids):
                 icons[trait["id"]] = trait.get("icon", "")
+                trait_slots[trait["id"]] = trait.get("slot", "")
+                trait_tiers[trait["id"]] = trait.get("tier", "")
                 for effect, source, value, note, review in extract_facts(trait.get("facts", [])):
                     rows.append({
                         "id": trait["id"],
@@ -304,6 +308,12 @@ def main():
 
     df = df.sort_values(by=["profession", "elite", "specialization", "name", "effect"])
     df["icon"] = df["id"].map(icons).fillna("")  # type: ignore
+
+    # slot and tier come from the API even for hand-written override rows -
+    # the conflict warning on the website relies on them being complete
+    is_trait = df["kind"] == "trait"
+    df.loc[is_trait, "slot"] = df.loc[is_trait, "id"].map(trait_slots)  # type: ignore
+    df.loc[is_trait, "tier"] = df.loc[is_trait, "id"].map(trait_tiers)  # type: ignore
     df.to_csv("assets/traits.csv", index=False)
     download_icons(df)
     generate_specializations()
