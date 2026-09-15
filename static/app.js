@@ -691,6 +691,20 @@ function renderResult(r, env) {
       `${fb.prec_infusions} precision infusions.`;
     resultBox.append(note);
   };
+  // severity order: the red cap-miss first, aureus advisories after
+  if (r.absolute_overshoot > 0) {
+    const overcapped = r.armor_precision < r.armor_floor;
+    const warning = document.createElement("p");
+    warning.className = "warning cap-miss";
+    warning.textContent = overcapped
+      ? `Crit chance already exceeds 100% before gear: even full power-major pieces overshoot ` +
+        `by ${Math.round(r.absolute_overshoot)} precision — deselect a crit source ` +
+        `(trait, sigil, writ or relic).`
+      : `No gear split hits the crit cap exactly here — closest overshoot: ` +
+        `${Math.round(r.absolute_overshoot)} precision.`;
+    resultBox.append(warning);
+  }
+
   if (r.stable_fallback) {
     const reasons = [];
     if (["perception", "bloodlust"].includes(r.sigil)) {
@@ -706,19 +720,6 @@ function renderResult(r, env) {
     note.textContent = "Mistburn's +10% crit is a passive while at ≥10 might — keep might up. " +
       "No backup build needed: swapping to a damage relic never breaks the cap.";
     resultBox.append(note);
-  }
-
-  if (r.absolute_overshoot > 0) {
-    const overcapped = r.armor_precision < r.armor_floor;
-    const warning = document.createElement("p");
-    warning.className = "warning cap-miss";
-    warning.textContent = overcapped
-      ? `Crit chance already exceeds 100% before gear: even full power-major pieces overshoot ` +
-        `by ${Math.round(r.absolute_overshoot)} precision — deselect a crit source ` +
-        `(trait, sigil, writ or relic).`
-      : `No gear split hits the crit cap exactly here — closest overshoot: ` +
-        `${Math.round(r.absolute_overshoot)} precision.`;
-    resultBox.append(warning);
   }
 
   const copyButton = document.createElement("button");
