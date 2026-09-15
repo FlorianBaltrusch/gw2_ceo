@@ -662,7 +662,7 @@ function renderResult(r, env) {
 
   if (r.absolute_overshoot > 0) {
     const warning = document.createElement("p");
-    warning.className = "warning";
+    warning.className = "warning cap-miss";
     warning.textContent = `No gear split hits the crit cap exactly here — closest overshoot: ${Math.round(r.absolute_overshoot)} precision.`;
     resultBox.append(warning);
   }

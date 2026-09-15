@@ -513,6 +513,7 @@ button { font: inherit; cursor: pointer; }
 .result .stats .stat-value { display: block; color: var(--text); }
 .result .stats .stat-name { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); }
 .result .warning { color: var(--gold); font-size: .85rem; margin-top: 10px; }
+.result .cap-miss { color: var(--accent); }  /* missing the cap is the severe case */
 .equipment-heading {
   font-weight: 500;
   font-variant: small-caps;
