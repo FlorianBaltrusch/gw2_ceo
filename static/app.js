@@ -458,6 +458,12 @@ const SIGIL_NAMES = {
   bloodlust: "Bloodlust (+250 power at 25 stacks)",
   impact: "Impact (+3%) — or Night, +10% at night",
 };
+const SIGIL_SHORT = {
+  accuracy: "Accuracy",
+  perception: "Perception",
+  bloodlust: "Bloodlust",
+  impact: "Impact (or Night)",
+};
 
 async function optimize() {
   const button = el("optimize");
@@ -568,21 +574,25 @@ function renderResult(r, env) {
 
   resultBox.append(ep, list, stats);
 
+  const heading = document.createElement("h3");
+  heading.className = "equipment-heading";
+  heading.textContent = "Equipment";
+  const equipmentList = document.createElement("dl");
+  const addEquipmentRow = (slot, text) => {
+    const dt = document.createElement("dt");
+    dt.textContent = slot;
+    const dd = document.createElement("dd");
+    dd.textContent = text;
+    equipmentList.append(dt, dd);
+  };
+  addEquipmentRow("Sigils", `Force + ${SIGIL_SHORT[r.sigil] || capitalize(String(r.sigil))}`);
   if (r.equipment) {
-    const heading = document.createElement("h3");
-    heading.className = "equipment-heading";
-    heading.textContent = "Equipment";
-    const equipmentList = document.createElement("dl");
     for (const group of r.equipment) {
       const names = group.slot.startsWith("Jewels") ? PREFIX_NAMES.jewels : PREFIX_NAMES[env];
-      const dt = document.createElement("dt");
-      dt.textContent = group.slot;
-      const dd = document.createElement("dd");
-      dd.textContent = equipmentLine(group, names);
-      equipmentList.append(dt, dd);
+      addEquipmentRow(group.slot, equipmentLine(group, names));
     }
-    resultBox.append(heading, equipmentList);
   }
+  resultBox.append(heading, equipmentList);
 
   if (r.sigil_fallback) {
     const fb = r.sigil_fallback;
