@@ -121,7 +121,16 @@ def chatlink_encode():
 def calculate():
     try:
         trait_ids = [int(trait_id) for trait_id in request.args.getlist("traits[]")]
-        profession = Profession(trait_ids, profession=request.args.get("profession"))
+        fury = request.args.get("fury") == "true"
+        might = int(request.args.get("might", "25"))
+
+        conditions = set()
+        if fury:
+            conditions.add("fury")
+        if might >= gd.general_buffs.trait_might_threshold:
+            conditions.add("might")
+        profession = Profession(trait_ids, profession=request.args.get("profession"),
+                                conditions=conditions)
 
         armor = request.args.getlist("armor[]")
         armor = [piece.replace("1", "").replace("2", "") for piece in armor]
@@ -144,8 +153,8 @@ def calculate():
             food=request.args.get("food", "true") == "true",
             utility=request.args.get("utility", "true") == "true",
 
-            fury=request.args.get("fury") == "true",
-            might=int(request.args.get("might", "25")),
+            fury=fury,
+            might=might,
 
             stacking_sigils=request.args.get("stacking", "true") == "true",
             writs=request.args.get("writs", "true") == "true",
@@ -171,15 +180,16 @@ def calculate():
             "prec_infusions": int(row["prec_infusions"]),
         }
 
-    result["sigil_fallback"] = fallback_summary(solution["sigil_fallback"])
-    result["utility_fallback"] = fallback_summary(solution["utility_fallback"])
-    result["relic_fallback"] = fallback_summary(solution["relic_fallback"])
+    result["stable_fallback"] = fallback_summary(solution["stable_fallback"])
     result["total_infusions"] = int(gd.num_infusions(constraints.num_ascended,
                                                      constraints.weapon_type))
 
     # concrete per-slot assignment: how many pieces of each group carry
     # precision as major stat
     gear = GearSelect(constraints)
+    # the least precision the gear can possibly give (all power-major pieces):
+    # below this the crit chance was already over the cap before gear
+    result["armor_floor"] = float(sum(min(options) for options in gear.equipment))
     assignment = next(gear.get_equipment(suggestion["armor_precision"]), None)
     result["equipment"] = None
     if assignment is not None:

@@ -14,13 +14,21 @@ class Profession:
     chat link can be mapped onto them directly.
     """
 
-    def __init__(self, trait_ids: list[int], profession: str | None = None):
+    def __init__(self, trait_ids: list[int], profession: str | None = None,
+                 conditions: set[str] | None = None):
         table: pd.DataFrame = gd.traits
         rows = table.loc[table["id"].isin(trait_ids)]
 
         missing = set(trait_ids) - set(rows["id"])
         if missing:
             raise ValueError(f"Unknown trait ids: {sorted(missing)}")
+
+        # rows conditional on a boon (requires "fury"/"might") only count when
+        # the corresponding toggle satisfies the condition
+        if conditions is None:
+            conditions = {"fury", "might"}
+        requires = rows["requires"].fillna("") if "requires" in rows else ""
+        rows = rows.loc[(requires == "") | requires.isin(conditions)]
 
         professions = rows["profession"].unique()
         if len(professions) > 1:

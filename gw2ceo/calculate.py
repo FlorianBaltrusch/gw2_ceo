@@ -231,29 +231,15 @@ def calc_ep(profession: Profession, build: BuildConstraints) -> dict:
 
     best = stats.iloc[0]
 
-    # stacking sigils assume 25 stacks; offer the best stack-independent
-    # option too, so a downstate does not silently cost the crit cap
-    sigil_fallback = None
-    if best["sigil"] in ("perception", "bloodlust"):
-        stable = stats.loc[stats["sigil"].isin(["accuracy", "impact"])]
+    # one combined backup: when the winner relies on stacking sigils and/or
+    # the accuracy writ, offer the best build using neither, so a downstate
+    # or low health never silently costs the crit cap (the relic needs no
+    # backup - swapping Mistburn for a damage relic keeps the cap)
+    stable_fallback = None
+    if best["sigil"] in ("perception", "bloodlust") or best["utility"] == "writ_accuracy":
+        stable = stats.loc[stats["sigil"].isin(["accuracy", "impact"])
+                           & stats["utility"].isin(["stones", "writ_strength", "none"])]
         if not stable.empty:
-            sigil_fallback = stable.iloc[0]
+            stable_fallback = stable.iloc[0]
 
-    # the accuracy writ only works above 90% health; offer the best option
-    # whose crit cap does not depend on it
-    utility_fallback = None
-    if best["utility"] == "writ_accuracy":
-        stable = stats.loc[stats["utility"].isin(["stones", "writ_strength", "none"])]
-        if not stable.empty:
-            utility_fallback = stable.iloc[0]
-
-    # Mistburn's crit chance vanishes below 10 might; offer the best
-    # damage-relic build as the stable alternative
-    relic_fallback = None
-    if best["relic"] == "mistburn":
-        stable = stats.loc[stats["relic"] == "damage"]
-        if not stable.empty:
-            relic_fallback = stable.iloc[0]
-
-    return {"best": best, "sigil_fallback": sigil_fallback,
-            "utility_fallback": utility_fallback, "relic_fallback": relic_fallback}
+    return {"best": best, "stable_fallback": stable_fallback}

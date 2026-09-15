@@ -647,23 +647,33 @@ function renderResult(r, env) {
       `${fb.prec_infusions} precision infusions.`;
     resultBox.append(note);
   };
-  if (r.sigil_fallback) {
-    fallbackNote(r.sigil_fallback,
-      "Stacking sigils lose their stacks on downstate. Stack-independent alternative");
+  if (r.stable_fallback) {
+    const reasons = [];
+    if (["perception", "bloodlust"].includes(r.sigil)) {
+      reasons.push("stacking sigil stacks vanish on downstate");
+    }
+    if (r.utility === "writ_accuracy") reasons.push("the accuracy writ needs >90% health");
+    fallbackNote(r.stable_fallback, `Backup without those risks (${reasons.join("; ")})`);
   }
-  if (r.utility_fallback) {
-    fallbackNote(r.utility_fallback,
-      "The accuracy writ needs >90% health to keep the cap. Stable alternative");
-  }
-  if (r.relic_fallback) {
-    fallbackNote(r.relic_fallback,
-      "Mistburn's crit chance needs ≥10 might stacks. Stable alternative");
+
+  if (r.relic === "mistburn") {
+    const note = document.createElement("p");
+    note.className = "warning";
+    note.textContent = "Mistburn's +10% crit is a passive while at ≥10 might — keep might up. " +
+      "No backup build needed: swapping to a damage relic never breaks the cap.";
+    resultBox.append(note);
   }
 
   if (r.absolute_overshoot > 0) {
+    const overcapped = r.armor_precision < r.armor_floor;
     const warning = document.createElement("p");
     warning.className = "warning cap-miss";
-    warning.textContent = `No gear split hits the crit cap exactly here — closest overshoot: ${Math.round(r.absolute_overshoot)} precision.`;
+    warning.textContent = overcapped
+      ? `Crit chance already exceeds 100% before gear: even full power-major pieces overshoot ` +
+        `by ${Math.round(r.absolute_overshoot)} precision — deselect a crit source ` +
+        `(trait, sigil, writ or relic).`
+      : `No gear split hits the crit cap exactly here — closest overshoot: ` +
+        `${Math.round(r.absolute_overshoot)} precision.`;
     resultBox.append(warning);
   }
 

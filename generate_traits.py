@@ -319,6 +319,13 @@ def main():
     # position within the tier column (top/middle/bottom in the trait tree);
     # skills have no position and stay empty
     df["position"] = df["id"].map(trait_positions)  # type: ignore
+
+    # boon conditions (set in the overrides): rows requiring fury or a might
+    # threshold are deactivated by the solver when the toggles don't match
+    if "requires" in df.columns:
+        df["requires"] = df["requires"].fillna("")
+    else:
+        df["requires"] = ""
     df.to_csv("assets/traits.csv", index=False)
     download_icons(df)
     generate_specializations()
