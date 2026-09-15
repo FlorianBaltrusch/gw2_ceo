@@ -470,6 +470,10 @@ const UTILITY_NAMES = {
   writ_strength: "Writ of Masterful Strength (+200 power above 90% health)",
   none: "none",
 };
+const RELIC_NAMES = {
+  mistburn: "Mistburn (+10% crit while at ≥10 might)",
+  damage: "damage relic of your choice (Fireworks +7%, Thief, Claw)",
+};
 
 // mixed rune sets from the rescue pass look like "scholar(4)+eagle(2)"
 function runeName(rune) {
@@ -566,6 +570,7 @@ function renderResult(r, env) {
     ["Rune", runeName(r.rune)],
     ["Food", FOOD_NAMES[r.food] || capitalize(r.food)],
     ["Utility", UTILITY_NAMES[r.utility] || capitalize(String(r.utility))],
+    ["Relic", RELIC_NAMES[r.relic] || capitalize(String(r.relic))],
     ["Second sigil (next to Force)", SIGIL_NAMES[r.sigil] || capitalize(String(r.sigil))],
     ["Precision infusions", `${r.prec_infusions} of ${r.total_infusions} (rest power)`],
   ];
@@ -608,7 +613,7 @@ function renderResult(r, env) {
     equipmentList.append(dt, dd);
   };
   addEquipmentRow("Sigils", `Force + ${SIGIL_SHORT[r.sigil] || capitalize(String(r.sigil))}`);
-  addEquipmentRow("Relic", "free choice — damage relics (Thief, Fireworks, Claw, …) don't affect the cap");
+  addEquipmentRow("Relic", r.relic === "mistburn" ? "Mistburn" : "Fireworks / Thief / Claw (free choice)");
   addEquipmentRow("Jade bot core", "Tier 10 (+235 vitality, already counted)");
   if (r.equipment) {
     for (const group of r.equipment) {
@@ -623,7 +628,8 @@ function renderResult(r, env) {
     const note = document.createElement("p");
     note.className = "warning";
     note.textContent = `${intro}: ${SIGIL_NAMES[fb.sigil]} sigil, ` +
-      `${UTILITY_NAMES[fb.utility] || fb.utility} — ` +
+      `${UTILITY_NAMES[fb.utility] || fb.utility}, ` +
+      `${RELIC_NAMES[fb.relic] || fb.relic} — ` +
       `${Math.round(fb.effective_power).toLocaleString("en-US")} EP (${delta}%) with ` +
       `${runeName(fb.rune)}, ${FOOD_NAMES[fb.food] || fb.food}, ` +
       `${fb.prec_infusions} precision infusions.`;
@@ -636,6 +642,10 @@ function renderResult(r, env) {
   if (r.utility_fallback) {
     fallbackNote(r.utility_fallback,
       "The accuracy writ needs >90% health to keep the cap. Stable alternative");
+  }
+  if (r.relic_fallback) {
+    fallbackNote(r.relic_fallback,
+      "Mistburn's crit chance needs ≥10 might stacks. Stable alternative");
   }
 
   if (r.absolute_overshoot > 0) {

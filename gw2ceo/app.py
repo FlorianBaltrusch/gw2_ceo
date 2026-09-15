@@ -164,6 +164,7 @@ def calculate():
         return {
             "sigil": row["sigil"],
             "utility": row["utility"],
+            "relic": row["relic"],
             "effective_power": float(row["effective_power"]),
             "rune": row["rune"],
             "food": row["food"],
@@ -172,6 +173,7 @@ def calculate():
 
     result["sigil_fallback"] = fallback_summary(solution["sigil_fallback"])
     result["utility_fallback"] = fallback_summary(solution["utility_fallback"])
+    result["relic_fallback"] = fallback_summary(solution["relic_fallback"])
     result["total_infusions"] = int(gd.num_infusions(constraints.num_ascended,
                                                      constraints.weapon_type))
 

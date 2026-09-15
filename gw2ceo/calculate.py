@@ -49,6 +49,18 @@ def _utility_candidates(build: BuildConstraints) -> pd.DataFrame:
     return utilities
 
 
+def _relic_candidates(build: BuildConstraints) -> pd.DataFrame:
+    """The relic slot: Mistburn's crit chance (a passive while at or above
+    10 might, so it only qualifies when the might setting reaches the
+    threshold) competes against a damage relic, handled later as a
+    multiplicative branch like the Impact sigil."""
+    relics = {"relic": ["none"], "relic_chance": [0.0]}
+    if build.might >= gd.general_buffs.relic_might_threshold:
+        relics = {"relic": ["none", "mistburn"],
+                  "relic_chance": [0.0, float(gd.general_buffs.relic_mistburn)]}
+    return pd.DataFrame(data=relics)
+
+
 def _mixed_runes() -> pd.DataFrame | None:
     """All 5+1/4+2/3+3 two-rune mixes, built from the per-piece bonuses in
     assets/rune_tiers.csv. Used only as a rescue when no full rune set can
@@ -94,6 +106,7 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     options = pd.merge(food.reset_index(), runes.reset_index(), how="cross", suffixes=("_food", "_rune"))
     options = pd.merge(_sigil_candidates(build), options, how="cross")
     options = pd.merge(_utility_candidates(build), options, how="cross")
+    options = pd.merge(_relic_candidates(build), options, how="cross")
     options = pd.merge(infusions, options, how="cross")
 
     options["power"] = options["power_rune"] + options["power_food"] + options["power_inf"]
@@ -101,13 +114,13 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     options["ferocity"] = options["ferocity_rune"] + options["ferocity_food"]
 
     stats = options[["prec_infusions", "sigil", "sigil_precision", "sigil_power",
-                     "utility", "util_precision", "util_power",
+                     "utility", "util_precision", "util_power", "relic", "relic_chance",
                      "food", "rune", "power", "precision", "chance", "ferocity"]].copy()
     stats[["power", "precision", "ferocity", "chance"]] = \
         stats[["power", "precision", "ferocity", "chance"]].astype(float)
 
     stats["precision"] += gd.general_buffs.base_precision + stats["sigil_precision"] + stats["util_precision"]
-    stats["chance"] += profession.additional_crit_chance()
+    stats["chance"] += profession.additional_crit_chance() + stats["relic_chance"]
     if build.fury:
         stats["chance"] += gd.general_buffs.fury
     stats["precision"] += profession.additional_precision()
@@ -178,6 +191,16 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     stats = pd.concat([stats.loc[stats["sigil"] != "none"], impact], ignore_index=True)
     stats["sigil_prio"] = stats["sigil"].map(SIGIL_PRIO).fillna(0)  # type: ignore
 
+    # likewise the relic-less rows become the "damage relic" branch
+    # (Fireworks/Thief/Claw): same gear solution, scaled effective power
+    damage_relic = stats.loc[stats["relic"] == "none"].copy()
+    damage_relic["relic"] = "damage"
+    damage_relic["effective_power"] *= 1 + gd.general_buffs.relic_damage
+    stats = pd.concat([stats.loc[stats["relic"] != "none"], damage_relic], ignore_index=True)
+    # at equal effective power the damage relic is safer than Mistburn's
+    # might-threshold condition
+    stats["relic_prio"] = stats["relic"].map({"damage": 0, "mistburn": 1}).fillna(0)  # type: ignore
+
     # hitting the cap exactly is the point of the tool; effective power only
     # ranks within that, and the remaining keys break ties
     by, ascending = zip(
@@ -187,6 +210,7 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
         ("absolute_remainder", True),
         ("utility_prio", True),
         ("sigil_prio", True),
+        ("relic_prio", True),
         ("food_prio", True),
     )
     stats.sort_values(by=list(by), ascending=list(ascending), inplace=True)  # type: ignore
@@ -223,4 +247,13 @@ def calc_ep(profession: Profession, build: BuildConstraints) -> dict:
         if not stable.empty:
             utility_fallback = stable.iloc[0]
 
-    return {"best": best, "sigil_fallback": sigil_fallback, "utility_fallback": utility_fallback}
+    # Mistburn's crit chance vanishes below 10 might; offer the best
+    # damage-relic build as the stable alternative
+    relic_fallback = None
+    if best["relic"] == "mistburn":
+        stable = stats.loc[stats["relic"] == "damage"]
+        if not stable.empty:
+            relic_fallback = stable.iloc[0]
+
+    return {"best": best, "sigil_fallback": sigil_fallback,
+            "utility_fallback": utility_fallback, "relic_fallback": relic_fallback}
