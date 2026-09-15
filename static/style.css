@@ -227,8 +227,10 @@ button { font: inherit; cursor: pointer; }
 .spec-tile .art {
   display: block;
   width: 100%;
-  aspect-ratio: 4 / 1;
-  padding: 6px;                    /* breathing room so the art doesn't touch the edges */
+  height: 88px;       /* fixed banner-strip height: aspect-ratio + flex min-sizing
+                         inflates the box around tall images in some engines */
+  min-height: 0;
+  padding: 6px;       /* breathing room so the art doesn't touch the edges */
 }
 .spec-tile .art img {              /* contain: the full painting, never cropped */
   width: 100%;
@@ -245,7 +247,8 @@ button { font: inherit; cursor: pointer; }
 }
 .spec-tile .art.core-art img {
   width: auto;
-  height: 82%;
+  height: 64px;       /* explicit: a percentage would fall back to the image's
+                         intrinsic 200px during intrinsic sizing in some engines */
   filter: drop-shadow(0 0 14px color-mix(in srgb, var(--aureus, #edb227) 45%, transparent));
 }
 .spec-tile .label {
