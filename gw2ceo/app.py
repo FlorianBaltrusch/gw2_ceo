@@ -11,6 +11,7 @@ from gw2ceo import buildlink, custom_colors
 from gw2ceo.calculate import calc_ep
 from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.gearselect import GearSelect
+from gw2ceo.icons import ensure_icon
 from gw2ceo.profession import Profession
 
 pd.options.mode.chained_assignment = None
@@ -65,14 +66,18 @@ def specializations():
 
     def versioned_icon(filename):
         """Icon URL stamped with the file's mtime, so browsers can cache long
-        but always fetch a fresh copy when the image content changes."""
+        but always fetch a fresh copy when the image content changes. Missing
+        files are downloaded first (fresh clones have an empty cache)."""
+        ensure_icon(filename)
         path = os.path.join("assets", "icons", filename)
-        return f"/icons/{filename}?v={int(os.path.getmtime(path))}"
+        version = int(os.path.getmtime(path)) if os.path.isfile(path) else 0
+        return f"/icons/{filename}?v={version}"
 
     def spec_icon(row):
-        tango = f"tango_{row['name']}.png"
-        if os.path.isfile(os.path.join("assets", "icons", tango)):
-            return versioned_icon(tango)
+        # only elite specs (and professions) have wiki tango icons; core
+        # trait lines fall back to their hexagon icon directly
+        if row["elite"] and ensure_icon(f"tango_{row['name']}.png"):
+            return versioned_icon(f"tango_{row['name']}.png")
         return versioned_icon(f"spec_{row['id']}.png")
 
     table = table.assign(
@@ -94,7 +99,10 @@ def traits():
 
 @app.route("/icons/<filename>")
 def icon(filename):
-    """Locally cached trait/specialization images (filled by generate_traits.py)."""
+    """Locally cached game images; missing files are downloaded on demand
+    (the cache is gitignored, so fresh clones start empty)."""
+    if not ensure_icon(filename):
+        return jsonify({"error": f"unknown or unreachable icon: {filename}"}), 404
     return send_from_directory(os.path.abspath(os.path.join("assets", "icons")),
                                filename, max_age=IMAGE_CACHE_SECONDS)
 

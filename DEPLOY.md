@@ -43,7 +43,8 @@ cd /opt/gw2_ceo
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 
-# one-time: fetch the GW2 API caches and all images (traits, banners, icons)
+# optional but recommended: pre-warm the GW2 API caches and all images in
+# one go (missing images also download themselves on first request)
 PYTHONPATH=. .venv/bin/python generate_traits.py
 
 # smoke test, then Ctrl+C

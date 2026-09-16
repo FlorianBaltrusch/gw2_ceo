@@ -24,12 +24,11 @@ Usage:  python generate_traits.py   (run from the repository root)
 import os
 import re
 
-import numpy as np
 import pandas as pd
 import requests
-from PIL import Image
 
 from gw2ceo.api import get_api_data, get_api_data_bulk
+from gw2ceo.icons import trim_banner_border
 
 WIKI_API = "https://wiki.guildwars2.com/api.php"
 
@@ -172,28 +171,6 @@ def generate_specializations():
     download_tango_icons(
         list(get_api_data("professions")) + df[df["elite"]]["name"].tolist()
     )
-
-
-def trim_banner_border(path, threshold=18, content_fraction=0.01):
-    """The spec banners bleed into the in-game UI panel and pad the painted
-    area with fully transparent or near-black margins; crop to the painted
-    area (idempotent). A row/column only counts as content if more than 1%
-    of its pixels are bright and visible, so a few stray specks in a black
-    region do not stop the trim - while dark artwork in the middle of a
-    banner stays safe because only the border is removed."""
-    image = Image.open(path).convert("RGBA")
-    pixels = np.asarray(image)
-    content = (pixels[..., :3].max(axis=2) > threshold) & (pixels[..., 3] > 8)
-
-    row_has_content = content.mean(axis=1) > content_fraction
-    col_has_content = content.mean(axis=0) > content_fraction
-    if not row_has_content.any() or not col_has_content.any():
-        return
-    top, bottom = np.flatnonzero(row_has_content)[[0, -1]]
-    left, right = np.flatnonzero(col_has_content)[[0, -1]]
-    box = (int(left), int(top), int(right) + 1, int(bottom) + 1)
-    if box != (0, 0, image.width, image.height):
-        image.crop(box).save(path)
 
 
 def download_tango_icons(names, sizes=(200, 48)):
