@@ -173,54 +173,47 @@ def calculate():
     except (ValueError, NotImplementedError) as error:
         return jsonify({"error": str(error)}), 400
 
-    suggestion = solution["best"]
-    result = json.loads(suggestion.to_json())
-
-    def fallback_summary(row):
-        if row is None:
-            return None
-        return {
-            "sigil": row["sigil"],
-            "utility": row["utility"],
-            "relic": row["relic"],
-            "effective_power": float(row["effective_power"]),
-            "rune": row["rune"],
-            "food": row["food"],
-            "prec_infusions": int(row["prec_infusions"]),
-        }
-
-    result["stable_fallback"] = fallback_summary(solution["stable_fallback"])
-    result["total_infusions"] = int(gd.num_infusions(constraints.num_ascended,
-                                                     constraints.weapon_type))
-
-    # concrete per-slot assignment: which piece variants make up each group;
-    # the low-remainder region of 3-stat gear may use Valkyrie pieces
     min_stats = gd.full_armor("Min", constraints.num_ascended,
                               constraints.gear_environment, constraints.weapon_type)
-    low_region = (constraints.gear_environment == "3p"
-                  and suggestion["remainder"] <= min_stats)
-    gear = GearSelect(constraints, valkyrie=low_region)
-    # the least precision the gear can possibly give: below this the crit
-    # chance was already over the cap before gear (0 with Valkyrie pieces)
-    result["armor_floor"] = float(sum(min(options) for options in gear.equipment))
-    assignment = next(gear.get_equipment(suggestion["armor_precision"]), None)
-    result["equipment"] = None
-    if assignment is not None:
-        groups = [(label, int(count), meta[choice])
-                  for (label, count), meta, choice
-                  in zip(gear.groups, gear.option_meta, assignment)
-                  if count > 0]
+    total_infusions = int(gd.num_infusions(constraints.num_ascended,
+                                           constraints.weapon_type))
 
-        # the rarity suffix only matters when a slot family actually mixes
-        # rarities (e.g. one ascended and one exotic ring); otherwise the
-        # label would just echo the user's own toggles
-        def family(label):
-            return label.removesuffix(" (ascended)").removesuffix(" (exotic)")
+    def render_row(row):
+        """Full result for one solution row: stats, per-slot gear assignment
+        (Valkyrie-capable in the low-remainder region of 3-stat gear) and the
+        armor precision floor."""
+        result = json.loads(row.to_json())
+        result["total_infusions"] = total_infusions
 
-        families = Counter(family(label) for label, _, _ in groups)
-        result["equipment"] = [
-            {"slot": family(label) if families[family(label)] == 1 else label,
-             "pieces": pieces, "precision_major": int(major), "no_precision": int(none_count)}
-            for label, pieces, (major, _, none_count) in groups
-        ]
+        low_region = (constraints.gear_environment == "3p"
+                      and row["remainder"] <= min_stats)
+        gear = GearSelect(constraints, valkyrie=low_region)
+        # the least precision the gear can possibly give: below this the crit
+        # chance was already over the cap before gear (0 with Valkyrie pieces)
+        result["armor_floor"] = float(sum(min(options) for options in gear.equipment))
+        assignment = next(gear.get_equipment(row["armor_precision"]), None)
+        result["equipment"] = None
+        if assignment is not None:
+            groups = [(label, int(count), meta[choice])
+                      for (label, count), meta, choice
+                      in zip(gear.groups, gear.option_meta, assignment)
+                      if count > 0]
+
+            # the rarity suffix only matters when a slot family actually
+            # mixes rarities; otherwise it would just echo the user's toggles
+            def family(label):
+                return label.removesuffix(" (ascended)").removesuffix(" (exotic)")
+
+            families = Counter(family(label) for label, _, _ in groups)
+            result["equipment"] = [
+                {"slot": family(label) if families[family(label)] == 1 else label,
+                 "pieces": pieces, "precision_major": int(major), "no_precision": int(none_count)}
+                for label, pieces, (major, _, none_count) in groups
+            ]
+        return result
+
+    result = render_row(solution["best"])
+    result["stable_fallback"] = None
+    if solution["stable_fallback"] is not None:
+        result["stable_fallback"] = render_row(solution["stable_fallback"])
     return jsonify(result)

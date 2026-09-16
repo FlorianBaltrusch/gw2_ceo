@@ -614,9 +614,76 @@ function equipmentLine(group, names) {
   return parts.join(", ");
 }
 
-function renderResult(r, env, singleSigil) {
+function renderResult(data, env, singleSigil) {
   const resultBox = el("result");
   resultBox.innerHTML = "";
+
+  const backup = data.stable_fallback;
+  const body = document.createElement("div");
+
+  if (backup) {
+    // why the backup exists, derived from what the best build relies on
+    const reasons = [];
+    if (["perception", "bloodlust"].includes(data.sigil)) {
+      reasons.push("stacking sigil stacks vanish on downstate");
+    }
+    if (data.utility === "writ_accuracy") reasons.push("the accuracy writ needs >90% health");
+
+    const tabs = document.createElement("div");
+    tabs.className = "result-tabs";
+    const bestTab = document.createElement("button");
+    bestTab.type = "button";
+    bestTab.textContent = "Best build";
+    const backupTab = document.createElement("button");
+    backupTab.type = "button";
+    const delta = ((backup.effective_power / data.effective_power - 1) * 100).toFixed(1);
+    backupTab.textContent = `Stable backup (${delta}%)`;
+
+    const activate = (tab, r, backupInfo) => {
+      for (const button of tabs.children) button.classList.toggle("active", button === tab);
+      body.innerHTML = "";
+      renderSolutionBody(body, r, env, singleSigil, backupInfo);
+    };
+    bestTab.addEventListener("click", () => activate(bestTab, data, null));
+    backupTab.addEventListener("click", () => activate(backupTab, backup, { reasons }));
+    tabs.append(bestTab, backupTab);
+    resultBox.append(tabs, body);
+    activate(bestTab, data, null);
+  } else {
+    resultBox.append(body);
+    renderSolutionBody(body, data, env, singleSigil, null);
+  }
+
+  // the trait selection is the same for both variants, so one link suffices
+  const copyButton = document.createElement("button");
+  copyButton.type = "button";
+  copyButton.className = "ghost-button copy-link";
+  copyButton.textContent = "Copy build template chat link";
+  copyButton.addEventListener("click", async () => {
+    const params = new URLSearchParams({ profession: state.profession });
+    for (const id of state.selectedTraits) params.append("traits[]", id);
+    const response = await fetch(`/chatlink/encode?${params}`);
+    const responseBody = await response.json();
+    if (!response.ok) {
+      copyButton.textContent = responseBody.error;
+      return;
+    }
+    await navigator.clipboard.writeText(responseBody.link);
+    copyButton.textContent = `Copied: ${responseBody.link}`;
+  });
+  resultBox.append(copyButton);
+
+  resultBox.classList.remove("hidden");
+}
+
+function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
+  if (backupInfo) {
+    const intro = document.createElement("p");
+    intro.className = "warning";
+    intro.textContent = `This build keeps the crit cap when the best build would lose it ` +
+      `(${backupInfo.reasons.join("; ")}).`;
+    container.append(intro);
+  }
 
   const ep = document.createElement("div");
   ep.className = "ep";
@@ -663,7 +730,7 @@ function renderResult(r, env, singleSigil) {
     stats.append(cell);
   }
 
-  resultBox.append(ep, list, stats);
+  container.append(ep, list, stats);
 
   const heading = document.createElement("h3");
   heading.className = "equipment-heading";
@@ -688,20 +755,8 @@ function renderResult(r, env, singleSigil) {
       addEquipmentRow(group.slot, equipmentLine(group, names));
     }
   }
-  resultBox.append(heading, equipmentList);
+  container.append(heading, equipmentList);
 
-  const fallbackNote = (fb, intro) => {
-    const delta = ((fb.effective_power / r.effective_power - 1) * 100).toFixed(1);
-    const note = document.createElement("p");
-    note.className = "warning";
-    note.textContent = `${intro}: ${SIGIL_NAMES[fb.sigil]} sigil, ` +
-      `${UTILITY_NAMES[fb.utility] || fb.utility}, ` +
-      `${RELIC_NAMES[fb.relic] || fb.relic} — ` +
-      `${Math.round(fb.effective_power).toLocaleString("en-US")} EP (${delta}%) with ` +
-      `${runeName(fb.rune)}, ${FOOD_NAMES[fb.food] || fb.food}, ` +
-      `${fb.prec_infusions} precision infusions.`;
-    resultBox.append(note);
-  };
   // severity order: the red cap-miss first, aureus advisories after
   if (r.absolute_overshoot > 0) {
     const overcapped = r.armor_precision < r.armor_floor;
@@ -717,16 +772,7 @@ function renderResult(r, env, singleSigil) {
             `Overshoot: ${Math.round(r.absolute_overshoot)} precision.`)
       : `No gear split hits the crit cap exactly here — closest overshoot: ` +
         `${Math.round(r.absolute_overshoot)} precision.`;
-    resultBox.append(warning);
-  }
-
-  if (r.stable_fallback) {
-    const reasons = [];
-    if (["perception", "bloodlust"].includes(r.sigil)) {
-      reasons.push("stacking sigil stacks vanish on downstate");
-    }
-    if (r.utility === "writ_accuracy") reasons.push("the accuracy writ needs >90% health");
-    fallbackNote(r.stable_fallback, `Backup without those risks (${reasons.join("; ")})`);
+    container.append(warning);
   }
 
   if (r.relic === "mistburn") {
@@ -734,28 +780,8 @@ function renderResult(r, env, singleSigil) {
     note.className = "warning";
     note.textContent = "Mistburn's +10% crit is a passive while at ≥10 might — keep might up. " +
       "No backup build needed: swapping to a damage relic never breaks the cap.";
-    resultBox.append(note);
+    container.append(note);
   }
-
-  const copyButton = document.createElement("button");
-  copyButton.type = "button";
-  copyButton.className = "ghost-button copy-link";
-  copyButton.textContent = "Copy build template chat link";
-  copyButton.addEventListener("click", async () => {
-    const params = new URLSearchParams({ profession: state.profession });
-    for (const id of state.selectedTraits) params.append("traits[]", id);
-    const response = await fetch(`/chatlink/encode?${params}`);
-    const body = await response.json();
-    if (!response.ok) {
-      copyButton.textContent = body.error;
-      return;
-    }
-    await navigator.clipboard.writeText(body.link);
-    copyButton.textContent = `Copied: ${body.link}`;
-  });
-  resultBox.append(copyButton);
-
-  resultBox.classList.remove("hidden");
 }
 
 el("optimize").addEventListener("click", optimize);

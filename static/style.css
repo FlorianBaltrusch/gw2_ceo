@@ -483,6 +483,22 @@ button { font: inherit; cursor: pointer; }
 /* result card */
 
 .result { margin-top: 14px; }
+.result-tabs { display: flex; gap: 6px; margin-bottom: 4px; }
+.result-tabs button {
+  flex: 1;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 6px;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: .9rem;
+}
+.result-tabs button.active {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 10%, transparent);
+}
 .result .ep {
   text-align: center;
   padding: 10px 0 14px;
