@@ -35,3 +35,8 @@ class BuildConstraints:
 
     # allow the +200 writs (active above 90% health) in the utility slot
     writs: bool = True
+
+    # only one sigil slot is free for stat/damage sigils (the other is
+    # reserved, e.g. Energy on Mirage): candidates then compete against
+    # Force's 5% instead of the second-slot 3% damage sigil
+    single_sigil: bool = False

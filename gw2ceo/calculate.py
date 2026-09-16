@@ -10,7 +10,7 @@ TARGET = 2995  # precision-equivalent for 100% critical chance at level 80
 
 # tie preferences at equal effective power (lower is preferred):
 # a damage sigil is a free bonus at night, stacking sigils are fragile
-SIGIL_PRIO = {"impact": 0, "accuracy": 1, "perception": 2, "bloodlust": 2}
+SIGIL_PRIO = {"impact": 0, "force": 0, "accuracy": 1, "perception": 2, "bloodlust": 2}
 # sharpening stones last longer than writs; the accuracy writ additionally
 # puts the crit cap at risk below 90% health
 UTILITY_PRIO = {"none": 0, "stones": 0, "writ_strength": 1, "writ_accuracy": 2}
@@ -197,12 +197,19 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     stats["food_prio"] = stats["food"].map(FOOD_PRIO).fillna(0)  # type: ignore
     stats["utility_prio"] = stats["utility"].map(UTILITY_PRIO).fillna(0)  # type: ignore
 
-    # the sigil-less rows become the "3% damage sigil" branch (Impact by day,
-    # Night at night - identical 3% baseline): same gear solution, scaled EP
-    impact = stats.loc[stats["sigil"] == "none"].copy()
-    impact["sigil"] = "impact"
-    impact["effective_power"] *= 1 + gd.general_buffs.sigil_impact
-    stats = pd.concat([stats.loc[stats["sigil"] != "none"], impact], ignore_index=True)
+    # the sigil-less rows become the damage-sigil branch. With both slots
+    # free that is the second slot's 3% sigil (Impact by day, Night at
+    # night) next to an always-on Force that cancels out of the comparison;
+    # with only one free slot (the other reserved, e.g. Energy) the stat
+    # sigils compete against Force's 5% itself.
+    if build.single_sigil:
+        branch_sigil, branch_bonus = "force", float(gd.general_buffs.sigil_force)
+    else:
+        branch_sigil, branch_bonus = "impact", float(gd.general_buffs.sigil_impact)
+    damage_sigil = stats.loc[stats["sigil"] == "none"].copy()
+    damage_sigil["sigil"] = branch_sigil
+    damage_sigil["effective_power"] *= 1 + branch_bonus
+    stats = pd.concat([stats.loc[stats["sigil"] != "none"], damage_sigil], ignore_index=True)
     stats["sigil_prio"] = stats["sigil"].map(SIGIL_PRIO).fillna(0)  # type: ignore
 
     # likewise the relic-less rows become the "damage relic" branch
@@ -251,7 +258,7 @@ def calc_ep(profession: Profession, build: BuildConstraints) -> dict:
     # backup - swapping Mistburn for a damage relic keeps the cap)
     stable_fallback = None
     if best["sigil"] in ("perception", "bloodlust") or best["utility"] == "writ_accuracy":
-        stable = stats.loc[stats["sigil"].isin(["accuracy", "impact"])
+        stable = stats.loc[stats["sigil"].isin(["accuracy", "impact", "force"])
                            & stats["utility"].isin(["stones", "writ_strength", "none"])]
         if not stable.empty:
             stable_fallback = stable.iloc[0]

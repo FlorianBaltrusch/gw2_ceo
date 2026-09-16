@@ -513,12 +513,14 @@ const SIGIL_NAMES = {
   perception: "Perception (+250 precision at 25 stacks)",
   bloodlust: "Bloodlust (+250 power at 25 stacks)",
   impact: "Impact (+3%) — or Night, +10% at night",
+  force: "Force (+5% damage)",
 };
 const SIGIL_SHORT = {
   accuracy: "Accuracy",
   perception: "Perception",
   bloodlust: "Bloodlust",
   impact: "Impact (or Night)",
+  force: "Force",
 };
 const UTILITY_NAMES = {
   stones: "Superior Sharpening Stone",
@@ -556,6 +558,7 @@ async function optimize() {
   params.set("utility", el("opt-utility").checked);
   params.set("stacking", el("opt-stacking").checked);
   params.set("writs", el("opt-writs").checked);
+  params.set("single_sigil", el("opt-single-sigil").checked);
 
   const errorBox = el("calc-error");
   const resultBox = el("result");
@@ -574,7 +577,7 @@ async function optimize() {
       return;
     }
     errorBox.classList.add("hidden");
-    renderResult(await response.json(), gear.env);
+    renderResult(await response.json(), gear.env, el("opt-single-sigil").checked);
   } catch {
     errorBox.textContent = "Could not reach the optimizer — check your connection and try again.";
     errorBox.classList.remove("hidden");
@@ -611,7 +614,7 @@ function equipmentLine(group, names) {
   return parts.join(", ");
 }
 
-function renderResult(r, env) {
+function renderResult(r, env, singleSigil) {
   const resultBox = el("result");
   resultBox.innerHTML = "";
 
@@ -631,7 +634,8 @@ function renderResult(r, env) {
     ["Food", FOOD_NAMES[r.food] || capitalize(r.food)],
     ["Utility", UTILITY_NAMES[r.utility] || capitalize(String(r.utility))],
     ["Relic", RELIC_NAMES[r.relic] || capitalize(String(r.relic))],
-    ["Second sigil (next to Force)", SIGIL_NAMES[r.sigil] || capitalize(String(r.sigil))],
+    [singleSigil ? "Sigil (other slot reserved)" : "Second sigil (next to Force)",
+     SIGIL_NAMES[r.sigil] || capitalize(String(r.sigil))],
     ["Precision infusions", `${r.prec_infusions} of ${r.total_infusions} (rest power)`],
   ];
   for (const [term, value] of facts) {
@@ -672,7 +676,10 @@ function renderResult(r, env) {
     dd.textContent = text;
     equipmentList.append(dt, dd);
   };
-  addEquipmentRow("Sigils", `Force + ${SIGIL_SHORT[r.sigil] || capitalize(String(r.sigil))}`);
+  const sigilShort = SIGIL_SHORT[r.sigil] || capitalize(String(r.sigil));
+  addEquipmentRow("Sigils", singleSigil
+    ? `${sigilShort} (second slot reserved)`
+    : `Force + ${sigilShort}`);
   addEquipmentRow("Relic", r.relic === "mistburn" ? "Mistburn" : "Thief / Eagle / Fireworks (free choice)");
   addEquipmentRow("Jade bot core", "Tier 10 (+235 vitality, already counted)");
   if (r.equipment) {

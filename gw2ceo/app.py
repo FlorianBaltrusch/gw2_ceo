@@ -166,6 +166,7 @@ def calculate():
 
             stacking_sigils=request.args.get("stacking", "true") == "true",
             writs=request.args.get("writs", "true") == "true",
+            single_sigil=request.args.get("single_sigil", "false") == "true",
         )
 
         solution = calc_ep(profession, constraints)
