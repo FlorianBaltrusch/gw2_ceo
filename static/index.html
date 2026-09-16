@@ -60,18 +60,30 @@
         </div>
 
         <div class="control-row">
-          <span class="control-label">Boons &amp; consumables</span>
+          <span class="control-label">Boons</span>
           <label class="check"><input type="checkbox" id="opt-fury" checked> Fury</label>
           <label class="check might">Might
             <input type="range" id="opt-might" min="0" max="25" value="25">
             <output id="might-value">25</output>
           </label>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Consumables</span>
           <label class="check"><input type="checkbox" id="opt-food" checked> Food</label>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Utility consumable</span>
           <label class="check"><input type="checkbox" id="opt-utility" checked> Sharpening stones</label>
-          <label class="check"><input type="checkbox" id="opt-stacking" checked>
-            Stacking sigils <span class="check-note">(Perception/Bloodlust — off for raids)</span></label>
           <label class="check"><input type="checkbox" id="opt-writs" checked>
             Writs <span class="check-note">(+200 above 90% health)</span></label>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Sigils</span>
+          <label class="check"><input type="checkbox" id="opt-stacking" checked>
+            Stacking sigils <span class="check-note">(Perception/Bloodlust — off for raids)</span></label>
         </div>
 
         <div id="build-warnings" class="build-warnings hidden"></div>
