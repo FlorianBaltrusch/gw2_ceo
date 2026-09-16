@@ -23,6 +23,7 @@ class BuildConstraints:
     num_ascended: np.ndarray
 
     food: bool
+    # allow sharpening stones in the utility slot (independent of writs)
     utility: bool
 
     fury: bool

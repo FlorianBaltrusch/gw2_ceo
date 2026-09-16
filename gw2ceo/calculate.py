@@ -34,19 +34,22 @@ def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
 
 def _utility_candidates(build: BuildConstraints) -> pd.DataFrame:
     """Candidates for the utility-consumable slot: sharpening stones (handled
-    as a conversion later) against the flat +200 writs (active above 90%
-    health)."""
-    if not build.utility:
-        return pd.DataFrame(data={"utility": ["none"],
-                                  "util_precision": [0.0], "util_power": [0.0]})
-    utilities = pd.DataFrame(data={
-        "utility": ["stones", "writ_accuracy", "writ_strength"],
-        "util_precision": [0.0, float(gd.general_buffs.writ_precision), 0.0],
-        "util_power": [0.0, 0.0, float(gd.general_buffs.writ_power)],
-    })
-    if not build.writs:
-        utilities = utilities.loc[utilities["utility"] == "stones"]
-    return utilities
+    as a conversion later) and the flat +200 writs (active above 90% health)
+    are independent toggles; 'none' is always in the pool, so unticking both
+    simply leaves the slot empty."""
+    names = ["none"]
+    precisions = [0.0]
+    powers = [0.0]
+    if build.utility:
+        names.append("stones")
+        precisions.append(0.0)
+        powers.append(0.0)
+    if build.writs:
+        names += ["writ_accuracy", "writ_strength"]
+        precisions += [float(gd.general_buffs.writ_precision), 0.0]
+        powers += [0.0, float(gd.general_buffs.writ_power)]
+    return pd.DataFrame(data={"utility": names, "util_precision": precisions,
+                              "util_power": powers})
 
 
 def _relic_candidates(build: BuildConstraints) -> pd.DataFrame:
