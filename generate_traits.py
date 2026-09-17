@@ -18,11 +18,18 @@ review work stable across regenerations. Icons (official render-service
 URLs) are attached by id after the override merge, so overrides never need
 to carry them.
 
-Usage:  python generate_traits.py   (run from the repository root)
+Usage:  python generate_traits.py [--refresh]   (run from the repository root)
+
+--refresh drops the cached API data (professions, specializations, traits,
+skills) and refetches everything - run this after a GW2 balance patch. The
+override drift report then warns about hand-reviewed rows whose values the
+API no longer backs; re-verify those against the wiki.
 """
 
 import os
 import re
+import shutil
+import sys
 
 import pandas as pd
 import requests
@@ -282,8 +289,10 @@ def main():
 
     if os.path.isfile(OVERRIDES_PATH):
         overrides = pd.read_csv(OVERRIDES_PATH)
+        upstream = df.loc[df["id"].isin(overrides["id"])].copy()
         df = df.loc[~df["id"].isin(overrides["id"])]
         df = pd.concat([df, overrides.loc[overrides["effect"] != "drop"]], ignore_index=True)
+        report_override_drift(upstream, overrides)
 
     df = df.sort_values(by=["profession", "elite", "specialization", "name", "effect"])
     df["icon"] = df["id"].map(icons).fillna("")  # type: ignore
@@ -319,5 +328,61 @@ def main():
               .to_string(index=False, max_colwidth=60))  # type: ignore
 
 
+# override values that intentionally differ from the API's facts because
+# they come from the wiki (conditional bonus parts, multiplied stack values);
+# re-verify these manually when their trait appears in patch notes
+WIKI_SOURCED_VALUES = {
+    (692, 10.0),    # Superiority Complex: conditional +10% vs disabled/low foes
+    (2353, 16.0),   # Fortissimo: 4% x 4 instruments
+    (2142, 33.0),   # Brutal Momentum: full-endurance value (API has only the base)
+}
+
+
+def report_override_drift(upstream, overrides):
+    """Tripwire for balance patches: warn when an overridden value is no
+    longer among the values the API generates for that trait and effect.
+    Rows modeled at max stacks (note mentions stacks), wiki-sourced values
+    and rows without upstream data (hand-entered signets etc.) are skipped."""
+    comparable = overrides.loc[(overrides["effect"] != "drop")
+                               & ~overrides["note"].str.contains("stack", case=False, na=False)
+                               & ~overrides.apply(lambda row: (row["id"], row["value"])
+                                                  in WIKI_SOURCED_VALUES, axis=1)]
+    drifted = []
+    for row in comparable.to_dict("records"):
+        candidates = upstream.loc[(upstream["id"] == row["id"])
+                                  & (upstream["effect"] == row["effect"]), "value"].dropna()
+        if candidates.empty or pd.isna(row["value"]):
+            continue
+        if not (candidates == row["value"]).any():
+            drifted.append(f"  id {row['id']} {row['name']} [{row['effect']}]: "
+                           f"override {row['value']}, api now offers {sorted(candidates.unique())}")
+    if drifted:
+        print("\nWARNING - overridden values no longer backed by the API (balance patch?)"
+              " - re-verify these against the wiki:")
+        print("\n".join(drifted))
+    else:
+        print("override drift check: all comparable overrides still backed by the API")
+
+
+def check_rune_data():
+    """The hand-maintained per-piece rune bonuses must sum to the 6-piece
+    totals in runes.csv."""
+    runes = pd.read_csv("assets/runes.csv", index_col=0)
+    tiers = pd.read_csv("assets/rune_tiers.csv")
+    for rune in runes.index:
+        totals = tiers.loc[tiers["rune"] == rune, ["power", "precision", "ferocity", "vitality"]].sum()
+        if not (totals.values == runes.loc[rune].values).all():
+            raise SystemExit(f"rune data mismatch for '{rune}': tiers sum to "
+                             f"{list(totals)}, runes.csv says {list(runes.loc[rune])}")
+    print(f"rune data check: {len(runes)} runes consistent with their tier bonuses")
+
+
 if __name__ == "__main__":
+    if "--refresh" in sys.argv[1:]:
+        # drop the cached API data so a balance patch actually reaches us;
+        # images are kept (existing files are skipped, new ones download)
+        for endpoint in ("professions", "specializations", "traits", "skills"):
+            shutil.rmtree(os.path.join("assets", "api-cache", endpoint), ignore_errors=True)
+        print("api-cache dropped - refetching from the GW2 API")
+    check_rune_data()
     main()

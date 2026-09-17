@@ -83,7 +83,7 @@ request (can take a few seconds).
 cd /opt/gw2_ceo
 git pull
 .venv/bin/pip install -r requirements.txt          # only when it changed
-PYTHONPATH=. .venv/bin/python generate_traits.py   # after balance patches
+PYTHONPATH=. .venv/bin/python generate_traits.py --refresh   # after balance patches
 sudo systemctl restart gw2ceo
 ```
 
