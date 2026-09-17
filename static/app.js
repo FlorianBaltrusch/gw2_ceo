@@ -18,7 +18,93 @@ const professionImage = (profession) =>
 
 const state = { profession: null, spec: null };
 
+// what the builder panel currently shows - survives navigating away, so
+// browser back/forward can return to it without wiping the trait selection
+const loaded = { profession: null, spec: null };
+
 const el = (id) => document.getElementById(id);
+
+// ---------- URL navigation ----------
+// every view has a URL - /, ?profession=X, ?profession=X&spec=Y (or spec=core) -
+// so the browser's back/forward buttons walk the same steps as the in-page ones
+
+function urlForState() {
+  const params = new URLSearchParams();
+  if (state.profession) {
+    params.set("profession", state.profession);
+    if (state.spec) params.set("spec", state.spec.coreArt ? "core" : state.spec.name);
+  }
+  const query = params.toString();
+  return location.pathname + (query ? `?${query}` : "");
+}
+
+function syncUrl(mode) {  // "push" (new history entry) or "replace"
+  const url = urlForState();
+  if (url !== location.pathname + location.search) {
+    history[`${mode}State`](null, "", url);
+  }
+}
+
+function showOverlay(step) {  // "professions" or "specs"
+  const overlay = el("overlay");
+  overlay.classList.remove("hidden", "closing");
+  el("profession-picker").classList.toggle("hidden", step !== "professions");
+  el("spec-picker").classList.toggle("hidden", step !== "specs");
+  el("topbar").classList.add("hidden");
+  el("main").classList.add("hidden");
+}
+
+function showBuilder() {  // instant variant of finishSelection for history jumps
+  const overlay = el("overlay");
+  overlay.classList.add("hidden");
+  overlay.classList.remove("closing");
+  el("topbar").classList.remove("hidden");
+  el("main").classList.remove("hidden");
+}
+
+// render whatever view the current URL names (initial load and back/forward)
+async function applyLocation() {
+  const query = new URLSearchParams(location.search);
+  const professionParam = query.get("profession") || "";
+  const match = PROFESSIONS.find(p => p.name.toLowerCase() === professionParam.toLowerCase());
+
+  if (!match) {
+    state.profession = null;
+    state.spec = null;
+    showOverlay("professions");
+    return;
+  }
+
+  const specParam = query.get("spec");
+  if (!specParam) {
+    await selectProfession(match.name);
+    return;
+  }
+
+  // straight to the builder; when it already shows exactly this profession
+  // and spec, only the view switches and the trait selection is kept
+  const wantCore = specParam.toLowerCase() === "core";
+  const sameBuilder = loaded.profession === match.name && loaded.spec
+    && (wantCore ? loaded.spec.coreArt
+                 : loaded.spec.name.toLowerCase() === specParam.toLowerCase());
+  if (sameBuilder) {
+    state.profession = loaded.profession;
+    state.spec = loaded.spec;
+    showBuilder();
+    return;
+  }
+
+  const specs = await selectProfession(match.name);
+  if (wantCore) {
+    selectSpec({ name: `Core ${match.name}`, icon: `/icons/tango_${match.name}.png`, coreArt: true });
+    return;
+  }
+  const spec = specs.find(s => s.elite && s.name.toLowerCase() === specParam.toLowerCase());
+  if (spec) selectSpec(spec);
+  // unknown spec name: stay on the spec picker selectProfession opened
+}
+
+window.addEventListener("popstate", () => { applyLocation(); });
 
 // ---------- step 1: professions ----------
 
@@ -39,7 +125,10 @@ function renderProfessionGrid() {
     name.textContent = prof.name;
 
     tile.append(img, name);
-    tile.addEventListener("click", () => selectProfession(prof.name));
+    tile.addEventListener("click", async () => {
+      await selectProfession(prof.name);
+      syncUrl("push");
+    });
     grid.append(tile);
   }
 }
@@ -52,10 +141,10 @@ async function selectProfession(profession) {
   const specs = await response.json();
 
   renderSpecGrid(profession, specs.filter(s => s.elite));
-  el("profession-picker").classList.add("hidden");
-  el("spec-picker").classList.remove("hidden");
+  showOverlay("specs");
   el("spec-question-prof").textContent = profession;
   window.scrollTo({ top: 0 });
+  return specs;
 }
 
 // ---------- step 2: elite specializations ----------
@@ -98,12 +187,17 @@ function specTile(spec) {
   label.append(icon, name);
 
   tile.append(art, label);
-  tile.addEventListener("click", () => selectSpec(spec));
+  tile.addEventListener("click", () => {
+    selectSpec(spec);
+    syncUrl("push");
+  });
   return tile;
 }
 
 function selectSpec(spec) {
   state.spec = spec;
+  loaded.profession = state.profession;
+  loaded.spec = spec;
   finishSelection();
   loadBuilder();
 }
@@ -131,18 +225,13 @@ function finishSelection() {
 }
 
 function reopenSelection() {
-  const overlay = el("overlay");
-  overlay.classList.remove("hidden", "closing");
-  el("spec-picker").classList.add("hidden");
-  el("profession-picker").classList.remove("hidden");
-  el("topbar").classList.add("hidden");
-  el("main").classList.add("hidden");
+  state.profession = null;
+  state.spec = null;
+  showOverlay("professions");
+  syncUrl("push");
 }
 
-el("back-to-professions").addEventListener("click", () => {
-  el("spec-picker").classList.add("hidden");
-  el("profession-picker").classList.remove("hidden");
-});
+el("back-to-professions").addEventListener("click", reopenSelection);
 el("change-selection").addEventListener("click", reopenSelection);
 
 // ---------- builder: traits ----------
@@ -332,10 +421,8 @@ async function loadChatlink() {
   errorBox.classList.add("hidden");
 
   state.pendingIds = new Set(body.selectable_ids);
-  await selectProfession(body.profession);
+  const specs = await selectProfession(body.profession);
   if (body.elite_spec) {
-    const specs = await fetch(`/specializations?profession=${encodeURIComponent(body.profession)}`)
-      .then(r => r.json());
     selectSpec(specs.find(s => s.name === body.elite_spec));
   } else {
     selectSpec({
@@ -344,6 +431,7 @@ async function loadChatlink() {
       coreArt: true,
     });
   }
+  syncUrl("push");
 }
 
 el("chatlink-load").addEventListener("click", loadChatlink);
@@ -790,24 +878,9 @@ el("optimize").addEventListener("click", optimize);
 
 renderProfessionGrid();
 
-// deep links: /?profession=Elementalist opens its spec picker,
-// /?profession=Elementalist&spec=Weaver (or spec=core) opens the builder
+// initial load: render the view the URL names (deep links included), then
+// normalize the address bar (canonical casing, unknown parameters dropped)
 (async () => {
-  const query = new URLSearchParams(location.search);
-  const preProfession = query.get("profession");
-  if (!preProfession) return;
-  const match = PROFESSIONS.find(p => p.name.toLowerCase() === preProfession.toLowerCase());
-  if (!match) return;
-  await selectProfession(match.name);
-
-  const preSpec = query.get("spec");
-  if (!preSpec) return;
-  if (preSpec.toLowerCase() === "core") {
-    selectSpec({ name: `Core ${match.name}`, icon: `/icons/tango_${match.name}.png`, coreArt: true });
-    return;
-  }
-  const specs = await fetch(`/specializations?profession=${encodeURIComponent(match.name)}`)
-    .then(r => r.json());
-  const spec = specs.find(s => s.elite && s.name.toLowerCase() === preSpec.toLowerCase());
-  if (spec) selectSpec(spec);
+  await applyLocation();
+  syncUrl("replace");
 })();
