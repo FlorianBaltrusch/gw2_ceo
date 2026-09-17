@@ -506,6 +506,7 @@ const FOOD_NAMES = {
   butternut: "Bowl of Butternut Squash Soup",
   truffle: "Plate of Truffle Steak",
   curry: "Bowl of Curry Butternut Squash Soup",
+  omnomberry: "Omnomberry Pie (+70 precision, lifesteal on crit)",
   "no food": "none",
 };
 const SIGIL_NAMES = {
@@ -559,6 +560,7 @@ async function optimize() {
   params.set("stacking", el("opt-stacking").checked);
   params.set("writs", el("opt-writs").checked);
   params.set("single_sigil", el("opt-single-sigil").checked);
+  params.set("pie", el("opt-pie").checked);
 
   const errorBox = el("calc-error");
   const resultBox = el("result");

@@ -93,8 +93,12 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     min_stats = gd.full_armor("Min", build.num_ascended, build.gear_environment, build.weapon_type)
     maj_stats = gd.full_armor("Maj", build.num_ascended, build.gear_environment, build.weapon_type)
 
-    if build.food:
-        food = gd.food
+    if build.omnomberry_pie:
+        # open-world mode: the pie's lifesteal is the (unmodeled) payoff, so
+        # it replaces the food contest instead of competing in it
+        food = gd.food.loc[["omnomberry"]]
+    elif build.food:
+        food = gd.food.drop(index="omnomberry")
     else:
         food = pd.DataFrame(data={"power": [0], "precision": [0], "ferocity": [0]}, index=["no food"])
         food.index.name = "food"

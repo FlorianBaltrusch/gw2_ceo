@@ -40,3 +40,8 @@ class BuildConstraints:
     # reserved, e.g. Energy on Mirage): candidates then compete against
     # Force's 5% instead of the second-slot 3% damage sigil
     single_sigil: bool = False
+
+    # open-world mode: fix the food to Omnomberry Pie (+70 precision plus
+    # lifesteal on crit, which the model does not price); overrides the
+    # normal food contest
+    omnomberry_pie: bool = False
