@@ -1,0 +1,9 @@
+rune,healing,power,precision,vitality,concentration,boon_pct
+water,175,0,0,0,0,25
+monk,300,0,0,0,0,15
+altruism,175,0,0,125,0,15
+leadership,36,36,36,36,36,25
+radiance,0,0,0,175,0,25
+sanctuary,0,0,0,300,0,15
+fireworks,0,175,0,0,0,25
+pack,0,175,125,0,0,15

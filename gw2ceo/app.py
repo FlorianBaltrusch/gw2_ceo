@@ -7,7 +7,7 @@ import pandas as pd
 from flask import Flask, Response, jsonify, request, send_from_directory
 
 import gw2ceo.general_data as gd
-from gw2ceo import buildlink, custom_colors
+from gw2ceo import boon, buildlink, custom_colors
 from gw2ceo.calculate import calc_ep
 from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.gearselect import GearSelect
@@ -145,7 +145,13 @@ def calculate():
         counts = Counter(armor)
         num_ascended = [counts[slot] for slot in ARMOR_SLOTS]
 
+        mode = request.args.get("mode", "crit")
+        if mode not in ("crit", "boon"):
+            raise ValueError("mode must be 'crit' or 'boon'")
+
         gear_environment = request.args.get("parameters")
+        if mode == "boon" and gear_environment != "3p":
+            raise ValueError("boon mode is 3-stat only (Harrier's/Magi's)")
         if gear_environment not in ("3p", "4p"):
             raise ValueError("parameters must be '3p' or '4p'")
         weapon_type = request.args.get("handedness")
@@ -168,8 +174,11 @@ def calculate():
             writs=request.args.get("writs", "true") == "true",
             single_sigil=request.args.get("single_sigil", "false") == "true",
             omnomberry_pie=request.args.get("pie", "false") == "true",
+            herald_relic=request.args.get("herald", "true") == "true",
         )
 
+        if mode == "boon":
+            return boon_result(profession, constraints)
         solution = calc_ep(profession, constraints)
     except (ValueError, NotImplementedError) as error:
         return jsonify({"error": str(error)}), 400
@@ -218,3 +227,48 @@ def calculate():
     if solution["stable_fallback"] is not None:
         result["stable_fallback"] = render_row(solution["stable_fallback"])
     return jsonify(result)
+
+
+def boon_result(profession: Profession, constraints: BuildConstraints):
+    """Both boon-mode rankings (healing power first / outgoing healing first)
+    rendered with their gear assignments and stable backups."""
+    solution = boon.calc_boon(profession, constraints)
+    total_infusions = int(gd.num_infusions(constraints.num_ascended,
+                                           constraints.weapon_type))
+
+    def render_boon_row(row):
+        if row is None:
+            return None
+        totals = boon.gear_totals(profession, constraints, row)
+        return {
+            "healing": float(row["healing"]),
+            "outgoing": float(row["outgoing"]),
+            "vitality": float(row["vitality"]),
+            "power": float(row["power"]),
+            "precision": float(row["precision"]),
+            "exact": bool(row["exact"]),
+            # positive: concentration wasted beyond the cap; negative: missing
+            "conc_delta": float(row["overshoot"]) if not row["exact"] else 0.0,
+            "rune": row["rune"],
+            "food": row["food"],
+            "sigil": row["sigil"],
+            "utility": row["utility"],
+            "relic": row["relic"],
+            "conc_infusions": int(row["conc_infusions"]),
+            "total_infusions": total_infusions,
+            # below the floor the cap was already broken before gear
+            "overcapped": bool(row["remainder"] < totals["conc_floor"] - 1),
+            "equipment": [
+                {"slot": label, "pieces": int(count),
+                 "harrier": int(meta[0]), "magi": int(meta[1])}
+                for label, count, meta in totals["groups"]
+            ],
+        }
+
+    return jsonify({
+        "mode": "boon",
+        "healing": {"best": render_boon_row(solution["healing"]["best"]),
+                    "stable_fallback": render_boon_row(solution["healing"]["stable_fallback"])},
+        "outgoing": {"best": render_boon_row(solution["outgoing"]["best"]),
+                     "stable_fallback": render_boon_row(solution["outgoing"]["stable_fallback"])},
+    })

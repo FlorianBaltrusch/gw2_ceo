@@ -45,3 +45,7 @@ class BuildConstraints:
     # lifesteal on crit, which the model does not price); overrides the
     # normal food contest
     omnomberry_pie: bool = False
+
+    # boon mode: allow Relic of the Herald (stacking +250 concentration on
+    # boon application, modeled at max stacks - fragile like stacking sigils)
+    herald_relic: bool = True

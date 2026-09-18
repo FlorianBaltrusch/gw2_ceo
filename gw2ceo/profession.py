@@ -108,6 +108,34 @@ class Profession:
                 result[row["effect"]] += base[row["source"]] * row["value"]
         return result["vitality"], result["power"], result["ferocity"]
 
+    # ---------- boon-duration mode ----------
+
+    def additional_concentration(self):
+        return self._flat("concentration")
+
+    def additional_healing(self):
+        return self._flat("healing")
+
+    def boon_duration_pct(self):
+        """Flat percentage boon duration from traits (adds linearly with
+        concentration inside the capped term)."""
+        rows = self.rows.loc[self.rows["effect"] == "boon_duration_pct"]
+        return float(rows["value"].sum())
+
+    def outgoing_heal_pct(self):
+        """Outgoing-healing modifiers; they stack additively in GW2."""
+        rows = self.rows.loc[self.rows["effect"] == "outgoing_heal_pct"]
+        return float(rows["value"].sum())
+
+    def conversion_rates(self, effect: str) -> dict[str, float]:
+        """Summed conversion rates into one attribute, keyed by source
+        (conversions read pre-conversion values and do not chain)."""
+        rows = self.conversions.loc[self.conversions["effect"] == effect]
+        rates: dict[str, float] = {}
+        for row in rows.to_dict("records"):
+            rates[row["source"]] = rates.get(row["source"], 0.0) + row["value"]
+        return rates
+
     def ferocity_equivalent(self, ferocity):
         """crit_damage_pct trait rows are multiplicative on-crit damage
         modifiers, not additions to the ferocity attribute: they scale every
