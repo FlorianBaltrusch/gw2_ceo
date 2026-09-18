@@ -110,6 +110,46 @@ class GearSelect:
         # memoize per instance (a class-level @cache would keep every
         # instance alive for the lifetime of the server)
         self.overshoot_values = cache(self._overshoot_values)
+        self._point_table = None
+
+    def point_table(self):
+        """Every reachable armor-precision total with the best complementary
+        stats and the choices behind it: (precision array, (power, ferocity,
+        vitality) matrix, choices list), sorted by precision. 3-stat gear
+        pays precision from power (ferocity is fixed), 4-stat gear from
+        ferocity (power is fixed); "best" maximizes (power + ferocity,
+        vitality) - the fixed part cancels within an environment. Built
+        lazily: only the no-crit-cap mode needs it."""
+        if self._point_table is None:
+            four_stats = self.constraints.gear_environment == "4p"
+            points = {0.0: ((0.0, 0.0, 0.0), ())}
+            for (maj, mino), options, metas in zip(self.group_budgets,
+                                                   self.equipment, self.option_meta):
+                merged = {}
+                for prec_sum, (value, choices) in points.items():
+                    for j, (option, (major, minor, none)) in enumerate(zip(options, metas)):
+                        if four_stats:
+                            power = maj * (major + minor)
+                            ferocity = mino * major + maj * minor
+                            vitality = mino * (major + minor)
+                        else:
+                            power = mino * major + maj * (minor + none)
+                            ferocity = mino * (major + minor + none)
+                            vitality = mino * none
+                        key = round(prec_sum + option, 6)
+                        candidate = ((value[0] + power, value[1] + ferocity,
+                                      value[2] + vitality), choices + (j,))
+                        rank = (candidate[0][0] + candidate[0][1], candidate[0][2])
+                        if (key not in merged
+                                or rank > (merged[key][0][0] + merged[key][0][1],
+                                           merged[key][0][2])):
+                            merged[key] = candidate
+                points = merged
+            precision = np.array(sorted(points))
+            values = np.array([points[p][0] for p in precision])
+            choices = [points[p][1] for p in precision]
+            self._point_table = (precision, values, choices)
+        return self._point_table
 
 
     def _overshoot_values(self, target, i=None):

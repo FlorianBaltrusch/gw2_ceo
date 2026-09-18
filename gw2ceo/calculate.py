@@ -6,7 +6,7 @@ import pandas as pd
 import gw2ceo.general_data as gd
 from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.gearselect import GearSelect
-from gw2ceo.profession import Profession
+from gw2ceo.profession import BASE_TOUGHNESS, Profession
 
 TARGET = 2995  # precision-equivalent for 100% critical chance at level 80
 
@@ -120,12 +120,11 @@ def _mixed_runes() -> pd.DataFrame | None:
     return pd.concat([gd.runes, mixed])
 
 
-def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame) -> pd.DataFrame:
-    """Score every food x rune x sigil x utility x infusion combination and
-    return the fully ranked table."""
-    min_stats = gd.full_armor("Min", build.num_ascended, build.gear_environment, build.weapon_type)
-    maj_stats = gd.full_armor("Maj", build.num_ascended, build.gear_environment, build.weapon_type)
-
+def _candidate_stats(profession: Profession, build: BuildConstraints,
+                     runes: pd.DataFrame) -> pd.DataFrame:
+    """One row per food x rune x sigil x utility x relic x infusion
+    combination with the pre-gear (raw, pre-multiplier) stat totals - the
+    shared starting point of the capped and the free-crit solver."""
     if build.omnomberry_pie:
         # open-world mode: the pie's lifesteal is the (unmodeled) payoff, so
         # it replaces the food contest instead of competing in it
@@ -177,6 +176,16 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     stats["ferocity"] += profession.additional_ferocity()
     stats["vitality"] = (gd.general_buffs.base_vitality + gd.general_buffs.jade_bot
                          + profession.additional_vitality() + stats["vitality_rune"])
+
+    return stats  # type: ignore
+
+
+def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame) -> pd.DataFrame:
+    """Score every candidate combination against the exact crit cap and
+    return the fully ranked table."""
+    min_stats = gd.full_armor("Min", build.num_ascended, build.gear_environment, build.weapon_type)
+    maj_stats = gd.full_armor("Maj", build.num_ascended, build.gear_environment, build.weapon_type)
+    stats = _candidate_stats(profession, build, runes)
 
     vit_prec_conversion = profession.vit_prec_conversion()
     stats["precision"] += stats["vitality"] * vit_prec_conversion
@@ -308,4 +317,101 @@ def calc_ep(profession: Profession, build: BuildConstraints) -> dict:
         if not stable.empty:
             stable_fallback = stable.iloc[0]
 
+    return {"best": best, "stable_fallback": stable_fallback}
+
+
+def calc_power(profession: Profession, build: BuildConstraints) -> dict:
+    """The free-crit mode: maximize true effective power
+    power x (1 + crit_chance x (0.5 + ferocity/1500))
+    with no cap constraint - the crit chance lands wherever that product
+    peaks (chance capped at 100%). Percentage attribute traits fit naturally
+    here: without a cap there is nothing to overshoot.
+
+    For every candidate row the gear's reachable precision points (with their
+    best complementary stats) are evaluated in full, vectorized in chunks."""
+    stats = _candidate_stats(profession, build, gd.runes)
+    gear = GearSelect(build, valkyrie=True)
+    gear_precision, gear_values, _ = gear.point_table()
+    gear_power, gear_ferocity, gear_vitality = gear_values.T
+
+    multiplier = profession.attribute_multiplier()
+    vit_prec = profession.vit_prec_conversion()
+    toughness = BASE_TOUGHNESS + profession._flat("toughness")
+    conversions = [record for record in profession.conversions.to_dict("records")
+                   if record["effect"] in ("power", "ferocity", "vitality")]
+
+    columns = {name: np.empty(len(stats)) for name in
+               ("effective_power", "crit_pct", "power", "precision",
+                "ferocity", "vitality", "best_point")}
+    arrays = {name: stats[name].to_numpy(dtype=float) for name in
+              ("precision", "power", "ferocity", "vitality", "chance", "sigil_damage")}
+    stones_rows = (stats["utility"] == "stones").to_numpy()
+
+    for start in range(0, len(stats), 512):
+        rows = slice(start, min(start + 512, len(stats)))
+        # raw (pre-conversion, pre-multiplier) totals: rows x gear points
+        precision = (arrays["precision"][rows, None] + gear_precision[None, :]
+                     + vit_prec * gear_vitality[None, :])
+        power = arrays["power"][rows, None] + gear_power[None, :]
+        ferocity = arrays["ferocity"][rows, None] + gear_ferocity[None, :]
+        vitality = arrays["vitality"][rows, None] + gear_vitality[None, :]
+
+        # trait conversions read the raw values and do not chain
+        sources = {"power": power, "precision": precision, "ferocity": ferocity,
+                   "vitality": vitality, "toughness": toughness}
+        adjusted = {"power": power.copy(), "ferocity": ferocity.copy(),
+                    "vitality": vitality.copy()}
+        for record in conversions:
+            adjusted[record["effect"]] += record["value"] * sources[record["source"]]
+        adjusted["power"] += stones_rows[rows, None] * (
+            precision * float(gd.general_buffs.stones_prec)
+            + adjusted["ferocity"] * float(gd.general_buffs.stones_fero))
+
+        panel_power = adjusted["power"] * multiplier
+        panel_precision = precision * multiplier
+        panel_ferocity = adjusted["ferocity"] * multiplier
+        chance = np.minimum(1.0, (panel_precision + arrays["chance"][rows, None]) / TARGET)
+        effective = (panel_power * (1 + chance * (0.5 + panel_ferocity / 1500))
+                     * arrays["sigil_damage"][rows, None])
+
+        best = effective.argmax(axis=1)
+        take = (np.arange(effective.shape[0]), best)
+        columns["best_point"][rows] = best
+        columns["effective_power"][rows] = effective[take]
+        columns["crit_pct"][rows] = chance[take] * 100
+        columns["power"][rows] = panel_power[take]
+        columns["precision"][rows] = panel_precision[take]
+        columns["ferocity"][rows] = panel_ferocity[take]
+        columns["vitality"][rows] = adjusted["vitality"][take] * multiplier
+    for name, values in columns.items():
+        stats[name] = values
+
+    # the relic-less rows become the "damage relic" branch, like in the
+    # capped mode (a constant factor per row never changes the best point)
+    damage_relic = stats.loc[stats["relic"] == "none"].copy()
+    damage_relic["relic"] = "damage"
+    damage_relic["effective_power"] *= 1 + gd.general_buffs.relic_damage
+    stats = pd.concat([stats.loc[stats["relic"] != "none"], damage_relic],
+                      ignore_index=True)
+    stats["relic_prio"] = stats["relic"].map({"damage": 0, "mistburn": 1}).fillna(0)  # type: ignore
+    stats["food_prio"] = stats["food"].map(FOOD_PRIO).fillna(0)  # type: ignore
+    stats["utility_prio"] = stats["utility"].map(UTILITY_PRIO).fillna(0)  # type: ignore
+
+    by, ascending = zip(
+        ("effective_power", False),
+        ("prec_infusions", True),
+        ("utility_prio", True),
+        ("sigil_prio", True),
+        ("relic_prio", True),
+        ("food_prio", True),
+    )
+    stats = stats.sort_values(by=list(by), ascending=list(ascending))
+
+    best = stats.iloc[0]
+    stable_fallback = None
+    if best["sigil_stacking"] or best["utility"] == "writ_accuracy":
+        stable = stats.loc[~stats["sigil_stacking"]
+                           & stats["utility"].isin(["stones", "writ_strength", "none"])]
+        if not stable.empty:
+            stable_fallback = stable.iloc[0]
     return {"best": best, "stable_fallback": stable_fallback}

@@ -865,7 +865,9 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
   epValue.textContent = Math.round(r.effective_power).toLocaleString("en-US");
   const epCaption = document.createElement("span");
   epCaption.className = "caption";
-  epCaption.textContent = "effective power at 100% crit";
+  epCaption.textContent = r.crit_pct !== undefined
+    ? `effective power at ${r.crit_pct}% critical chance`
+    : "effective power at 100% crit";
   ep.append(epValue, epCaption);
 
   const list = document.createElement("dl");
@@ -878,6 +880,9 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
      sigilNames(String(r.sigil), SIGIL_NAMES)],
     ["Precision infusions", `${r.prec_infusions} of ${r.total_infusions} (rest power)`],
   ];
+  if (r.crit_pct !== undefined) {
+    facts.unshift(["Critical chance", `${r.crit_pct}% — wherever effective power peaks`]);
+  }
   for (const [term, value] of facts) {
     const dt = document.createElement("dt");
     dt.textContent = term;

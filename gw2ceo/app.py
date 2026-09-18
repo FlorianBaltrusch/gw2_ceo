@@ -8,7 +8,7 @@ from flask import Flask, Response, jsonify, request, send_from_directory
 
 import gw2ceo.general_data as gd
 from gw2ceo import boon, buildlink, custom_colors
-from gw2ceo.calculate import calc_ep
+from gw2ceo.calculate import calc_ep, calc_power
 from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.gearselect import GearSelect
 from gw2ceo.icons import ensure_icon
@@ -159,8 +159,8 @@ def calculate():
         num_ascended = [counts[slot] for slot in ARMOR_SLOTS]
 
         mode = request.args.get("mode", "crit")
-        if mode not in ("crit", "boon"):
-            raise ValueError("mode must be 'crit' or 'boon'")
+        if mode not in ("crit", "boon", "power"):
+            raise ValueError("mode must be 'crit', 'boon' or 'power'")
 
         gear_environment = request.args.get("parameters")
         if mode == "boon" and gear_environment != "3p":
@@ -199,6 +199,8 @@ def calculate():
             if not 0 <= k <= 1e6:
                 raise ValueError("k must be between 0 and 1000000")
             return boon_result(profession, constraints, ranking, k)
+        if mode == "power":
+            return power_result(profession, constraints)
         solution = calc_ep(profession, constraints)
     except (ValueError, NotImplementedError) as error:
         return jsonify({"error": str(error)}), 400
@@ -247,6 +249,44 @@ def calculate():
     result["stable_fallback"] = None
     if solution["stable_fallback"] is not None:
         result["stable_fallback"] = render_row(solution["stable_fallback"])
+    return jsonify(result)
+
+
+def power_result(profession: Profession, constraints: BuildConstraints):
+    """Free-crit mode: the gear point maximizing true effective power, with
+    the crit chance landing wherever that product peaks."""
+    solution = calc_power(profession, constraints)
+    gear = GearSelect(constraints, valkyrie=True)
+    _, _, choices = gear.point_table()
+    total_infusions = int(gd.num_infusions(constraints.num_ascended,
+                                           constraints.weapon_type))
+
+    def render(row):
+        if row is None:
+            return None
+        result = json.loads(row.to_json())
+        result["total_infusions"] = total_infusions
+        result["exact"] = True  # no cap, hence no cap warnings
+        result["crit_pct"] = round(float(row["crit_pct"]), 1)
+        choice = choices[int(row["best_point"])]
+        groups = [(label, int(count), meta[j])
+                  for (label, count), meta, j
+                  in zip(gear.groups, gear.option_meta, choice) if count > 0]
+
+        def family(label):
+            return label.removesuffix(" (ascended)").removesuffix(" (exotic)")
+
+        families = Counter(family(label) for label, _, _ in groups)
+        result["equipment"] = [
+            {"slot": family(label) if families[family(label)] == 1 else label,
+             "pieces": pieces, "precision_major": int(major), "no_precision": int(none_count)}
+            for label, pieces, (major, _, none_count) in groups
+        ]
+        return result
+
+    result = render(solution["best"])
+    assert result is not None  # a best row always exists
+    result["stable_fallback"] = render(solution["stable_fallback"])
     return jsonify(result)
 
 
