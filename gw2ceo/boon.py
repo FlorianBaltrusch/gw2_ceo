@@ -219,21 +219,23 @@ class BoonGear:
 
 
 def _sigil_members(build: BuildConstraints) -> list[tuple]:
-    """(name, concentration, healing, outgoing) per sigil; stacking sigils
-    at their 25-stack maximum. "free" is an empty slot for a proc sigil of
-    the user's choice (Water, Renewal ...)."""
+    """(name, concentration, healing, outgoing %, boon duration % as
+    concentration-equivalent) per sigil; stacking sigils at their 25-stack
+    maximum. The Concentration sigil grants duration % (not the attribute),
+    so percentage-attribute traits never multiply it. "free" is an empty
+    slot for a proc sigil of the user's choice (Water, Renewal ...)."""
     buffs = gd.general_buffs
     members = [
-        ("transference", 0.0, 0.0, float(buffs.sigil_transference_pct)),
-        ("concentration", float(buffs.sigil_concentration_pct * buffs.conc_per_bd_pct),
-         0.0, 0.0),
-        ("free", 0.0, 0.0, 0.0),
+        ("transference", 0.0, 0.0, float(buffs.sigil_transference_pct), 0.0),
+        ("concentration", 0.0, 0.0, 0.0,
+         float(buffs.sigil_concentration_pct * buffs.conc_per_bd_pct)),
+        ("free", 0.0, 0.0, 0.0, 0.0),
     ]
     if build.stacking_sigils:
         members += [
-            ("bounty", float(buffs.sigil_bounty), 0.0, 0.0),
-            ("life", 0.0, float(buffs.sigil_life), 0.0),
-            ("benevolence", 0.0, 0.0, float(buffs.sigil_benevolence_pct)),
+            ("bounty", float(buffs.sigil_bounty), 0.0, 0.0, 0.0),
+            ("life", 0.0, float(buffs.sigil_life), 0.0, 0.0),
+            ("benevolence", 0.0, 0.0, float(buffs.sigil_benevolence_pct), 0.0),
         ]
     return members
 
@@ -254,6 +256,7 @@ def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
         "sigil_conc": sum(sigil[1] for sigil in pick),
         "sigil_healing": sum(sigil[2] for sigil in pick),
         "sigil_outgoing": sum(sigil[3] for sigil in pick),
+        "sigil_bd_equiv": sum(sigil[4] for sigil in pick),
         "sigil_stacking": any(sigil[0] in STACKING_SIGILS for sigil in pick),
         "sigil_prio": sum(SIGIL_PRIO[sigil[0]] for sigil in pick),
     } for pick in picks])
@@ -359,11 +362,14 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
                             + stats["sigil_healing"] + stats["healing_inf"])
     stats["healing_base"] = stats["healing_raw"] + heal_from_power * stats["power_base"]
 
-    stats["conc_flat"] = (profession.additional_concentration()
-                          + profession.boon_duration_pct() * per_pct
-                          + stats["concentration_rune"] + stats["boon_pct"] * per_pct
-                          + stats["concentration_food"] + stats["sigil_conc"]
-                          + stats["relic_conc"] + stats["conc_inf"])
+    # attribute concentration is multiplied by percentage-attribute traits;
+    # duration percentages (rune/sigil/trait boon duration) are not attributes
+    multiplier = profession.attribute_multiplier()
+    stats["conc_attr"] = (profession.additional_concentration()
+                          + stats["concentration_rune"] + stats["concentration_food"]
+                          + stats["sigil_conc"] + stats["relic_conc"] + stats["conc_inf"])
+    stats["bd_equiv"] = (profession.boon_duration_pct() * per_pct
+                         + stats["boon_pct"] * per_pct + stats["sigil_bd_equiv"])
 
     # per-oil conversion profiles: each needs its own gear model, because the
     # gear's side stats feed the conversions ("effective" concentration).
@@ -377,23 +383,28 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
         conv, toughness_rate = _row_conversions(profession, str(utility))
         gear = BoonGear(build, conv)
 
-        # conversions read pre-conversion values, hence healing_raw
+        # conversions read pre-conversion (and pre-multiplier) values
         conc_from_base = (conv.conc_equivalent(
             stats.loc[mask, "healing_raw"], stats.loc[mask, "power_base"],
             stats.loc[mask, "precision_base"], stats.loc[mask, "vitality_base"])
             + toughness_rate * toughness)
-        remainder = (target - stats.loc[mask, "conc_flat"] - conc_from_base).round(6)
+        remainder = ((target - stats.loc[mask, "bd_equiv"]) / multiplier
+                     - stats.loc[mask, "conc_attr"] - conc_from_base).round(6)
 
         index = gear.query_many(remainder.to_numpy())
         delta = gear.conc_points[index] - remainder
         stats.loc[mask, "remainder"] = remainder
-        stats.loc[mask, "overshoot"] = delta
+        stats.loc[mask, "overshoot"] = delta * multiplier  # panel points
         stats.loc[mask, "exact"] = abs(delta) <= EXACT_EPSILON
         gear_values = gear.point_value_matrix[index]
-        stats.loc[mask, "healing"] = stats.loc[mask, "healing_base"] + gear_values[:, 0]
-        stats.loc[mask, "vitality"] = stats.loc[mask, "vitality_base"] + gear_values[:, 1]
-        stats.loc[mask, "power"] = stats.loc[mask, "power_base"] + gear_values[:, 2]
-        stats.loc[mask, "precision"] = stats.loc[mask, "precision_base"] + gear_values[:, 3]
+        stats.loc[mask, "healing"] = (stats.loc[mask, "healing_base"]
+                                      + gear_values[:, 0]) * multiplier
+        stats.loc[mask, "vitality"] = (stats.loc[mask, "vitality_base"]
+                                       + gear_values[:, 1]) * multiplier
+        stats.loc[mask, "power"] = (stats.loc[mask, "power_base"]
+                                    + gear_values[:, 2]) * multiplier
+        stats.loc[mask, "precision"] = (stats.loc[mask, "precision_base"]
+                                        + gear_values[:, 3]) * multiplier
 
     stats["concentration_total"] = target + stats["overshoot"]
 

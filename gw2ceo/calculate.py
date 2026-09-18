@@ -181,7 +181,11 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     vit_prec_conversion = profession.vit_prec_conversion()
     stats["precision"] += stats["vitality"] * vit_prec_conversion
 
-    stats["remainder"] = TARGET - stats["precision"] - stats["chance"]
+    # percentage all-attribute traits multiply the final attribute totals;
+    # crit-chance percentages are not attributes, so they stay outside. The
+    # gear must supply the remainder in raw (pre-multiplier) points.
+    multiplier = profession.attribute_multiplier()
+    stats["remainder"] = (TARGET - stats["chance"]) / multiplier - stats["precision"]
     stats["precision"] += stats["remainder"]
 
     # distribute the armor's Maj/Min budget: the armor must contribute the
@@ -217,17 +221,28 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     gear = GearSelect(build)
     gear_low = GearSelect(build, valkyrie=True) if build.gear_environment == "3p" else gear
     low_region = stats["remainder"] <= min_stats
-    stats["overshoot"] = [
+    pairs = [
         (gear_low if low else gear).overshoot_values(remainder)
         for remainder, low in zip(stats["armor_precision"], low_region)
     ]
-    stats["absolute_overshoot"] = [min(overshoot) for overshoot in stats["overshoot"]]
-    stats["exact"] = stats["absolute_overshoot"] == 0
+    # each pair is (0-if-exact, smallest overshoot); an infinite overshoot
+    # component means even all-major gear falls short of the cap, and the
+    # exact component then carries the shortfall
+    stats["capped"] = [bool(np.isfinite(pair[1])) for pair in pairs]
+    stats["absolute_overshoot"] = [float(min(pair)) for pair in pairs]
+    stats["exact"] = stats["capped"] & (np.abs(stats["absolute_overshoot"]) <= 1e-4)
+    stats["shortfall"] = np.where(stats["capped"], 0.0, stats["absolute_overshoot"])
+
+    # the multiplier scales every attribute (conversions read raw values);
+    # overshoot and shortfall are reported in panel (multiplied) points too
+    for column in ("power", "precision", "ferocity", "vitality",
+                   "absolute_overshoot", "shortfall"):
+        stats[column] = stats[column] * multiplier
 
     # a forced overshoot eats into the armor budget, so rank those rows with
     # the (approximate) honest effective power instead of the ideal one
     stats["ferocity_equivalent"] = profession.ferocity_equivalent(stats["ferocity"])
-    stats["effective_power"] = ((stats["power"] - stats["absolute_overshoot"])
+    stats["effective_power"] = ((stats["power"] - stats["capped"] * stats["absolute_overshoot"])
                                 * (1.5 + stats["ferocity_equivalent"] / 1500))
 
     stats["absolute_remainder"] = np.minimum(abs(stats["armor_precision"] - min_stats),
@@ -249,10 +264,13 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     # might-threshold condition
     stats["relic_prio"] = stats["relic"].map({"damage": 0, "mistburn": 1}).fillna(0)  # type: ignore
 
-    # hitting the cap exactly is the point of the tool; effective power only
-    # ranks within that, and the remaining keys break ties
+    # hitting the cap exactly is the point of the tool; a forced overshoot
+    # (never an undershoot while the cap is reachable) is priced into the
+    # honest effective power, and the remaining keys break ties
     by, ascending = zip(
         ("exact", False),
+        ("capped", False),
+        ("shortfall", True),
         ("effective_power", False),
         ("prec_infusions", True),
         ("absolute_remainder", True),

@@ -36,13 +36,6 @@ class Profession:
         if profession and len(professions) and professions[0].lower() != profession.lower():
             raise ValueError(f"Traits belong to {professions[0]}, not {profession}")
 
-        unsupported = rows.loc[rows["effect"] == "all_stats_pct"]
-        if not unsupported.empty:
-            raise ValueError(
-                "Percentage attribute increases cannot hit exactly 100% critical "
-                f"chance and are not supported: {', '.join(unsupported['name'].unique())}"
-            )
-
         unvalued = rows.loc[rows["value"].isna()]
         if not unvalued.empty:
             raise ValueError(
@@ -79,6 +72,15 @@ class Profession:
         """Critical chance bonuses, in precision equivalents."""
         crit = self.rows.loc[self.rows["effect"] == "crit_chance"]
         return float(crit["value"].sum()) * CRIT_CHANCE_PRECISION_EQUIV
+
+    def attribute_multiplier(self):
+        """Percentage all-attribute traits (Elemental Empowerment, Fortissimo)
+        multiply the final attribute totals - modeled on the hero panel after
+        all flat bonuses and conversions; several sources add their
+        percentages. Duration and chance percentages are not attributes and
+        stay outside the multiplier."""
+        rows = self.rows.loc[self.rows["effect"] == "all_stats_pct"]
+        return 1 + float(rows["value"].sum()) / 100
 
     def power_per_might(self):
         """Extra power per stack of might (on top of might's own 30)."""

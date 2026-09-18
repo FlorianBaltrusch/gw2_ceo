@@ -404,15 +404,12 @@ function traitGroup(title, iconSrc, groupEntries) {
   group.append(header);
 
   for (const entry of groupEntries) {
-    const unsolvable = entry.effects.some(e => e.effect === "all_stats_pct");
-
     const label = document.createElement("label");
-    label.className = unsolvable ? "trait disabled" : "trait";
+    label.className = "trait";
 
     const box = document.createElement("input");
     box.type = "checkbox";
-    box.disabled = unsolvable;
-    if (!unsolvable && state.pendingIds?.has(entry.id)) {
+    if (state.pendingIds?.has(entry.id)) {
       box.checked = true;
       state.selectedTraits.add(entry.id);
     }
@@ -433,7 +430,7 @@ function traitGroup(title, iconSrc, groupEntries) {
     nameLine.textContent = entry.name;
     const slotTag = document.createElement("span");
     slotTag.className = "slot-tag";
-    slotTag.textContent = unsolvable ? "percentage bonus — cannot hit exactly 100%" : (entry.slot || "");
+    slotTag.textContent = entry.slot || "";
     nameLine.append(slotTag);
     const effects = document.createElement("span");
     effects.className = "trait-effects";
@@ -933,11 +930,14 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
   container.append(heading, equipmentList);
 
   // severity order: the red cap-miss first, aureus advisories after
-  if (r.absolute_overshoot > 0) {
+  if (!r.exact) {
     const overcapped = r.armor_precision < r.armor_floor;
     const warning = document.createElement("p");
     warning.className = "warning cap-miss";
-    warning.textContent = overcapped
+    warning.textContent = !r.capped
+      ? `100% critical chance is out of reach: ${pointText(r.absolute_overshoot)} precision ` +
+        `missing. Allow more crit sources or use more ascended pieces.`
+      : overcapped
       ? (env === "4p"
           ? `Crit chance exceeds the cap and 4-stat gear cannot shed precision (every prefix ` +
             `carries it) — switch to the 3-stat environment (Valkyrie pieces) or deselect ` +
@@ -945,8 +945,8 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
           : `Crit chance exceeds 100% even with zero precision from gear — deselect a crit ` +
             `source (trait, sigil, writ or relic). ` +
             `Overshoot: ${pointText(r.absolute_overshoot)} precision.`)
-      : `No gear split hits the crit cap exactly here — closest overshoot: ` +
-        `${pointText(r.absolute_overshoot)} precision.`;
+      : `No gear split hits the crit cap exactly here — overcapping by the least possible: ` +
+        `${pointText(r.absolute_overshoot)} precision is wasted, but the cap holds.`;
     container.append(warning);
   }
 
