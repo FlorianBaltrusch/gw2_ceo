@@ -2,7 +2,10 @@
 
 Pulls every specialization trait and profession skill for all nine professions,
 extracts the facts that affect Power, Precision, Ferocity (API: "CritDamage"),
-Vitality, Toughness or critical chance/damage, and writes one row per effect.
+Vitality, Toughness, critical chance/damage, Concentration (API:
+"BoonDuration"), Healing Power (API: "Healing") or outgoing healing, and
+writes one row per effect. The crit optimizer and the boon-duration optimizer
+read the same file; each mode only uses the effects relevant to it.
 
 Rows with review=True need a manual pass against the wiki:
   - rows where the same fact appears with several values are usually the
@@ -47,6 +50,8 @@ ATTR_MAP = {
     "CritDamage": "ferocity",
     "Vitality": "vitality",
     "Toughness": "toughness",
+    "BoonDuration": "concentration",
+    "Healing": "healing",
 }
 
 # standard boons a trait may apply; their stat effect is handled by the
@@ -58,10 +63,21 @@ BOONS = {
 }
 
 ATTR_WORDS = re.compile(
-    r"(?i)\b(power|precision|ferocity|vitality|critical chance|critical damage)\b"
+    r"(?i)\b(healing power|boon duration|outgoing healing|concentration"
+    r"|power|precision|ferocity|vitality|critical chance|critical damage)\b"
 )
 # phrases that would otherwise false-positive the attribute regex
-ATTR_NOISE = re.compile(r"(?i)healing power|condition damage|condition duration")
+ATTR_NOISE = re.compile(r"(?i)condition damage|condition duration"
+                        r"|incoming healing|incoming boon duration")
+# Buff-description matches mapped onto effect names (plain single-word
+# attributes map onto themselves)
+BUFF_EFFECTS = {
+    "critical chance": "crit_chance",
+    "critical damage": "crit_damage_pct",
+    "healing power": "healing",
+    "boon duration": "boon_duration_pct",
+    "outgoing healing": "outgoing_heal_pct",
+}
 ALL_ATTRIBUTES = re.compile(r"(?i)(\d+) to All Attributes")
 # AttributeAdjust facts that are outgoing damage numbers, not player stats
 DAMAGE_FACT = re.compile(r"(?i)siphon|life steal|damage")
@@ -78,8 +94,17 @@ def extract_facts(facts):
 
         if fact_type == "AttributeAdjust":
             effect = ATTR_MAP.get(fact.get("target"))
-            if effect and not DAMAGE_FACT.search(fact.get("text", "")):
-                yield effect, "", fact.get("value"), fact.get("text", ""), False
+            text = fact.get("text") or ""
+            if not effect or DAMAGE_FACT.search(text):
+                continue
+            # the API reuses AttributeAdjust->Healing for the heal AMOUNTS of
+            # skill effects ("Healing", "Barrier", "Heal per ..."); only
+            # untexted facts are plain attribute gains, and "Healing Power
+            # below/above X% Health" texts are conditional attribute gains
+            if effect == "healing" and text and not text.startswith("Healing Power"):
+                continue
+            review = effect == "healing" and bool(text)
+            yield effect, "", fact.get("value"), text, review
 
         elif fact_type == "BuffConversion":
             effect = ATTR_MAP.get(fact.get("target"))
@@ -95,6 +120,10 @@ def extract_facts(facts):
                 yield "crit_damage_pct", "", fact["percent"], text, True
             elif "Attribute Increase" in text:
                 yield "all_stats_pct", "", fact["percent"], text, True
+            elif text in ("Healing Increase to Others", "Healing Increase"):
+                yield "outgoing_heal_pct", "", fact["percent"], text, True
+            elif text == "Ally Boon Duration":
+                yield "boon_duration_pct", "", fact["percent"], text, True
 
         elif fact_type in ("Buff", "PrefixedBuff"):
             if fact.get("status", "") in BOONS:
@@ -110,11 +139,7 @@ def extract_facts(facts):
             cleaned = ATTR_NOISE.sub(" ", description)
             matches = list(dict.fromkeys(m.lower() for m in ATTR_WORDS.findall(cleaned)))
             for match in matches:
-                effect = {
-                    "critical chance": "crit_chance",
-                    "critical damage": "crit_damage_pct",
-                }.get(match, match)
-                yield effect, "", None, note, True
+                yield BUFF_EFFECTS.get(match, match), "", None, note, True
 
 
 def download_icons(df):
@@ -293,6 +318,7 @@ def main():
         df = df.loc[~df["id"].isin(overrides["id"])]
         df = pd.concat([df, overrides.loc[overrides["effect"] != "drop"]], ignore_index=True)
         report_override_drift(upstream, overrides)
+        report_override_gaps(upstream, overrides)
 
     df = df.sort_values(by=["profession", "elite", "specialization", "name", "effect"])
     df["icon"] = df["id"].map(icons).fillna("")  # type: ignore
@@ -335,6 +361,9 @@ WIKI_SOURCED_VALUES = {
     (692, 10.0),    # Superiority Complex: conditional +10% vs disabled/low foes
     (2353, 16.0),   # Fortissimo: 4% x 4 instruments
     (2142, 33.0),   # Brutal Momentum: full-endurance value (API has only the base)
+    (978, 0.065),   # Wellspring: tooltip/API say 7%, actual conversion is 6.5%
+    (2182, 20.0),   # Righteous Rebel: 4% x 5 Kalla's Fervor stacks
+    (2342, 15.0),   # Familiar's Focus: delta on top of Familiar's Prowess (30% total)
 }
 
 
@@ -362,6 +391,37 @@ def report_override_drift(upstream, overrides):
         print("\n".join(drifted))
     else:
         print("override drift check: all comparable overrides still backed by the API")
+
+
+# api effects under overridden ids that the review consciously skips
+# (verified against the wiki; re-check when the trait appears in patch notes)
+GAP_OK = {
+    (915, "power"),     # Awaken the Pain: modeled as power_per_might instead
+    (1453, "power"),    # Pinnacle of Strength: modeled as might-based power
+    (1849, "power"),    # Applied Force: modeled as might-based power
+    (1503, "crit_damage_pct"),  # Fresh Air: on-crit modifier, ranking-neutral
+    (14410, "ferocity"),        # Signet of Fury: 4s active bonus only
+}
+
+
+def report_override_gaps(upstream, overrides):
+    """Second tripwire: an override replaces ALL generated rows of its id, so
+    an API fact with an effect the override rows do not carry would be masked
+    silently - list those so the reviewer can extend the override."""
+    gaps = []
+    for trait_id, up in upstream.groupby("id"):
+        own = overrides.loc[overrides["id"] == trait_id, "effect"]
+        if (own == "drop").any():
+            continue
+        new = {e for e in set(up["effect"]) - set(own) if (trait_id, e) not in GAP_OK}
+        if new:
+            gaps.append(f"  id {trait_id} {up['name'].iloc[0]}: api also offers "
+                        f"{sorted(new)}, not present in the override")
+    if gaps:
+        print("\nWARNING - api effects masked by overrides - extend or consciously skip:")
+        print("\n".join(gaps))
+    else:
+        print("override gap check: no api effects are masked by overrides")
 
 
 def check_rune_data():
