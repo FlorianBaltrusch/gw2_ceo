@@ -317,6 +317,7 @@ function renderTraitGroups() {
   state.conditionHints = [];
   state.traitStacks = new Map();    // stack-group id -> assumed stacks
   state.traitVariants = new Map();  // trait id -> chosen attunements
+  state.stackControls = new Map();  // stack-group id -> its linked sliders
   const traits = state.traitRows;
   const specs = state.specRows;
 
@@ -431,6 +432,21 @@ function updateBuildWarnings() {
       const [spec, tier] = key.split("|");
       warnings.push(`${joinNames(names)} are competing ${spec} ${TIER_NAMES[tier] || ""} ` +
                     "choices — the game lets you slot only one of them.");
+    }
+  }
+
+  // ticked traits whose current assumptions make them contribute nothing
+  for (const id of state.selectedTraits) {
+    const entry = state.entries?.get(id);
+    if (!entry) continue;
+    const stackRow = entry.effects.find(e => e.max_stacks != null);
+    if (stackRow && (state.traitStacks?.get(Number(stackRow.stack_group)) ?? 1) === 0) {
+      warnings.push(`${entry.name} is ticked at 0 assumed stacks — it contributes nothing.`);
+    }
+    if (entry.effects.some(e => e.variant)
+        && !(state.traitVariants?.get(id) || []).length) {
+      warnings.push(`${entry.name} is ticked but no attunement is chosen — ` +
+                    `it contributes nothing.`);
     }
   }
 
@@ -576,14 +592,17 @@ function traitGroup(title, iconSrc, groupEntries) {
     label.append(box, icon, info);
     group.append(label);
 
-    // stack-scaled traits get a slider for the assumed stacks; linked traits
-    // (Empowered Empowerment) share the owning trait's slider via stack_group
+    // stack-scaled traits get a slider for the assumed stacks; traits sharing
+    // one buff (the two Catalyst Empowerments) get LINKED sliders via their
+    // stack_group - moving one moves the others, they always agree
     const stackRow = entry.effects.find(e => e.max_stacks != null);
-    if (stackRow && Number(stackRow.stack_group) === entry.id) {
+    if (stackRow) {
+      const groupId = Number(stackRow.stack_group);
       const max = Number(stackRow.max_stacks);
       const fallback = stackRow.default_stacks != null ? Number(stackRow.default_stacks) : max;
-      const initial = memory?.stacks.has(entry.id) ? memory.stacks.get(entry.id) : fallback;
-      state.traitStacks.set(entry.id, initial);
+      const initial = memory?.stacks.has(groupId) ? memory.stacks.get(groupId)
+        : (state.traitStacks.has(groupId) ? state.traitStacks.get(groupId) : fallback);
+      state.traitStacks.set(groupId, initial);
       const options = document.createElement("div");
       options.className = "trait-options";
       const slider = document.createElement("input");
@@ -593,9 +612,16 @@ function traitGroup(title, iconSrc, groupEntries) {
       slider.value = String(initial);
       const readout = document.createElement("span");
       readout.textContent = `assumed stacks: ${initial}/${max}`;
+      if (!state.stackControls.has(groupId)) state.stackControls.set(groupId, []);
+      state.stackControls.get(groupId).push({ slider, readout, max });
       slider.addEventListener("input", () => {
-        state.traitStacks.set(entry.id, Number(slider.value));
-        readout.textContent = `assumed stacks: ${slider.value}/${max}`;
+        const count = Number(slider.value);
+        state.traitStacks.set(groupId, count);
+        for (const control of state.stackControls.get(groupId)) {
+          control.slider.value = String(count);
+          control.readout.textContent = `assumed stacks: ${count}/${control.max}`;
+        }
+        updateBuildWarnings();
       });
       options.append(slider, readout);
       group.append(options);
@@ -632,6 +658,7 @@ function traitGroup(title, iconSrc, groupEntries) {
           for (const other of options.querySelectorAll(".variant-chip")) {
             other.classList.toggle("active", active.includes(other.textContent.toLowerCase()));
           }
+          updateBuildWarnings();
         });
         options.append(chip);
       }
