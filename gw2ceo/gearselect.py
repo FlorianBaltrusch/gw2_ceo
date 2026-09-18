@@ -40,15 +40,18 @@ class GearSelect:
 
         # options per slot group with parallel metadata: option_meta[i][j] is
         # the (precision-major, precision-minor, no-precision) piece split
-        # behind equipment[i][j], and groups[i] the (label, piece count)
+        # behind equipment[i][j], groups[i] the (label, piece count) and
+        # group_budgets[i] the (Maj, Min) stat budget of one piece
         self.equipment = []
         self.groups = []
         self.option_meta = []
+        self.group_budgets = []
 
-        def add_group(label, count, options, meta):
+        def add_group(label, count, options, meta, budgets=(0, 0)):
             self.equipment.append(options)
             self.groups.append((label, count))
             self.option_meta.append(meta)
+            self.group_budgets.append(budgets)
 
         def spread(gear, slot, count):
             """all splits of `count` pieces of one slot across the variants"""
@@ -58,7 +61,7 @@ class GearSelect:
                     minor = count - none_count - major
                     options.append(gear["Maj", slot] * major + gear["Min", slot] * minor)
                     meta.append((major, minor, none_count))
-            return options, meta
+            return options, meta, (gear["Maj", slot], gear["Min", slot])
 
         def single(label, min_value, maj_value):
             options = [min_value, maj_value]
@@ -66,7 +69,7 @@ class GearSelect:
             if self.valkyrie:
                 options.append(0)
                 meta.append((0, 0, 1))
-            add_group(label, 1, options, meta)
+            add_group(label, 1, options, meta, (maj_value, min_value))
 
         # Weapon
         if build.weapon_type == "1h":
@@ -134,3 +137,24 @@ class GearSelect:
         for j, option in enumerate(self.equipment[i - 1]):
             for equip in self.get_equipment(target - option, i - 1):
                 yield equip.copy() + [j]
+
+    def get_best_equipment(self, target):
+        """The exact assignment with the most power (then vitality), or None.
+
+        In the normal region every split reaching the same precision has
+        identical totals (Assassin's<->Berserker's trades 1:1), but with
+        Valkyrie pieces they differ: an Assassin's piece paid for with an
+        extra Valkyrie loses power. The solver's ranking assumes all majors
+        go into power, so the displayed split must provably match that."""
+        best, best_value = None, None
+        for assignment in self.get_equipment(target):
+            power = vitality = 0.0
+            for (maj, mino), metas, choice in zip(self.group_budgets,
+                                                  self.option_meta, assignment):
+                major, minor, none = metas[choice]
+                power += mino * major + maj * minor + maj * none
+                vitality += mino * none
+            value = (power, vitality)
+            if best_value is None or value > best_value:
+                best, best_value = assignment, value
+        return best

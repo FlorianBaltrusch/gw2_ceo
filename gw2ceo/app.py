@@ -221,7 +221,8 @@ def calculate():
         # the least precision the gear can possibly give: below this the crit
         # chance was already over the cap before gear (0 with Valkyrie pieces)
         result["armor_floor"] = float(sum(min(options) for options in gear.equipment))
-        assignment = next(gear.get_equipment(row["armor_precision"]), None)
+        # among equal-precision splits the most power (Valkyrie splits differ)
+        assignment = gear.get_best_equipment(row["armor_precision"])
         result["equipment"] = None
         if assignment is not None:
             groups = [(label, int(count), meta[choice])

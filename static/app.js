@@ -149,6 +149,10 @@ el("change-selection").addEventListener("click", reopenSelection);
 
 const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
 
+// stat amounts in warnings: sub-point misses (from attribute conversions)
+// must not round away to "0 precision"
+const pointText = (x) => (Math.round(Math.abs(x) * 10) / 10).toLocaleString("en-US");
+
 // fact labels that merely restate the stat add nothing next to "+200 power"
 const REDUNDANT_NOTES = new Set([
   "power", "precision", "ferocity", "vitality", "concentration",
@@ -937,12 +941,12 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
       ? (env === "4p"
           ? `Crit chance exceeds the cap and 4-stat gear cannot shed precision (every prefix ` +
             `carries it) — switch to the 3-stat environment (Valkyrie pieces) or deselect ` +
-            `a crit source. Overshoot: ${Math.round(r.absolute_overshoot)} precision.`
+            `a crit source. Overshoot: ${pointText(r.absolute_overshoot)} precision.`
           : `Crit chance exceeds 100% even with zero precision from gear — deselect a crit ` +
             `source (trait, sigil, writ or relic). ` +
-            `Overshoot: ${Math.round(r.absolute_overshoot)} precision.`)
+            `Overshoot: ${pointText(r.absolute_overshoot)} precision.`)
       : `No gear split hits the crit cap exactly here — closest overshoot: ` +
-        `${Math.round(r.absolute_overshoot)} precision.`;
+        `${pointText(r.absolute_overshoot)} precision.`;
     container.append(warning);
   }
 
@@ -1142,12 +1146,13 @@ function renderBoonBody(container, r, singleSigil, backupInfo) {
     warning.className = "warning cap-miss";
     warning.textContent = r.overcapped
       ? `Boon duration exceeds 100% even with full Magi's gear — deselect a concentration ` +
-        `source (trait, rune, sigil, food). Overshoot: ${Math.round(r.conc_delta)} ` +
+        `source (trait, rune, sigil, food). Overshoot: ${pointText(r.conc_delta)} ` +
         `concentration (${missPct}%).`
       : (r.conc_delta > 0
-          ? `No gear split lands exactly on 100% boon duration here — closest overshoot: ` +
-            `${Math.round(r.conc_delta)} concentration (${missPct}%).`
-          : `100% boon duration is out of reach: ${Math.round(-r.conc_delta)} concentration ` +
+          ? `No gear split lands exactly on 100% boon duration here — overcapping by the ` +
+            `least possible: ${pointText(r.conc_delta)} concentration (${missPct}%) is ` +
+            `wasted, but the cap holds.`
+          : `100% boon duration is out of reach: ${pointText(r.conc_delta)} concentration ` +
             `missing (${missPct}% boon duration). Allow more sources (food, oils, stacking ` +
             `sigils, Herald relic) or use more ascended pieces.`);
     container.append(warning);

@@ -22,12 +22,14 @@ two result rankings just sort by different columns: healing power first or
 total outgoing % first - the user picks the tab matching their skills' base-
 to-coefficient ratio.
 
-Attribute conversions (oils, traits) are modeled continuously, while the game
-floors each converted amount to whole points. A solution within one point of
-concentration (0.07% boon duration) of the cap therefore counts as on-cap:
-the in-game integer arithmetic decides that last point, not this model.
-Without that slack every conversion oil would be locked out of "exact" by
-fractions the game itself never sees.
+Landing on the cap exactly is the point of the tool: a solution only counts
+as exact when the model reaches 1500 to the (floating) point. When no exact
+split exists, the gear never undershoots - it overcaps by the least possible
+amount, so 100% boon duration always holds - and the website shows a warning
+for any deviation, even a fraction of a point. Attribute conversions (oils,
+traits) are modeled continuously while the game floors them to whole points,
+so a sub-point warning can be conservative; the warning keeps that honest
+instead of hiding it.
 """
 
 from dataclasses import dataclass
@@ -49,7 +51,7 @@ STACKING_SIGILS = ("bounty", "life", "benevolence")
 # need boons pulsing - a reserved or free-choice slot has no condition
 RELIC_PRIO = {"utility": 0, "reserved": 0, "monk": 1, "castora": 1, "herald": 1}
 
-CAP_SLACK = 1.0  # one point of concentration; see the module docstring
+EXACT_EPSILON = 1e-4  # float noise from conversion rates like 0.065
 
 
 @dataclass(frozen=True)
@@ -193,10 +195,6 @@ class BoonGear:
         self.point_values = [points[conc][0] for conc in self.conc_points]
         self.point_choices = [points[conc][1] for conc in self.conc_points]
         self.point_value_matrix = np.array(self.point_values)
-        # the value tuples packed into one float for vectorized argmax
-        # (each component stays below 4096, so the packing is collision-free)
-        healing, vitality, power, precision = self.point_value_matrix.T
-        self.point_scores = ((healing * 4096 + vitality) * 4096 + power) * 4096 + precision
 
     def conc_floor(self) -> float:
         return float(self.conc_points[0])
@@ -204,27 +202,19 @@ class BoonGear:
     def conc_ceiling(self) -> float:
         return float(self.conc_points[-1])
 
-    def query_many(self, needs: np.ndarray):
-        """Best gear point per required effective concentration. Points
-        within CAP_SLACK of the need count as exact hits (the best value
-        among them wins); otherwise the nearest overshooting point is
-        chosen, or the all-Harrier ceiling when even that falls short.
-        Returns (exact, point index) arrays."""
-        low = np.searchsorted(self.conc_points, needs - CAP_SLACK)
-        high = np.searchsorted(self.conc_points, needs + CAP_SLACK, side="right")
-        exact = low < high
-        nearest = np.minimum(np.searchsorted(self.conc_points, needs),
-                             len(self.conc_points) - 1)
-        index = np.where(exact, np.minimum(low, len(self.conc_points) - 1), nearest)
-        for i in np.flatnonzero(exact & (high - low > 1)):
-            index[i] = low[i] + int(np.argmax(self.point_scores[low[i]:high[i]]))
-        return exact, index
+    def query_many(self, needs: np.ndarray) -> np.ndarray:
+        """Gear point index per required effective concentration: the exact
+        point when one exists, otherwise the smallest point above the need
+        (the cap is never undershot while reaching it is possible), or the
+        all-Harrier ceiling when even that falls short."""
+        return np.minimum(np.searchsorted(self.conc_points, needs - EXACT_EPSILON),
+                          len(self.conc_points) - 1)
 
     def query(self, need: float):
         """(exact, delta, value, choices) for a single required amount."""
-        exact, index = self.query_many(np.array([float(need)]))
-        i = int(index[0])
-        return bool(exact[0]), float(self.conc_points[i]) - need, \
+        i = int(self.query_many(np.array([float(need)]))[0])
+        delta = float(self.conc_points[i]) - need
+        return abs(delta) <= EXACT_EPSILON, delta, \
             self.point_values[i], self.point_choices[i]
 
 
@@ -394,10 +384,11 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
             + toughness_rate * toughness)
         remainder = (target - stats.loc[mask, "conc_flat"] - conc_from_base).round(6)
 
-        exact, index = gear.query_many(remainder.to_numpy())
+        index = gear.query_many(remainder.to_numpy())
+        delta = gear.conc_points[index] - remainder
         stats.loc[mask, "remainder"] = remainder
-        stats.loc[mask, "overshoot"] = gear.conc_points[index] - remainder
-        stats.loc[mask, "exact"] = exact
+        stats.loc[mask, "overshoot"] = delta
+        stats.loc[mask, "exact"] = abs(delta) <= EXACT_EPSILON
         gear_values = gear.point_value_matrix[index]
         stats.loc[mask, "healing"] = stats.loc[mask, "healing_base"] + gear_values[:, 0]
         stats.loc[mask, "vitality"] = stats.loc[mask, "vitality_base"] + gear_values[:, 1]
@@ -419,22 +410,28 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
     stats.loc[stats["relic"] == "none", "relic"] = "utility"
 
     stats["relic_prio"] = stats["relic"].map(RELIC_PRIO).fillna(0)  # type: ignore
-    # sub-point deltas inside the slack are noise, not misses
-    stats["miss"] = np.where(stats["exact"], 0.0, abs(stats["overshoot"]))
+    # the cap is never given up: rows at or above 100% boon duration ("capped",
+    # their overcap already priced into the stat totals) beat rows below it
+    stats["capped"] = stats["overshoot"] >= -EXACT_EPSILON
+    stats["shortfall"] = np.where(stats["capped"], 0.0, -stats["overshoot"])
+    stats["miss"] = abs(stats["overshoot"])
     return stats
 
 
 def _rank(stats: pd.DataFrame, first: str, second: str) -> pd.DataFrame:
-    """Hitting the cap exactly is the point of the tool; among the misses the
-    smallest miss wins. The remaining keys implement the agreed stat order."""
+    """Hitting the cap exactly is the point of the tool; a forced overcap
+    (never an undershoot) is priced into the stats and only breaks late ties.
+    The remaining keys implement the agreed stat order."""
     by, ascending = zip(
         ("exact", False),
-        ("miss", True),
+        ("capped", False),
+        ("shortfall", True),
         (first, False),
         (second, False),
         ("vitality", False),
         ("power", False),
         ("precision", False),
+        ("miss", True),
         ("conc_infusions", True),
         ("sigil_prio", True),
         ("relic_prio", True),
