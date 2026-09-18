@@ -22,6 +22,13 @@
   </header>
 
   <main id="main" class="main hidden">
+    <div class="mode-bar">
+      <span class="control-label">Optimize for</span>
+      <div class="segmented" id="mode-choice">
+        <button type="button" data-value="crit" class="active">100% critical chance</button>
+        <button type="button" data-value="boon">100% boon duration</button>
+      </div>
+    </div>
     <div class="builder">
 
       <section class="panel">
@@ -34,7 +41,7 @@
       <aside class="panel">
         <h2>Gear</h2>
 
-        <div class="control-row">
+        <div class="control-row" id="row-env">
           <span class="control-label">Attributes per piece</span>
           <div class="segmented" id="env-choice">
             <button type="button" data-value="3p" class="active">3 stats</button>
@@ -61,7 +68,7 @@
 
         <div class="control-row">
           <span class="control-label">Boons</span>
-          <label class="check"><input type="checkbox" id="opt-fury" checked> Fury</label>
+          <label class="check" id="fury-label"><input type="checkbox" id="opt-fury" checked> Fury</label>
           <label class="check might">Might
             <input type="range" id="opt-might" min="0" max="25" value="25">
             <output id="might-value">25</output>
@@ -71,21 +78,27 @@
         <div class="control-row">
           <span class="control-label">Allow the optimizer to use</span>
           <label class="check"><input type="checkbox" id="opt-food" checked> Food</label>
-          <label class="check"><input type="checkbox" id="opt-pie">
+          <label class="check" id="pie-label"><input type="checkbox" id="opt-pie">
             Omnomberry Pie instead <span class="check-note">(open world: +70 precision
             + lifesteal on crit — replaces the food options)</span></label>
-          <label class="check"><input type="checkbox" id="opt-utility" checked> Sharpening stones</label>
-          <label class="check"><input type="checkbox" id="opt-writs" checked>
+          <label class="check"><input type="checkbox" id="opt-utility" checked>
+            <span id="utility-name">Sharpening stones</span>
+            <span class="check-note" id="utility-note"></span></label>
+          <label class="check" id="writs-label"><input type="checkbox" id="opt-writs" checked>
             Writs <span class="check-note">(+200 above 90% health)</span></label>
           <label class="check"><input type="checkbox" id="opt-stacking" checked>
-            Stacking sigils <span class="check-note">(Perception/Bloodlust — lost on downstate)</span></label>
+            Stacking sigils <span class="check-note" id="stacking-note">(Perception/Bloodlust —
+            lost on downstate)</span></label>
+          <label class="check hidden" id="herald-label"><input type="checkbox" id="opt-herald" checked>
+            Relic of the Herald <span class="check-note">(+250 concentration on boon application —
+            assumed at max stacks)</span></label>
         </div>
 
         <div class="control-row">
           <span class="control-label">Sigil slots</span>
           <label class="check"><input type="checkbox" id="opt-single-sigil">
-            Only one sigil slot <span class="check-note">(other slot reserved, e.g. Energy —
-            candidates compete with Force +5%)</span></label>
+            Only one sigil slot <span class="check-note" id="single-sigil-note">(other slot reserved,
+            e.g. Energy — candidates compete with Force +5%)</span></label>
         </div>
 
         <div id="build-warnings" class="build-warnings hidden"></div>

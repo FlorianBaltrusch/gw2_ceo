@@ -16,7 +16,7 @@ const PROFESSIONS = [
 const professionImage = (profession) =>
   `/profession-images/freigestellt/${PROFESSIONS.find(p => p.name === profession).img}`;
 
-const state = { profession: null, spec: null };
+const state = { profession: null, spec: null, mode: "crit" };
 
 const el = (id) => document.getElementById(id);
 
@@ -151,31 +151,47 @@ const capitalize = (word) => word.charAt(0).toUpperCase() + word.slice(1);
 
 // fact labels that merely restate the stat add nothing next to "+200 power"
 const REDUNDANT_NOTES = new Set([
-  "power", "precision", "ferocity", "vitality",
+  "power", "precision", "ferocity", "vitality", "concentration",
   "power increase", "precision increase", "ferocity increase", "vitality increase",
   "attribute conversion", "critical chance increase", "critical damage increase",
+  "pve value", "unconditional", "unconditional (pve value)",
+  "permanent conversion (pve value)",
 ]);
+
+// which trait effects matter per optimizer mode: the builder only lists
+// entries carrying at least one relevant effect
+const MODE_EFFECTS = {
+  crit: new Set(["power", "precision", "ferocity", "vitality", "crit_chance",
+                 "crit_damage_pct", "all_stats_flat", "all_stats_pct", "power_per_might"]),
+  boon: new Set(["concentration", "healing", "boon_duration_pct", "outgoing_heal_pct",
+                 "all_stats_flat", "all_stats_pct"]),
+};
+
+const ATTRIBUTE_LABELS = { healing: "healing power" };
 
 function effectText(row) {
   const meaningful = row.note && !REDUNDANT_NOTES.has(row.note.toLowerCase());
   const condition = meaningful ? ` — ${row.note}` : "";
+  if (row.source) {  // attribute conversion, e.g. "+6.5% of power as healing power"
+    const source = ATTRIBUTE_LABELS[row.source] || row.source;
+    const target = ATTRIBUTE_LABELS[row.effect] || row.effect;
+    return `+${Math.round(row.value * 1000) / 10}% of ${source} as ${target}${condition}`;
+  }
   switch (row.effect) {
-    case "crit_chance":     return `+${row.value}% critical chance${condition}`;
-    case "crit_damage_pct": return `+${row.value}% critical damage${condition}`;
-    case "all_stats_pct":   return `+${row.value}% all attributes${condition}`;
-    case "all_stats_flat":  return `+${row.value} all attributes${condition}`;
-    case "power_per_might": return `+${row.value} power per might stack${condition}`;
+    case "crit_chance":      return `+${row.value}% critical chance${condition}`;
+    case "crit_damage_pct":  return `+${row.value}% critical damage${condition}`;
+    case "all_stats_pct":    return `+${row.value}% all attributes${condition}`;
+    case "all_stats_flat":   return `+${row.value} all attributes${condition}`;
+    case "power_per_might":  return `+${row.value} power per might stack${condition}`;
+    case "healing":          return `+${row.value} healing power${condition}`;
+    case "boon_duration_pct": return `+${row.value}% boon duration${condition}`;
+    case "outgoing_heal_pct": return `+${row.value}% outgoing healing${condition}`;
     default:
-      if (row.source) {
-        return `+${Math.round(row.value * 100)}% of ${row.source} as ${row.effect}${condition}`;
-      }
       return `+${row.value} ${row.effect}${condition}`;
   }
 }
 
 async function loadBuilder() {
-  state.selectedTraits = new Set();
-  state.conditionHints = [];
   el("result").classList.add("hidden");
   el("calc-error").classList.add("hidden");
 
@@ -183,6 +199,17 @@ async function loadBuilder() {
     fetch(`/traits?profession=${encodeURIComponent(state.profession)}`).then(r => r.json()),
     fetch(`/specializations?profession=${encodeURIComponent(state.profession)}`).then(r => r.json()),
   ]);
+  state.traitRows = traits;
+  state.specRows = specs;
+  renderTraitGroups();
+}
+
+function renderTraitGroups() {
+  if (!state.traitRows) return;
+  state.selectedTraits = new Set();
+  state.conditionHints = [];
+  const traits = state.traitRows;
+  const specs = state.specRows;
 
   // core lines are always available; of the elite lines only the chosen one
   const coreSpecs = specs.filter(s => !s.elite).map(s => s.name);
@@ -190,7 +217,8 @@ async function loadBuilder() {
   if (!state.spec.coreArt) allowed.add(state.spec.name);
   const rows = traits.filter(r => !r.specialization || allowed.has(r.specialization));
 
-  // one entry per trait/skill id, with all its effect rows
+  // one entry per trait/skill id, with all its effect rows; the mode decides
+  // which entries are listed (crit stats vs concentration/healing)
   const byId = new Map();
   for (const row of rows) {
     if (!byId.has(row.id)) {
@@ -198,7 +226,9 @@ async function loadBuilder() {
     }
     byId.get(row.id).effects.push(row);
   }
-  const entries = [...byId.values()];
+  const relevant = MODE_EFFECTS[state.mode];
+  const entries = [...byId.values()]
+    .filter(e => e.effects.some(effect => relevant.has(effect.effect)));
   state.entries = byId;
 
   // sections: core lines first, the chosen elite spec last, then skills
@@ -479,6 +509,31 @@ setupSegmented("weapon-choice", value => {
   renderSlotGrid();
 });
 
+// ---------- optimizer mode (crit vs boon duration) ----------
+
+function setMode(mode) {
+  state.mode = mode;
+  const boon = mode === "boon";
+  el("row-env").classList.toggle("hidden", boon);       // boon mode is 3-stat only
+  el("fury-label").classList.toggle("hidden", boon);    // fury only affects crit
+  el("pie-label").classList.toggle("hidden", boon);
+  el("writs-label").classList.toggle("hidden", boon);   // no concentration writ exists
+  el("herald-label").classList.toggle("hidden", !boon);
+  el("utility-name").textContent = boon ? "Maintenance oils" : "Sharpening stones";
+  el("utility-note").textContent = boon ? "(Magnanimous / Lucent / Toxic / Bountiful)" : "";
+  el("stacking-note").textContent = boon
+    ? "(Bounty/Life/Benevolence — kill stacks, lost on downstate)"
+    : "(Perception/Bloodlust — lost on downstate)";
+  el("single-sigil-note").textContent = boon
+    ? "(other slot reserved — candidates compete with Transference +10% outgoing healing)"
+    : "(other slot reserved, e.g. Energy — candidates compete with Force +5%)";
+  el("result").classList.add("hidden");
+  el("calc-error").classList.add("hidden");
+  renderTraitGroups();
+}
+
+setupSegmented("mode-choice", setMode);
+
 el("all-asc").addEventListener("click", () => {
   [...weaponSlots(), ...ARMOR_TRINKET_SLOTS].forEach(([key]) => gear.ascended.add(key));
   renderSlotGrid();
@@ -548,9 +603,10 @@ async function optimize() {
   if (button.disabled) return;  // ignore double clicks while a request runs
 
   const params = new URLSearchParams();
+  params.set("mode", state.mode);
   params.set("profession", state.profession);
   for (const id of state.selectedTraits) params.append("traits[]", id);
-  params.set("parameters", gear.env);
+  params.set("parameters", state.mode === "boon" ? "3p" : gear.env);
   params.set("handedness", gear.weapon);
   for (const key of gear.ascended) params.append("armor[]", key);
   params.set("fury", el("opt-fury").checked);
@@ -561,6 +617,7 @@ async function optimize() {
   params.set("writs", el("opt-writs").checked);
   params.set("single_sigil", el("opt-single-sigil").checked);
   params.set("pie", el("opt-pie").checked);
+  params.set("herald", el("opt-herald").checked);
 
   const errorBox = el("calc-error");
   const resultBox = el("result");
@@ -579,7 +636,9 @@ async function optimize() {
       return;
     }
     errorBox.classList.add("hidden");
-    renderResult(await response.json(), gear.env, el("opt-single-sigil").checked);
+    const data = await response.json();
+    if (state.mode === "boon") renderBoonResult(data);
+    else renderResult(data, gear.env, el("opt-single-sigil").checked);
   } catch {
     errorBox.textContent = "Could not reach the optimizer — check your connection and try again.";
     errorBox.classList.remove("hidden");
@@ -656,7 +715,12 @@ function renderResult(data, env, singleSigil) {
     renderSolutionBody(body, data, env, singleSigil, null);
   }
 
-  // the trait selection is the same for both variants, so one link suffices
+  resultBox.append(chatlinkButton());
+  resultBox.classList.remove("hidden");
+}
+
+// the trait selection is the same for every result variant, so one link suffices
+function chatlinkButton() {
   const copyButton = document.createElement("button");
   copyButton.type = "button";
   copyButton.className = "ghost-button copy-link";
@@ -673,9 +737,7 @@ function renderResult(data, env, singleSigil) {
     await navigator.clipboard.writeText(responseBody.link);
     copyButton.textContent = `Copied: ${responseBody.link}`;
   });
-  resultBox.append(copyButton);
-
-  resultBox.classList.remove("hidden");
+  return copyButton;
 }
 
 function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
@@ -782,6 +844,240 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
     note.className = "warning";
     note.textContent = "Mistburn's +10% crit is a passive while at ≥10 might — keep might up. " +
       "No backup build needed: swapping to a damage relic never breaks the cap.";
+    container.append(note);
+  }
+}
+
+// ---------- boon-duration mode: result rendering ----------
+
+const BOON_RUNE_NAMES = {
+  water: "Water", monk: "Monk", altruism: "Altruism", leadership: "Leadership",
+  radiance: "Radiance", sanctuary: "Sanctuary", fireworks: "Fireworks", pack: "Pack",
+};
+const BOON_FOOD_NAMES = {
+  mint_brulee: "Mint Creme Brulee (+100 concentration, +70 healing, +10% outgoing)",
+  mint_salad: "Bowl of Fruit Salad with Mint Garnish (+100 healing, +70 concentration, +10% outgoing)",
+  "no food": "none",
+};
+const BOON_SIGIL_NAMES = {
+  concentration: "Concentration (+10% boon duration)",
+  bounty: "Bounty (+225 concentration at 25 kill stacks)",
+  life: "Life (+250 healing at 25 kill stacks)",
+  benevolence: "Benevolence (+12.5% outgoing healing at 25 kill stacks)",
+  transference: "Transference (+10% outgoing healing)",
+  free: "utility sigil of your choice (Water, Renewal, …)",
+};
+const BOON_SIGIL_SHORT = {
+  concentration: "Concentration", bounty: "Bounty", life: "Life",
+  benevolence: "Benevolence", transference: "Transference",
+  free: "utility sigil of your choice",
+};
+const BOON_UTILITY_NAMES = {
+  magnanimous: "Magnanimous Maintenance Oil (concentration = 3% of vitality + toughness)",
+  toxic: "Toxic Maintenance Oil (concentration = 3% of power)",
+  lucent: "Potent Lucent Oil (concentration = 3% of power + 3% of precision)",
+  bountiful: "Bountiful Maintenance Oil (outgoing healing from healing power + concentration)",
+  none: "none",
+};
+const BOON_RELIC_NAMES = {
+  herald: "Herald (+250 concentration on boon application, max stacks)",
+  utility: "utility relic of your choice (Karakosa, Founding, …)",
+};
+const BOON_STACKING = ["bounty", "life", "benevolence"];
+
+function renderBoonResult(data) {
+  const resultBox = el("result");
+  resultBox.innerHTML = "";
+  const singleSigil = el("opt-single-sigil").checked;
+
+  // when both rankings crown the same build, one tab says it all
+  const signature = r => JSON.stringify([r.rune, r.food, r.sigil, r.utility, r.relic,
+                                         r.conc_infusions, r.equipment]);
+  const agree = signature(data.healing.best) === signature(data.outgoing.best);
+  const variants = agree
+    ? [{ label: "Best build (both rankings agree)", solution: data.healing, metric: "healing" }]
+    : [{ label: "Most healing power", solution: data.healing, metric: "healing" },
+       { label: "Most outgoing healing", solution: data.outgoing, metric: "outgoing" }];
+
+  const body = document.createElement("div");
+  const renderVariant = (variant) => {
+    body.innerHTML = "";
+    const best = variant.solution.best;
+    const backup = variant.solution.stable_fallback;
+    if (!backup) {
+      renderBoonBody(body, best, singleSigil, null);
+      return;
+    }
+    const reasons = [];
+    if (BOON_STACKING.includes(best.sigil)) reasons.push("kill stacks vanish on downstate");
+    if (best.relic === "herald") reasons.push("Herald stacks need near-constant boon application");
+
+    const tabs = document.createElement("div");
+    tabs.className = "result-tabs";
+    const inner = document.createElement("div");
+    const bestTab = document.createElement("button");
+    bestTab.type = "button";
+    bestTab.textContent = "Best build";
+    const backupTab = document.createElement("button");
+    backupTab.type = "button";
+    const delta = ((backup[variant.metric] / best[variant.metric] - 1) * 100).toFixed(1);
+    backupTab.textContent = `Stable backup (${delta}%)`;
+    const activate = (tab, r, backupInfo) => {
+      for (const button of tabs.children) button.classList.toggle("active", button === tab);
+      inner.innerHTML = "";
+      renderBoonBody(inner, r, singleSigil, backupInfo);
+    };
+    bestTab.addEventListener("click", () => activate(bestTab, best, null));
+    backupTab.addEventListener("click", () => activate(backupTab, backup, { reasons }));
+    tabs.append(bestTab, backupTab);
+    body.append(tabs, inner);
+    activate(bestTab, best, null);
+  };
+
+  if (variants.length > 1) {
+    const rankTabs = document.createElement("div");
+    rankTabs.className = "result-tabs rank-tabs";
+    for (const variant of variants) {
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.textContent = variant.label;
+      tab.addEventListener("click", () => {
+        for (const button of rankTabs.children) button.classList.toggle("active", button === tab);
+        renderVariant(variant);
+      });
+      rankTabs.append(tab);
+    }
+    rankTabs.children[0].classList.add("active");
+    resultBox.append(rankTabs);
+  } else {
+    const heading = document.createElement("p");
+    heading.className = "rank-note";
+    heading.textContent = variants[0].label;
+    resultBox.append(heading);
+  }
+  resultBox.append(body);
+  renderVariant(variants[0]);
+
+  resultBox.append(chatlinkButton());
+  resultBox.classList.remove("hidden");
+}
+
+function renderBoonBody(container, r, singleSigil, backupInfo) {
+  if (backupInfo) {
+    const intro = document.createElement("p");
+    intro.className = "warning";
+    intro.textContent = `This build keeps 100% boon duration when the best build would lose it ` +
+      `(${backupInfo.reasons.join("; ")}).`;
+    container.append(intro);
+  }
+
+  const ep = document.createElement("div");
+  ep.className = "ep";
+  const epValue = document.createElement("span");
+  epValue.className = "value";
+  epValue.textContent = Math.round(r.healing).toLocaleString("en-US");
+  const epCaption = document.createElement("span");
+  epCaption.className = "caption";
+  epCaption.textContent = "healing power at 100% boon duration";
+  ep.append(epValue, epCaption);
+
+  const list = document.createElement("dl");
+  const facts = [
+    ["Rune", BOON_RUNE_NAMES[r.rune] || capitalize(r.rune)],
+    ["Food", BOON_FOOD_NAMES[r.food] || capitalize(r.food)],
+    ["Utility", BOON_UTILITY_NAMES[r.utility] || capitalize(String(r.utility))],
+    ["Relic", BOON_RELIC_NAMES[r.relic] || capitalize(String(r.relic))],
+    [singleSigil ? "Sigil (other slot reserved)" : "Second sigil (next to Transference)",
+     BOON_SIGIL_NAMES[r.sigil] || capitalize(String(r.sigil))],
+    ["Concentration infusions", `${r.conc_infusions} of ${r.total_infusions} (rest healing)`],
+    ["Outgoing healing", `+${r.outgoing.toFixed(1)}% in total (stacks additively)`],
+  ];
+  for (const [term, value] of facts) {
+    const dt = document.createElement("dt");
+    dt.textContent = term;
+    const dd = document.createElement("dd");
+    dd.textContent = value;
+    list.append(dt, dd);
+  }
+
+  const stats = document.createElement("div");
+  stats.className = "stats";
+  for (const [name, value] of [
+    ["Healing Power", r.healing], ["Concentration", 1500 + r.conc_delta],
+    ["Vitality", r.vitality], ["Power", r.power],
+  ]) {
+    const cell = document.createElement("div");
+    const statValue = document.createElement("span");
+    statValue.className = "stat-value";
+    statValue.textContent = Math.round(value).toLocaleString("en-US");
+    const statName = document.createElement("span");
+    statName.className = "stat-name";
+    statName.textContent = name;
+    cell.append(statValue, statName);
+    stats.append(cell);
+  }
+
+  container.append(ep, list, stats);
+
+  const heading = document.createElement("h3");
+  heading.className = "equipment-heading";
+  heading.textContent = "Equipment";
+  const equipmentList = document.createElement("dl");
+  const addEquipmentRow = (slot, text) => {
+    const dt = document.createElement("dt");
+    dt.textContent = slot;
+    const dd = document.createElement("dd");
+    dd.textContent = text;
+    equipmentList.append(dt, dd);
+  };
+  const sigilShort = BOON_SIGIL_SHORT[r.sigil] || capitalize(String(r.sigil));
+  addEquipmentRow("Sigils", singleSigil
+    ? `${sigilShort} (second slot reserved)`
+    : `Transference + ${sigilShort}`);
+  addEquipmentRow("Relic", r.relic === "herald" ? "Herald" : "Karakosa / Founding / … (free choice)");
+  addEquipmentRow("Jade bot core", "Tier 10 (+235 vitality, already counted)");
+  for (const group of r.equipment) {
+    const upgrades = group.slot.startsWith("Upgrades");
+    const names = upgrades ? ["Platinum Doubloon", "Crest of the Magi"] : ["Harrier's", "Magi's"];
+    const parts = [];
+    if (group.harrier > 0) parts.push(`${group.harrier}× ${names[0]}`);
+    if (group.magi > 0) parts.push(`${group.magi}× ${names[1]}`);
+    const text = group.pieces === 1 && parts.length === 1
+      ? parts[0].replace("1× ", "") : parts.join(", ");
+    addEquipmentRow(group.slot, text);
+  }
+  container.append(heading, equipmentList);
+
+  // severity order: the red cap-miss first, aureus advisories after
+  if (!r.exact) {
+    const missPct = (Math.abs(r.conc_delta) / 15).toFixed(2);
+    const warning = document.createElement("p");
+    warning.className = "warning cap-miss";
+    warning.textContent = r.overcapped
+      ? `Boon duration exceeds 100% even with full Magi's gear — deselect a concentration ` +
+        `source (trait, rune, sigil, food). Overshoot: ${Math.round(r.conc_delta)} ` +
+        `concentration (${missPct}%).`
+      : (r.conc_delta > 0
+          ? `No gear split lands exactly on 100% boon duration here — closest overshoot: ` +
+            `${Math.round(r.conc_delta)} concentration (${missPct}%).`
+          : `100% boon duration is out of reach: ${Math.round(-r.conc_delta)} concentration ` +
+            `missing (${missPct}% boon duration). Allow more sources (food, oils, stacking ` +
+            `sigils, Herald relic) or use more ascended pieces.`);
+    container.append(warning);
+  }
+
+  if (r.rune === "leadership") {
+    const note = document.createElement("p");
+    note.className = "warning";
+    note.textContent = "Rune of Leadership carries +36 toughness — negligible next to a " +
+      "tank's, but keep it in mind for your group's aggro setup.";
+    container.append(note);
+  }
+  if (r.relic === "herald") {
+    const note = document.createElement("p");
+    note.className = "warning";
+    note.textContent = "Herald relic: the +250 concentration assumes 10 stacks — stacks last " +
+      "3s each, so keep boons pulsing. Untick its checkbox to exclude it.";
     container.append(note);
   }
 }

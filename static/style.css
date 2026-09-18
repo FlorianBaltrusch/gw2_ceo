@@ -549,3 +549,29 @@ button { font: inherit; cursor: pointer; }
   margin-top: 12px;
   overflow-wrap: anywhere;
 }
+
+/* ---------- optimizer mode bar (crit vs boon duration) ---------- */
+
+.mode-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--gold) 4%, transparent);
+}
+.mode-bar .control-label { margin-bottom: 0; }
+.mode-bar .segmented { flex: 1; max-width: 420px; }
+
+/* boon mode: ranking tabs above the best/backup tabs */
+.rank-tabs { margin-bottom: 10px; }
+.rank-note {
+  font-size: .82rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+  margin: 2px 0 6px;
+}
