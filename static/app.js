@@ -300,6 +300,7 @@ function effectText(row) {
 async function loadBuilder() {
   el("result").classList.add("hidden");
   el("calc-error").classList.add("hidden");
+  state.traitMemory = {};  // a new profession/spec starts fresh
 
   const [traits, specs] = await Promise.all([
     fetch(`/traits?profession=${encodeURIComponent(state.profession)}`).then(r => r.json()),
@@ -523,13 +524,14 @@ function traitGroup(title, iconSrc, groupEntries) {
   header.append(name);
   group.append(header);
 
+  const memory = state.traitMemory?.[TRAIT_FAMILY[state.mode]];
   for (const entry of groupEntries) {
     const label = document.createElement("label");
     label.className = "trait";
 
     const box = document.createElement("input");
     box.type = "checkbox";
-    if (state.pendingIds?.has(entry.id)) {
+    if (state.pendingIds?.has(entry.id) || memory?.selected.has(entry.id)) {
       box.checked = true;
       state.selectedTraits.add(entry.id);
     }
@@ -579,7 +581,8 @@ function traitGroup(title, iconSrc, groupEntries) {
     const stackRow = entry.effects.find(e => e.max_stacks != null);
     if (stackRow && Number(stackRow.stack_group) === entry.id) {
       const max = Number(stackRow.max_stacks);
-      const initial = stackRow.default_stacks != null ? Number(stackRow.default_stacks) : max;
+      const fallback = stackRow.default_stacks != null ? Number(stackRow.default_stacks) : max;
+      const initial = memory?.stacks.has(entry.id) ? memory.stacks.get(entry.id) : fallback;
       state.traitStacks.set(entry.id, initial);
       const options = document.createElement("div");
       options.className = "trait-options";
@@ -602,9 +605,11 @@ function traitGroup(title, iconSrc, groupEntries) {
     // elements; being fully attuned to one grants its bonus only once
     const offered = [...new Set(entry.effects.map(e => e.variant).filter(Boolean))];
     if (offered.length) {
-      const chosen = [...new Set(entry.effects
-        .filter(e => e.variant && e.variant_default)
-        .map(e => e.variant))];
+      const chosen = memory?.variants.has(entry.id)
+        ? [...memory.variants.get(entry.id)]
+        : [...new Set(entry.effects
+            .filter(e => e.variant && e.variant_default)
+            .map(e => e.variant))];
       state.traitVariants.set(entry.id, chosen);
       const options = document.createElement("div");
       options.className = "trait-options";
@@ -691,7 +696,21 @@ setupSegmented("weapon-choice", value => {
 
 // ---------- optimizer mode (crit vs boon duration) ----------
 
+// tab switches keep the trait panel state per family: the two crit-stat modes
+// share one memory, boon duration has its own
+const TRAIT_FAMILY = { crit: "crit", power: "crit", boon: "boon" };
+
+function saveTraitMemory() {
+  if (!state.traitMemory) state.traitMemory = {};
+  state.traitMemory[TRAIT_FAMILY[state.mode]] = {
+    selected: new Set(state.selectedTraits || []),
+    stacks: new Map(state.traitStacks || []),
+    variants: new Map(state.traitVariants || []),
+  };
+}
+
 function setMode(mode) {
+  if (state.selectedTraits) saveTraitMemory();
   state.mode = mode;
   // keep the segmented control in sync when the mode comes from the URL
   for (const button of el("mode-choice").querySelectorAll("button")) {
