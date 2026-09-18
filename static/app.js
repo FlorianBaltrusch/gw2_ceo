@@ -25,14 +25,18 @@ const loaded = { profession: null, spec: null };
 const el = (id) => document.getElementById(id);
 
 // ---------- URL navigation ----------
-// every view has a URL - /, ?profession=X, ?profession=X&spec=Y (or spec=core) -
-// so the browser's back/forward buttons walk the same steps as the in-page ones
+// every view has a URL - /, ?profession=X, ?profession=X&spec=Y (or spec=core,
+// plus &mode=boon/power off the default) - so the browser's back/forward
+// buttons walk the same steps as the in-page ones
 
 function urlForState() {
   const params = new URLSearchParams();
   if (state.profession) {
     params.set("profession", state.profession);
-    if (state.spec) params.set("spec", state.spec.coreArt ? "core" : state.spec.name);
+    if (state.spec) {
+      params.set("spec", state.spec.coreArt ? "core" : state.spec.name);
+      if (state.mode !== "crit") params.set("mode", state.mode);
+    }
   }
   const query = params.toString();
   return location.pathname + (query ? `?${query}` : "");
@@ -81,6 +85,9 @@ async function applyLocation() {
     return;
   }
 
+  const modeParam = (query.get("mode") || "crit").toLowerCase();
+  const mode = ["crit", "boon", "power"].includes(modeParam) ? modeParam : "crit";
+
   // straight to the builder; when it already shows exactly this profession
   // and spec, only the view switches and the trait selection is kept
   const wantCore = specParam.toLowerCase() === "core";
@@ -91,9 +98,11 @@ async function applyLocation() {
     state.profession = loaded.profession;
     state.spec = loaded.spec;
     showBuilder();
+    if (mode !== state.mode) setMode(mode);
     return;
   }
 
+  if (mode !== state.mode) setMode(mode);  // before the builder renders
   const specs = await selectProfession(match.name);
   if (wantCore) {
     selectSpec({ name: `Core ${match.name}`, icon: `/icons/tango_${match.name}.png`, coreArt: true });
@@ -252,10 +261,14 @@ const REDUNDANT_NOTES = new Set([
 ]);
 
 // which trait effects matter per optimizer mode: the builder only lists
-// entries carrying at least one relevant effect
+// entries carrying at least one relevant effect (the free-crit power mode
+// works with the same stats as the capped crit mode)
+const CRIT_EFFECTS = new Set(["power", "precision", "ferocity", "vitality", "crit_chance",
+                              "crit_damage_pct", "all_stats_flat", "all_stats_pct",
+                              "power_per_might"]);
 const MODE_EFFECTS = {
-  crit: new Set(["power", "precision", "ferocity", "vitality", "crit_chance",
-                 "crit_damage_pct", "all_stats_flat", "all_stats_pct", "power_per_might"]),
+  crit: CRIT_EFFECTS,
+  power: CRIT_EFFECTS,
   boon: new Set(["concentration", "healing", "boon_duration_pct", "outgoing_heal_pct",
                  "all_stats_flat", "all_stats_pct"]),
 };
@@ -602,6 +615,10 @@ setupSegmented("weapon-choice", value => {
 
 function setMode(mode) {
   state.mode = mode;
+  // keep the segmented control in sync when the mode comes from the URL
+  for (const button of el("mode-choice").querySelectorAll("button")) {
+    button.classList.toggle("active", button.dataset.value === mode);
+  }
   const boon = mode === "boon";
   el("row-env").classList.toggle("hidden", boon);       // boon mode is 3-stat only
   el("fury-label").classList.toggle("hidden", boon);    // fury only affects crit
@@ -624,7 +641,10 @@ function setMode(mode) {
   renderTraitGroups();
 }
 
-setupSegmented("mode-choice", setMode);
+setupSegmented("mode-choice", (mode) => {
+  setMode(mode);
+  syncUrl("push");  // the mode is part of the builder's URL
+});
 
 // ---------- boon mode: healing-profile slider (the K value) ----------
 // slider position 0 and 100 are the analytical edges (rank purely by healing

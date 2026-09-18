@@ -51,9 +51,6 @@ PYTHONPATH=. .venv/bin/python generate_traits.py
 .venv/bin/gunicorn --bind 127.0.0.1:8000 gw2ceo.app:app
 ```
 
-Note: deploy the branch that contains the website (merge
-`feat/all-profession-traits` into `main` first, or `git clone -b <branch>`).
-
 ## 4. Run as a service
 
 Edit the two ADJUST lines in `deploy/gw2ceo.service` (user + path), then:
