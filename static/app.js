@@ -525,30 +525,44 @@ function setMode(mode) {
     ? "(Bounty/Life/Benevolence — kill stacks, lost on downstate)"
     : "(Perception/Bloodlust — lost on downstate)";
   el("single-sigil-note").textContent = boon
-    ? "(other slot reserved — candidates compete with Transference +10% outgoing healing)"
-    : "(other slot reserved, e.g. Energy — candidates compete with Force +5%)";
+    ? "(the other slot is yours, e.g. a proc sigil — only one slot is optimized)"
+    : "(the other slot is yours, e.g. Energy — only one slot is optimized)";
+  el("reserve-relic-label").classList.toggle("hidden", !boon);
   el("row-ranking").classList.toggle("hidden", !boon);
   el("result").classList.add("hidden");
   el("calc-error").classList.add("hidden");
+  if (boon) loadHealSkills();
   renderTraitGroups();
 }
 
 setupSegmented("mode-choice", setMode);
 
 // ---------- boon mode: healing-profile slider (the K value) ----------
-// slider position 0 ranks by healing power, 100 by outgoing healing %; in
-// between the K index (K + healing power) x (1 + outgoing%) decides, K on a
-// log scale so both realistic extremes (regen ~1000, big base heals ~6000+)
-// sit comfortably inside
+// slider position 0 and 100 are the analytical edges (rank purely by healing
+// power resp. purely by outgoing healing %); positions in between pick a K
+// for the index (K + healing power) x (1 + outgoing%). The interior spans
+// exactly the K range of the profession's own healing skills (regeneration
+// included), on a log scale because that range covers two orders of magnitude
 
-const K_MIN = 100, K_MAX = 40000;
+let kBounds = { min: 100, max: 40000 };
+
+async function loadHealSkills() {
+  if (state.healSkillsFor === state.profession) return state.healSkills;
+  state.healSkills = await fetch(
+    `/heal-skills?profession=${encodeURIComponent(state.profession)}`).then(r => r.json());
+  state.healSkillsFor = state.profession;
+  const ks = state.healSkills.map(s => s.k);
+  kBounds = { min: Math.min(...ks), max: Math.max(...ks) };
+  updateKLabel();
+  return state.healSkills;
+}
 
 function kFromSlider(position) {
-  return Math.round(K_MIN * Math.pow(K_MAX / K_MIN, (position - 1) / 98));
+  return Math.round(kBounds.min * Math.pow(kBounds.max / kBounds.min, (position - 1) / 98));
 }
 
 function sliderFromK(k) {
-  const position = 1 + 98 * Math.log(k / K_MIN) / Math.log(K_MAX / K_MIN);
+  const position = 1 + 98 * Math.log(k / kBounds.min) / Math.log(kBounds.max / kBounds.min);
   return Math.min(99, Math.max(1, Math.round(position)));
 }
 
@@ -583,8 +597,7 @@ el("k-slider").addEventListener("change", reoptimizeIfShown);
 async function openSkillPopup() {
   const list = el("skill-list");
   list.innerHTML = "";
-  const skills = await fetch(`/heal-skills?profession=${encodeURIComponent(state.profession)}`)
-    .then(r => r.json());
+  const skills = [...await loadHealSkills()];
   skills.sort((a, b) => a.k - b.k);
   for (const skill of skills) {
     const row = document.createElement("button");
@@ -674,6 +687,10 @@ const RELIC_NAMES = {
   damage: "damage relic of your choice (Thief, Eagle, Fireworks — ~5% effective)",
 };
 
+// sigil pairs look like "force+accuracy"; single-sigil results carry one name
+const sigilNames = (pair, map) =>
+  pair.split("+").map(name => map[name] || capitalize(name)).join(" + ");
+
 // mixed rune sets from the rescue pass look like "scholar(4)+eagle(2)"
 function runeName(rune) {
   if (!rune.includes("(")) return RUNE_NAMES[rune] || capitalize(rune);
@@ -703,6 +720,7 @@ async function optimize() {
   params.set("single_sigil", el("opt-single-sigil").checked);
   params.set("pie", el("opt-pie").checked);
   params.set("herald", el("opt-herald").checked);
+  params.set("relic_reserved", el("opt-reserve-relic").checked);
   if (state.mode === "boon") {
     const { ranking, k } = currentRanking();
     params.set("ranking", ranking);
@@ -775,7 +793,7 @@ function renderResult(data, env, singleSigil) {
   if (backup) {
     // why the backup exists, derived from what the best build relies on
     const reasons = [];
-    if (["perception", "bloodlust"].includes(data.sigil)) {
+    if (data.sigil.split("+").some(s => ["perception", "bloodlust"].includes(s))) {
       reasons.push("stacking sigil stacks vanish on downstate");
     }
     if (data.utility === "writ_accuracy") reasons.push("the accuracy writ needs >90% health");
@@ -855,8 +873,8 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
     ["Food", FOOD_NAMES[r.food] || capitalize(r.food)],
     ["Utility", UTILITY_NAMES[r.utility] || capitalize(String(r.utility))],
     ["Relic", RELIC_NAMES[r.relic] || capitalize(String(r.relic))],
-    [singleSigil ? "Sigil (other slot reserved)" : "Second sigil (next to Force)",
-     SIGIL_NAMES[r.sigil] || capitalize(String(r.sigil))],
+    [singleSigil ? "Sigil (other slot reserved)" : "Sigils",
+     sigilNames(String(r.sigil), SIGIL_NAMES)],
     ["Precision infusions", `${r.prec_infusions} of ${r.total_infusions} (rest power)`],
   ];
   for (const [term, value] of facts) {
@@ -897,10 +915,9 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
     dd.textContent = text;
     equipmentList.append(dt, dd);
   };
-  const sigilShort = SIGIL_SHORT[r.sigil] || capitalize(String(r.sigil));
   addEquipmentRow("Sigils", singleSigil
-    ? `${sigilShort} (second slot reserved)`
-    : `Force + ${sigilShort}`);
+    ? `${sigilNames(String(r.sigil), SIGIL_SHORT)} (second slot reserved)`
+    : sigilNames(String(r.sigil), SIGIL_SHORT));
   addEquipmentRow("Relic", r.relic === "mistburn" ? "Mistburn" : "Thief / Eagle / Fireworks (free choice)");
   addEquipmentRow("Jade bot core", "Tier 10 (+235 vitality, already counted)");
   if (r.equipment) {
@@ -971,7 +988,14 @@ const BOON_UTILITY_NAMES = {
 };
 const BOON_RELIC_NAMES = {
   herald: "Herald (+250 concentration on boon application, max stacks)",
-  utility: "utility relic of your choice (Karakosa, Founding, …)",
+  monk: "Monk (+10% outgoing healing at 10 boon-application stacks)",
+  castora: "Castora (+25% outgoing to allies below 50% health — effective 12.5%)",
+  reserved: "your reserved relic (e.g. Karakosa)",
+  utility: "none earned the slot — free choice (Karakosa, Founding, …)",
+};
+const BOON_RELIC_SHORT = {
+  herald: "Herald", monk: "Monk", castora: "Castora",
+  reserved: "(your reserved relic)", utility: "free choice",
 };
 
 function renderBoonResult(data) {
@@ -1051,8 +1075,8 @@ function renderBoonBody(container, r, singleSigil, backupInfo) {
     ["Food", BOON_FOOD_NAMES[r.food] || capitalize(r.food)],
     ["Utility", BOON_UTILITY_NAMES[r.utility] || capitalize(String(r.utility))],
     ["Relic", BOON_RELIC_NAMES[r.relic] || capitalize(String(r.relic))],
-    [singleSigil ? "Sigil (other slot reserved)" : "Second sigil (next to Transference)",
-     BOON_SIGIL_NAMES[r.sigil] || capitalize(String(r.sigil))],
+    [singleSigil ? "Sigil (other slot reserved)" : "Sigils",
+     sigilNames(String(r.sigil), BOON_SIGIL_NAMES)],
     ["Concentration infusions", `${r.conc_infusions} of ${r.total_infusions} (rest healing)`],
     ["Outgoing healing", `+${r.outgoing.toFixed(1)}% in total (stacks additively)`],
   ];
@@ -1094,11 +1118,10 @@ function renderBoonBody(container, r, singleSigil, backupInfo) {
     dd.textContent = text;
     equipmentList.append(dt, dd);
   };
-  const sigilShort = BOON_SIGIL_SHORT[r.sigil] || capitalize(String(r.sigil));
   addEquipmentRow("Sigils", singleSigil
-    ? `${sigilShort} (second slot reserved)`
-    : `Transference + ${sigilShort}`);
-  addEquipmentRow("Relic", r.relic === "herald" ? "Herald" : "Karakosa / Founding / … (free choice)");
+    ? `${sigilNames(String(r.sigil), BOON_SIGIL_SHORT)} (second slot reserved)`
+    : sigilNames(String(r.sigil), BOON_SIGIL_SHORT));
+  addEquipmentRow("Relic", BOON_RELIC_SHORT[r.relic] || capitalize(String(r.relic)));
   addEquipmentRow("Jade bot core", "Tier 10 (+235 vitality, already counted)");
   for (const group of r.equipment) {
     const upgrades = group.slot.startsWith("Upgrades");
@@ -1137,12 +1160,19 @@ function renderBoonBody(container, r, singleSigil, backupInfo) {
       "tank's, but keep it in mind for your group's aggro setup.";
     container.append(note);
   }
-  if (r.relic === "herald") {
+  const RELIC_NOTES = {
+    herald: "Herald relic: the +250 concentration assumes 10 stacks — stacks last 3s each " +
+      "and rebuild within seconds of boon pulsing. Untick its checkbox to remove it " +
+      "from the candidate pool.",
+    monk: "Monk relic: the +10% outgoing healing assumes 10 stacks — like Herald, stacks " +
+      "last 3s each and rebuild within seconds of boon pulsing.",
+    castora: "Castora relic: +25% outgoing healing only while the healed ally is below 50% " +
+      "health — modeled at an effective 12.5%, arguably more since heals chase low allies.",
+  };
+  if (RELIC_NOTES[r.relic]) {
     const note = document.createElement("p");
     note.className = "warning";
-    note.textContent = "Herald relic: the +250 concentration assumes 10 stacks — stacks last " +
-      "3s each and rebuild within seconds of boon pulsing. Untick its checkbox to remove it " +
-      "from the candidate pool.";
+    note.textContent = RELIC_NOTES[r.relic];
     container.append(note);
   }
 }

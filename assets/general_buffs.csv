@@ -38,3 +38,5 @@ doubloon_concentration,40.0
 crest_healing,20.0
 crest_precision,14.0
 crest_vitality,14.0
+relic_monk_pct,10.0
+relic_castora_pct,12.5

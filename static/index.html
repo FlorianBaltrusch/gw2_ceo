@@ -95,10 +95,13 @@
         </div>
 
         <div class="control-row">
-          <span class="control-label">Sigil slots</span>
+          <span class="control-label">Sigil &amp; relic slots</span>
           <label class="check"><input type="checkbox" id="opt-single-sigil">
-            Only one sigil slot <span class="check-note" id="single-sigil-note">(other slot reserved,
-            e.g. Energy — candidates compete with Force +5%)</span></label>
+            Only one sigil slot <span class="check-note" id="single-sigil-note">(the other slot is
+            yours, e.g. Energy — only one slot is optimized)</span></label>
+          <label class="check hidden" id="reserve-relic-label"><input type="checkbox" id="opt-reserve-relic">
+            Reserve the relic slot <span class="check-note">(for a proc relic like Karakosa —
+            no stat relic competes)</span></label>
         </div>
 
         <div class="control-row hidden" id="row-ranking">
@@ -107,9 +110,11 @@
           </span>
           <input type="range" id="k-slider" class="k-slider" min="0" max="100" value="0">
           <div class="k-readout"><output id="k-label">ranking by healing power</output></div>
-          <p class="hint">Left edge ranks by healing power, right edge by outgoing healing %.
-            In between, builds maximize (K + healing power) × (1 + outgoing%) — pick the K
-            of the skill you spam and both bonuses are weighted like that skill heals.</p>
+          <p class="hint">The edges rank purely by healing power (left) or purely by outgoing
+            healing % (right). In between, builds maximize (K + healing power) × (1 + outgoing%),
+            with K spanning your class's own skills from the most coefficient-heavy to the most
+            base-heavy — pick the K of the skill you spam and both bonuses are weighted like
+            that skill heals.</p>
         </div>
 
         <div id="build-warnings" class="build-warnings hidden"></div>

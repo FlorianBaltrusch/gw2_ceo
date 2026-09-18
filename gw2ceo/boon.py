@@ -31,6 +31,7 @@ fractions the game itself never sees.
 """
 
 from dataclasses import dataclass
+from itertools import combinations
 
 import numpy as np
 import pandas as pd
@@ -39,11 +40,14 @@ import gw2ceo.general_data as gd
 from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.profession import BASE_TOUGHNESS, Profession
 
-# tie preferences (lower preferred): stacking effects are fragile
-SIGIL_PRIO = {"transference": 0, "free": 0, "concentration": 0,
+# tie preferences (lower preferred): stacking effects are fragile, an empty
+# slot ("free") loses ties against any real sigil
+SIGIL_PRIO = {"transference": 0, "concentration": 0, "free": 1,
               "bounty": 2, "life": 2, "benevolence": 2}
 STACKING_SIGILS = ("bounty", "life", "benevolence")
-RELIC_PRIO = {"utility": 0, "herald": 1}
+# Castora's bonus needs the healed ally below 50% health, Monk and Herald
+# need boons pulsing - a reserved or free-choice slot has no condition
+RELIC_PRIO = {"utility": 0, "reserved": 0, "monk": 1, "castora": 1, "herald": 1}
 
 CAP_SLACK = 1.0  # one point of concentration; see the module docstring
 
@@ -224,21 +228,45 @@ class BoonGear:
             self.point_values[i], self.point_choices[i]
 
 
-def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
-    """Candidates for the second sigil slot (the first holds Transference,
-    whose +10% outgoing healing reaches every option equally). Stacking
-    sigils are modeled at their 25-stack maximum and end on downstate."""
+def _sigil_members(build: BuildConstraints) -> list[tuple]:
+    """(name, concentration, healing, outgoing) per sigil; stacking sigils
+    at their 25-stack maximum. "free" is an empty slot for a proc sigil of
+    the user's choice (Water, Renewal ...)."""
     buffs = gd.general_buffs
-    sigils = pd.DataFrame(data={
-        "sigil": ["none", "concentration", "bounty", "life", "benevolence"],
-        "sigil_conc": [0.0, float(buffs.sigil_concentration_pct * buffs.conc_per_bd_pct),
-                       float(buffs.sigil_bounty), 0.0, 0.0],
-        "sigil_healing": [0.0, 0.0, 0.0, float(buffs.sigil_life), 0.0],
-        "sigil_outgoing": [0.0, 0.0, 0.0, 0.0, float(buffs.sigil_benevolence_pct)],
-    })
-    if not build.stacking_sigils:
-        sigils = sigils.loc[~sigils["sigil"].isin(STACKING_SIGILS)]
-    return sigils
+    members = [
+        ("transference", 0.0, 0.0, float(buffs.sigil_transference_pct)),
+        ("concentration", float(buffs.sigil_concentration_pct * buffs.conc_per_bd_pct),
+         0.0, 0.0),
+        ("free", 0.0, 0.0, 0.0),
+    ]
+    if build.stacking_sigils:
+        members += [
+            ("bounty", float(buffs.sigil_bounty), 0.0, 0.0),
+            ("life", 0.0, float(buffs.sigil_life), 0.0),
+            ("benevolence", 0.0, 0.0, float(buffs.sigil_benevolence_pct)),
+        ]
+    return members
+
+
+def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
+    """Both sigil slots are optimized together: every unordered pair of
+    distinct sigils competes (only one attribute-stacking sigil can be
+    active). In single-sigil mode the other slot is reserved for the user,
+    so the sigils compete alone."""
+    members = _sigil_members(build)
+    if build.single_sigil:
+        picks = [(member,) for member in members]
+    else:
+        picks = [pair for pair in combinations(members, 2)
+                 if sum(sigil[0] in STACKING_SIGILS for sigil in pair) <= 1]
+    return pd.DataFrame(data=[{
+        "sigil": "+".join(sigil[0] for sigil in pick),
+        "sigil_conc": sum(sigil[1] for sigil in pick),
+        "sigil_healing": sum(sigil[2] for sigil in pick),
+        "sigil_outgoing": sum(sigil[3] for sigil in pick),
+        "sigil_stacking": any(sigil[0] in STACKING_SIGILS for sigil in pick),
+        "sigil_prio": sum(SIGIL_PRIO[sigil[0]] for sigil in pick),
+    } for pick in picks])
 
 
 def _utility_candidates(build: BuildConstraints) -> pd.DataFrame:
@@ -298,9 +326,22 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
         "healing_inf": [5 * (num_infusions - i) for i in range(num_infusions + 1)],
     })
 
-    relics = {"relic": ["none"], "relic_conc": [0.0]}
-    if build.herald_relic:
-        relics = {"relic": ["none", "herald"], "relic_conc": [0.0, float(buffs.relic_herald)]}
+    # the relic slot: Herald's concentration and the outgoing-healing relics
+    # (Monk at 10 boon-application stacks, Castora at an effective value -
+    # its +25% only counts while the healed ally is below 50% health) compete
+    # for the slot; reserving it keeps every stat relic out so a proc relic
+    # like Karakosa can live there
+    if build.relic_reserved:
+        relics = {"relic": ["reserved"], "relic_conc": [0.0], "relic_outgoing": [0.0]}
+    else:
+        relics = {"relic": ["none", "monk", "castora"],
+                  "relic_conc": [0.0, 0.0, 0.0],
+                  "relic_outgoing": [0.0, float(buffs.relic_monk_pct),
+                                     float(buffs.relic_castora_pct)]}
+        if build.herald_relic:
+            relics["relic"].append("herald")
+            relics["relic_conc"].append(float(buffs.relic_herald))
+            relics["relic_outgoing"].append(0.0)
 
     options = pd.merge(food.reset_index(), gd.boon_runes.reset_index(),
                        how="cross", suffixes=("_food", "_rune"))
@@ -365,32 +406,18 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
 
     stats["concentration_total"] = target + stats["overshoot"]
 
-    # outgoing healing stacks additively in GW2; Transference occupies the
-    # first sigil slot unless that slot is reserved (single-sigil mode)
+    # outgoing healing stacks additively in GW2
     stats["outgoing"] = (profession.outgoing_heal_pct()
-                         + stats["outgoing_pct"] + stats["sigil_outgoing"])
+                         + stats["outgoing_pct"] + stats["sigil_outgoing"]
+                         + stats["relic_outgoing"])
     bountiful = (stats["utility"] == "bountiful").astype(float)
     stats["outgoing"] += bountiful * (stats["healing"] * float(buffs.bountiful_healing_pct)
                                       + stats["concentration_total"]
                                       * float(buffs.bountiful_concentration_pct))
-    if build.single_sigil:
-        # the stat sigils compete against Transference itself
-        transference = stats.loc[stats["sigil"] == "none"].copy()
-        transference["sigil"] = "transference"
-        transference["outgoing"] += float(buffs.sigil_transference_pct)
-        stats = pd.concat([stats.loc[stats["sigil"] != "none"], transference],
-                          ignore_index=True)
-    else:
-        stats["outgoing"] += float(buffs.sigil_transference_pct)
-        stats.loc[stats["sigil"] == "none", "sigil"] = "free"
 
-    # the relic-less rows become the "utility relic of your choice" branch
-    utility_relic = stats.loc[stats["relic"] == "none"].copy()
-    utility_relic["relic"] = "utility"
-    stats = pd.concat([stats.loc[stats["relic"] != "none"], utility_relic],
-                      ignore_index=True)
+    # a relic-less winner just means no stat relic earned the slot
+    stats.loc[stats["relic"] == "none", "relic"] = "utility"
 
-    stats["sigil_prio"] = stats["sigil"].map(SIGIL_PRIO).fillna(0)  # type: ignore
     stats["relic_prio"] = stats["relic"].map(RELIC_PRIO).fillna(0)  # type: ignore
     # sub-point deltas inside the slack are noise, not misses
     stats["miss"] = np.where(stats["exact"], 0.0, abs(stats["overshoot"]))
@@ -456,8 +483,8 @@ def calc_boon(profession: Profession, build: BuildConstraints,
     ranked = _rank(stats, *order)
     best = ranked.iloc[0]
     backup = None
-    if best["sigil"] in STACKING_SIGILS:
-        stable = ranked.loc[~ranked["sigil"].isin(STACKING_SIGILS)]
+    if best["sigil_stacking"]:
+        stable = ranked.loc[~ranked["sigil_stacking"]]
         if not stable.empty:
             backup = stable.iloc[0]
     return {"best": best, "stable_fallback": backup}

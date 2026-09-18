@@ -49,3 +49,7 @@ class BuildConstraints:
     # boon mode: allow Relic of the Herald (stacking +250 concentration on
     # boon application, modeled at max stacks - fragile like stacking sigils)
     herald_relic: bool = True
+
+    # boon mode: the relic slot is reserved for a proc relic the model cannot
+    # price (Karakosa's blast heal ...) - no stat relic competes
+    relic_reserved: bool = False

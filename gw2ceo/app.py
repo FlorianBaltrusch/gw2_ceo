@@ -188,6 +188,7 @@ def calculate():
             single_sigil=request.args.get("single_sigil", "false") == "true",
             omnomberry_pie=request.args.get("pie", "false") == "true",
             herald_relic=request.args.get("herald", "true") == "true",
+            relic_reserved=request.args.get("relic_reserved", "false") == "true",
         )
 
         if mode == "boon":

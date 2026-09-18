@@ -1,3 +1,5 @@
+from itertools import combinations
+
 import numpy as np
 import pandas as pd
 
@@ -11,25 +13,56 @@ TARGET = 2995  # precision-equivalent for 100% critical chance at level 80
 # tie preferences at equal effective power (lower is preferred):
 # a damage sigil is a free bonus at night, stacking sigils are fragile
 SIGIL_PRIO = {"impact": 0, "force": 0, "accuracy": 1, "perception": 2, "bloodlust": 2}
+STACKING_SIGILS = ("perception", "bloodlust")
 # sharpening stones last longer than writs; the accuracy writ additionally
 # puts the crit cap at risk below 90% health
 UTILITY_PRIO = {"none": 0, "stones": 0, "writ_strength": 1, "writ_accuracy": 2}
 FOOD_PRIO = {"truffle": 1, "curry": 2, "butternut": 2}
 
 
-def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
-    """Candidates for the second sigil slot (the first holds a damage sigil
-    like Force, which multiplies every option equally and cancels out).
+def _sigil_members(build: BuildConstraints) -> list[tuple]:
+    """(name, chance, precision, power, damage multiplier) per sigil.
     Stacking sigils are modeled at their 25-stack maximum."""
-    sigils = pd.DataFrame(data={
-        "sigil": ["none", "accuracy", "perception", "bloodlust"],
-        "chance": [0.0, float(gd.general_buffs.sigil_accuracy), 0.0, 0.0],
-        "sigil_precision": [0.0, 0.0, float(gd.general_buffs.sigil_perception), 0.0],
-        "sigil_power": [0.0, 0.0, 0.0, float(gd.general_buffs.sigil_bloodlust)],
-    })
-    if not build.stacking_sigils:
-        sigils = sigils.loc[~sigils["sigil"].isin(["perception", "bloodlust"])]
-    return sigils
+    buffs = gd.general_buffs
+    members = [
+        ("force", 0.0, 0.0, 0.0, float(buffs.sigil_force)),
+        ("impact", 0.0, 0.0, 0.0, float(buffs.sigil_impact)),
+        ("accuracy", float(buffs.sigil_accuracy), 0.0, 0.0, 0.0),
+    ]
+    if build.stacking_sigils:
+        members += [
+            ("perception", 0.0, float(buffs.sigil_perception), 0.0, 0.0),
+            ("bloodlust", 0.0, 0.0, float(buffs.sigil_bloodlust), 0.0),
+        ]
+    return members
+
+
+def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
+    """Both sigil slots are optimized together: every unordered pair of
+    distinct sigils competes (the game allows only one attribute-stacking
+    sigil at a time). In single-sigil mode the other slot is reserved for
+    the user, so the sigils compete alone."""
+    members = _sigil_members(build)
+    if build.single_sigil:
+        picks = [(member,) for member in members]
+    else:
+        picks = [pair for pair in combinations(members, 2)
+                 if sum(sigil[0] in STACKING_SIGILS for sigil in pair) <= 1]
+    rows = []
+    for pick in picks:
+        damage = 1.0
+        for sigil in pick:
+            damage *= 1 + sigil[4]
+        rows.append({
+            "sigil": "+".join(sigil[0] for sigil in pick),
+            "chance": sum(sigil[1] for sigil in pick),
+            "sigil_precision": sum(sigil[2] for sigil in pick),
+            "sigil_power": sum(sigil[3] for sigil in pick),
+            "sigil_damage": damage,
+            "sigil_stacking": any(sigil[0] in STACKING_SIGILS for sigil in pick),
+            "sigil_prio": sum(SIGIL_PRIO[sigil[0]] for sigil in pick),
+        })
+    return pd.DataFrame(data=rows)
 
 
 def _utility_candidates(build: BuildConstraints) -> pd.DataFrame:
@@ -123,6 +156,7 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     options = options.rename(columns={"vitality": "vitality_rune"})
 
     stats = options[["prec_infusions", "sigil", "sigil_precision", "sigil_power",
+                     "sigil_damage", "sigil_stacking", "sigil_prio",
                      "utility", "util_precision", "util_power", "relic", "relic_chance",
                      "food", "rune", "power", "precision", "chance", "ferocity",
                      "vitality_rune"]].copy()
@@ -201,20 +235,9 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     stats["food_prio"] = stats["food"].map(FOOD_PRIO).fillna(0)  # type: ignore
     stats["utility_prio"] = stats["utility"].map(UTILITY_PRIO).fillna(0)  # type: ignore
 
-    # the sigil-less rows become the damage-sigil branch. With both slots
-    # free that is the second slot's 3% sigil (Impact by day, Night at
-    # night) next to an always-on Force that cancels out of the comparison;
-    # with only one free slot (the other reserved, e.g. Energy) the stat
-    # sigils compete against Force's 5% itself.
-    if build.single_sigil:
-        branch_sigil, branch_bonus = "force", float(gd.general_buffs.sigil_force)
-    else:
-        branch_sigil, branch_bonus = "impact", float(gd.general_buffs.sigil_impact)
-    damage_sigil = stats.loc[stats["sigil"] == "none"].copy()
-    damage_sigil["sigil"] = branch_sigil
-    damage_sigil["effective_power"] *= 1 + branch_bonus
-    stats = pd.concat([stats.loc[stats["sigil"] != "none"], damage_sigil], ignore_index=True)
-    stats["sigil_prio"] = stats["sigil"].map(SIGIL_PRIO).fillna(0)  # type: ignore
+    # the damage sigils in a pair multiply the effective power (a pair like
+    # Force + Impact carries both factors); stat pairs carry a factor of 1
+    stats["effective_power"] *= stats["sigil_damage"]
 
     # likewise the relic-less rows become the "damage relic" branch
     # (Fireworks/Thief/Claw): same gear solution, scaled effective power
@@ -261,8 +284,8 @@ def calc_ep(profession: Profession, build: BuildConstraints) -> dict:
     # or low health never silently costs the crit cap (the relic needs no
     # backup - swapping Mistburn for a damage relic keeps the cap)
     stable_fallback = None
-    if best["sigil"] in ("perception", "bloodlust") or best["utility"] == "writ_accuracy":
-        stable = stats.loc[stats["sigil"].isin(["accuracy", "impact", "force"])
+    if best["sigil_stacking"] or best["utility"] == "writ_accuracy":
+        stable = stats.loc[~stats["sigil_stacking"]
                            & stats["utility"].isin(["stones", "writ_strength", "none"])]
         if not stable.empty:
             stable_fallback = stable.iloc[0]
