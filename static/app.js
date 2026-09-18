@@ -430,6 +430,23 @@ function updateBuildWarnings() {
                     "choices — the game lets you slot only one of them.");
     }
   }
+
+  // equipping a trait line activates ALL its minor traits automatically, so
+  // a selected trait without the line's (relevant) minors is an impossible
+  // in-game state - e.g. Empowered Empowerment never comes without
+  // Elemental Empowerment
+  const relevant = MODE_EFFECTS[state.mode];
+  for (const line of lines) {
+    const missing = [...state.entries.values()]
+      .filter(e => e.kind === "trait" && e.specialization === line
+                   && e.slot === "Minor" && !state.selectedTraits.has(e.id)
+                   && e.effects.some(effect => relevant.has(effect.effect)))
+      .map(e => e.name);
+    if (missing.length) {
+      warnings.push(`${line}'s minor traits are always active while the line is ` +
+                    `equipped — also tick ${joinNames(missing)}.`);
+    }
+  }
   if (lines.size > 3) {
     warnings.push(`Your traits span ${lines.size} trait lines ` +
                   `(${[...lines].join(", ")}) — a build holds only three.`);
