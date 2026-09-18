@@ -97,6 +97,19 @@ def traits():
     return Response(table.to_json(orient="records"), mimetype="application/json")
 
 
+@app.route("/heal-skills")
+def heal_skills():
+    """Healing skills with their K = base/coefficient ratio for the boon
+    mode's healing-profile slider, filtered by ?profession=... (rows without
+    a profession, like the regeneration boon, apply to everyone)."""
+    table: pd.DataFrame = gd.heal_skills
+    profession = request.args.get("profession", "")
+    universal = table["profession"].fillna("") == ""
+    table = table.loc[universal
+                      | (table["profession"].str.lower() == profession.lower())]
+    return Response(table.to_json(orient="records"), mimetype="application/json")
+
+
 @app.route("/icons/<filename>")
 def icon(filename):
     """Locally cached game images; missing files are downloaded on demand
@@ -178,7 +191,13 @@ def calculate():
         )
 
         if mode == "boon":
-            return boon_result(profession, constraints)
+            ranking = request.args.get("ranking", "healing")
+            if ranking not in ("healing", "outgoing", "k"):
+                raise ValueError("ranking must be 'healing', 'outgoing' or 'k'")
+            k = float(request.args.get("k", "2000"))
+            if not 0 <= k <= 1e6:
+                raise ValueError("k must be between 0 and 1000000")
+            return boon_result(profession, constraints, ranking, k)
         solution = calc_ep(profession, constraints)
     except (ValueError, NotImplementedError) as error:
         return jsonify({"error": str(error)}), 400
@@ -229,10 +248,11 @@ def calculate():
     return jsonify(result)
 
 
-def boon_result(profession: Profession, constraints: BuildConstraints):
-    """Both boon-mode rankings (healing power first / outgoing healing first)
-    rendered with their gear assignments and stable backups."""
-    solution = boon.calc_boon(profession, constraints)
+def boon_result(profession: Profession, constraints: BuildConstraints,
+                ranking: str, k: float):
+    """The boon-mode ranking picked by the healing-profile slider, rendered
+    with its gear assignment and stable backup."""
+    solution = boon.calc_boon(profession, constraints, ranking, k)
     total_infusions = int(gd.num_infusions(constraints.num_ascended,
                                            constraints.weapon_type))
 
@@ -267,8 +287,8 @@ def boon_result(profession: Profession, constraints: BuildConstraints):
 
     return jsonify({
         "mode": "boon",
-        "healing": {"best": render_boon_row(solution["healing"]["best"]),
-                    "stable_fallback": render_boon_row(solution["healing"]["stable_fallback"])},
-        "outgoing": {"best": render_boon_row(solution["outgoing"]["best"]),
-                     "stable_fallback": render_boon_row(solution["outgoing"]["stable_fallback"])},
+        "ranking": ranking,
+        "k": k,
+        "best": render_boon_row(solution["best"]),
+        "stable_fallback": render_boon_row(solution["stable_fallback"]),
     })

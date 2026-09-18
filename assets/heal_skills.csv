@@ -1,0 +1,243 @@
+profession,skill,kind,base,coefficient,k
+,"Regeneration (boon, per second)",healing,130.0,0.125,1040
+Elementalist,Riptide,healing,120.0,0.5,240
+Elementalist,Soothing Splash (Healing per Unique Condition),healing,23.0,0.05,460
+Elementalist,Riptide,healing,216.0,0.18,1200
+Elementalist,Seiche,healing,66.0,0.05,1320
+Elementalist,Geyser,healing,2760.0,2.0,1380
+Elementalist,Water Blast,healing,372.0,0.25,1488
+Elementalist,Signet of Water,healing,1940.0,1.3,1492
+Elementalist,Cone of Cold,healing,1888.0,1.2,1573
+Elementalist,Water Trident (First-Hit Healing),healing,1832.0,1.0,1832
+Elementalist,"""Rebound!""",healing,2836.0,1.5,1891
+Elementalist,Undercurrent,healing,1940.0,1.0,1940
+Elementalist,Water Globe,healing,470.0,0.24,1958
+Elementalist,Overload Water,healing,392.0,0.2,1960
+Elementalist,Signet of Restoration (Healing per Cast),healing,202.0,0.1,2020
+Elementalist,Cleansing Wave,healing,2222.0,1.0,2222
+Elementalist,Pressure Blast (Ally Healing),healing,1285.0,0.5,2570
+Elementalist,Tidal Surge,healing,1302.0,0.5,2604
+Elementalist,"""Wash the Pain Away!"" (Second Heal)",healing,1310.0,0.5,2620
+Elementalist,"""Wash the Pain Away!"" (Third Heal)",healing,660.0,0.25,2640
+Elementalist,"""Wash the Pain Away!"" (First Heal)",healing,2344.0,0.75,3125
+Elementalist,Tidal Wave,healing,325.0,0.1,3250
+Elementalist,Lava Skin (Barrier per Pulse),barrier,379.0,0.1,3790
+Elementalist,Ripple,healing,2025.0,0.5,4050
+Elementalist,Steam Surge,healing,427.0,0.1,4270
+Elementalist,Healing Rain (Heal per Condition),healing,427.0,0.1,4270
+Elementalist,Overload Water (Final Healing),healing,3220.0,0.75,4293
+Elementalist,Molten Burst,barrier,1418.0,0.33,4297
+Elementalist,Rock Barrier,barrier,1753.0,0.4,4382
+Elementalist,Aqua Siphon,healing,2255.0,0.5,4510
+Elementalist,Lava Skin (Initial Barrier),barrier,1018.0,0.2,5090
+Elementalist,Pressure Blast (Self Healing),healing,1285.0,0.25,5140
+Elementalist,Glyph of Elemental Harmony,healing,6494.0,1.2,5412
+Elementalist,Molten Burst,barrier,2123.0,0.3795,5594
+Elementalist,Immutable Stone,barrier,2919.0,0.5,5838
+Elementalist,Harden,barrier,3009.0,0.5,6018
+Elementalist,Aquatic Stance (Initial Heal),healing,6400.0,1.0,6400
+Elementalist,Rejuvenate,healing,6420.0,1.0,6420
+Elementalist,Signet of Restoration,healing,3275.0,0.5,6550
+Elementalist,Armor of Earth,barrier,655.0,0.1,6550
+Elementalist,Ether Renewal,healing,996.0,0.15,6640
+Elementalist,Ether Renewal,healing,7968.0,1.2,6640
+Elementalist,Soothing Water,healing,1340.0,0.2,6700
+Elementalist,Stone Resonance,barrier,1069.0,0.15,7127
+Elementalist,Water Trident (Additional-Hit Healing),healing,916.0,0.1,9160
+Elementalist,Crashing Font (Greater Healing),healing,4659.0,0.45,10353
+Elementalist,Crashing Font (Lesser Healing),healing,2330.0,0.225,10356
+Elementalist,Arcane Brilliance,healing,4840.0,0.3,16133
+Elementalist,Fortified Earth,barrier,3000.0,0.1,30000
+Engineer,Med Blaster (Base Healing),healing,70.0,0.1,700
+Engineer,Medic Gyro (Area Pulse Heal),healing,460.0,0.6,767
+Engineer,Energizing Slam,barrier,648.0,0.8,810
+Engineer,Barrier Signet (Barrier per Pulse),barrier,326.0,0.4,815
+Engineer,Med Blaster (Healing for Each Boon),healing,11.0,0.0125,880
+Engineer,Vital Burst,healing,942.0,1.03,915
+Engineer,Essence of Animated Sand,barrier,1285.0,1.0,1285
+Engineer,Bulwark Gyro (Initial Barrier),barrier,1620.0,0.8,2025
+Engineer,Bulwark Gyro (Pulse Barrier),barrier,810.0,0.4,2025
+Engineer,Essence of Living Shadows (Initial Heal),healing,970.0,0.45,2156
+Engineer,Essence of Living Shadows (Pulse Heal),healing,645.0,0.2,3225
+Engineer,Shock Shield (Barrier per Hit),barrier,213.0,0.06,3550
+Engineer,Healing Turret,healing,2520.0,0.5,5040
+Engineer,Rectifier Signet (Heal Pulse),healing,262.0,0.05,5240
+Engineer,Elixir H,healing,5560.0,1.0,5560
+Engineer,Coolant Blast,healing,4740.0,0.8,5925
+Engineer,Medic Gyro (Personal Heal),healing,4510.0,0.7,6443
+Engineer,Rectifier Signet,healing,6500.0,1.0,6500
+Engineer,A.E.D. (Healing when lethal damage taken),healing,12280.0,1.72,7140
+Engineer,A.E.D.,healing,4344.0,0.6,7240
+Engineer,Mitotic State,healing,7625.0,1.0,7625
+Engineer,Elixir C,healing,450.0,0.05,9000
+Guardian,Chapter 1: Desert Bloom,healing,602.0,1.1,547
+Guardian,Holy Strike,healing,221.0,0.25,884
+Guardian,Chapter 4: Shining River,healing,326.0,0.35,931
+Guardian,Helio Rush,healing,965.0,1.0,965
+Guardian,Helio Rush (Illuminated Healing),healing,1158.0,1.2,965
+Guardian,Symbol of Faith,healing,527.0,0.5,1054
+Guardian,Virtue of Resolve,healing,1625.0,1.4,1161
+Guardian,Signet of Courage (Passive Heal),healing,202.0,0.15,1347
+Guardian,Bow of Truth,healing,232.0,0.15,1547
+Guardian,Signet of Courage (Final Heal Pulse),healing,3250.0,2.0,1625
+Guardian,"""Receive the Light!"" (Allied Heal per Pulse)",healing,1044.0,0.6,1740
+Guardian,Merciful Intervention,healing,2344.0,1.1,2131
+Guardian,Effulgent Stance,barrier,2245.0,1.0,2245
+Guardian,Chapter 3: Azure Sun,healing,1650.0,0.664,2485
+Guardian,Reversal of Fortune (Heal If Attacked),healing,4264.0,1.54,2769
+Guardian,Reversal of Fortune (Heal if no attacks are reversed.),healing,2132.0,0.77,2769
+Guardian,Empower (Heal Pulses),healing,496.0,0.17,2918
+Guardian,Empower (Final Heal),healing,1500.0,0.5,3000
+Guardian,Solar Storm,healing,966.0,0.3,3220
+Guardian,Wings of Resolve,healing,3890.0,1.2,3242
+Guardian,"""Receive the Light!"" (Initial Self Heal)",healing,2600.0,0.8,3250
+Guardian,Signet of Courage (Active Heal),healing,650.0,0.2,3250
+Guardian,Resolute Stance (Ally Healing),healing,3350.0,1.0,3350
+Guardian,Sanctuary,healing,522.0,0.1375,3796
+Guardian,"""Receive the Light!"" (Self Heal per Pulse)",healing,650.0,0.16,4062
+Guardian,Purification (Initial Heal),healing,1608.0,0.333,4829
+Guardian,Ray of Judgment,healing,975.0,0.2,4875
+Guardian,Flowing Resolve (Initial Self Heal),healing,783.0,0.15,5220
+Guardian,Purification (Trap Heal),healing,6480.0,1.0,6480
+Guardian,Resolute Stance (Healing per Condition Removed),healing,325.0,0.05,6500
+Guardian,Daybreaking Slash,healing,390.0,0.06,6500
+Guardian,Shelter,healing,4555.0,0.7,6507
+Guardian,Signet of Resolve,healing,8150.0,1.25,6520
+Guardian,Resolute Stance,healing,6550.0,1.0,6550
+Guardian,Litany of Wrath,healing,1640.0,0.25,6560
+Guardian,Leap of Faith (Additional-Hit Healing),healing,750.0,0.1,7500
+Guardian,Zealot's Embrace (First Hit Barrier),barrier,1513.0,0.2,7565
+Guardian,Leap of Faith (First-Hit Healing),healing,1750.0,0.2,8750
+Guardian,Zealot's Embrace (Additional Hit Barrier),barrier,625.0,0.05,12500
+Guardian,Valorous Stance,healing,76.0,0.0046,16522
+Mesmer,Harmonious Harp (Pulse Healing),healing,805.0,1.0,805
+Mesmer,Singularity Shot,barrier,2346.0,1.6,1466
+Mesmer,Friendly Fire,healing,325.0,0.2,1625
+Mesmer,Lively Lute,healing,985.0,0.6,1642
+Mesmer,Crescendo,barrier,2565.0,1.35,1900
+Mesmer,Journey,healing,1295.0,0.67,1933
+Mesmer,Twin Blade Restoration,healing,6200.0,2.0,3100
+Mesmer,Twin Blade Restoration,healing,3100.0,1.0,3100
+Mesmer,Well of Eternity (Ending Heal),healing,3870.0,1.2,3225
+Mesmer,False Oasis,healing,1620.0,0.5,3240
+Mesmer,Ether Feast,healing,5560.0,1.0,5560
+Mesmer,Signet of the Ether (Heal on Illusion Summon),healing,350.0,0.06,5833
+Mesmer,Ether Feast (Heal per Clone),healing,640.0,0.1,6400
+Mesmer,Signet of the Ether,healing,5560.0,0.85,6541
+Mesmer,Mantra of Recovery (Self-Healing),healing,3275.0,0.5,6550
+Mesmer,Mantra of Recovery (Ally-Healing),healing,1965.0,0.3,6550
+Mesmer,Mirror,healing,5195.0,0.6,8658
+Mesmer,Well of Eternity (Initial Self Heal),healing,3230.0,0.3,10767
+Mesmer,Imaginary Inversion,healing,2570.0,0.1,25700
+Mesmer,Imaginary Inversion (Empowered Healing),healing,3850.0,0.1,38500
+Necromancer,Sand Cascade,barrier,1188.0,2.0,594
+Necromancer,Sand Flare (Ally Barrier),barrier,1220.0,2.0,610
+Necromancer,Transfusion,healing,404.0,0.45,898
+Necromancer,Transfusion,healing,419.0,0.35,1197
+Necromancer,Sand Flare (Self Barrier),barrier,2420.0,2.0,1210
+Necromancer,Serpent Siphon,barrier,1295.0,1.0,1295
+Necromancer,Well of Blood (Health per Second),healing,664.0,0.5,1328
+Necromancer,Desert Shroud,barrier,2188.0,1.25,1750
+Necromancer,Weapon of Remedy (Healing per Condition Removed),healing,408.0,0.2,2040
+Necromancer,Sand Swell,barrier,1618.0,0.75,2157
+Necromancer,Sand Swell,barrier,1861.0,0.8625,2158
+Necromancer,Transfusion,healing,1302.0,0.5,2604
+Necromancer,Well of Blood (Initial Self Heal),healing,2936.0,1.0,2936
+Necromancer,Sand Flare (Self Heal),healing,3230.0,1.1,2936
+Necromancer,Resilient Weapon (Healing per Second),healing,1092.0,0.28,3900
+Necromancer,Enervation Blade (Additional-Hit Healing),healing,40.0,0.01,4000
+Necromancer,Enervation Blade (First-Hit Healing),healing,202.0,0.05,4040
+Necromancer,Path of Gluttony (Additional-Hit Healing),healing,410.0,0.1,4100
+Necromancer,Life Siphon (Pulse Heal),healing,450.0,0.082,5488
+Necromancer,Path of Gluttony (First-Hit Healing),healing,2410.0,0.4,6025
+Necromancer,"""Your Soul Is Mine!""",healing,4555.0,0.7,6507
+Necromancer,Consume Conditions,healing,6840.0,1.0,6840
+Necromancer,Consume Conditions (Heal per condition),healing,724.0,0.1,7240
+Necromancer,Signet of Vampirism,healing,5750.0,0.5,11500
+Ranger,Seed of Life,healing,216.0,0.4745,455
+Ranger,Cosmic Ray,healing,231.0,0.469,493
+Ranger,Flourish,healing,509.0,0.5,1018
+Ranger,Bear Stance (Per Condition Removed),healing,408.0,0.4,1020
+Ranger,Lunar Impact,healing,1620.0,1.44,1125
+Ranger,Rejuvenating Tides,healing,390.0,0.3,1300
+Ranger,Ancestral Grace,healing,1450.0,1.0,1450
+Ranger,Harmonic Cry,healing,1660.0,1.0,1660
+Ranger,Astral Wisp,healing,1288.0,0.6,2147
+Ranger,Solar Beam,healing,66.0,0.03,2200
+Ranger,Spiritual Reprieve,healing,4235.0,1.74,2434
+Ranger,Wild Swing (Additional Hit Barrier),barrier,198.0,0.05,3960
+Ranger,Thistleguard,barrier,3210.0,0.8,4012
+Ranger,Thistleguard (Barrier on hit),barrier,1610.0,0.4,4025
+Ranger,Healing Spring,healing,4920.0,1.0,4920
+Ranger,Wild Swing (First Hit Barrier),barrier,1194.0,0.2,5970
+Ranger,Sublime Conversion,healing,162.0,0.025,6480
+Ranger,"""We Heal As One!""",healing,6520.0,1.0,6520
+Ranger,Soothing Breeze,healing,6520.0,1.0,6520
+Ranger,Water Spirit,healing,3002.0,0.4,7505
+Ranger,Troll Unguent (Health per second),healing,1062.0,0.12,8850
+Ranger,Overbearing Smash,barrier,2017.0,0.2,10085
+Ranger,Bear Stance,healing,4963.0,0.4,12408
+Ranger,"""Protect Me!""",barrier,3973.0,0.24,16554
+Ranger,Photosynthesize,healing,5130.0,0.08,64125
+Revenant,Natural Harmony,healing,1124.0,2.75,409
+Revenant,Crystal Hibernation,healing,620.0,0.5,1240
+Revenant,Envoy of Exuberance,healing,1620.0,1.0,1620
+Revenant,Purifying Essence (Healing per Condition Removed),healing,325.0,0.2,1625
+Revenant,Blossoming Aura,barrier,504.0,0.3,1680
+Revenant,Reckoning Blast,healing,1428.0,0.8,1785
+Revenant,Renewing Wave,healing,1295.0,0.65,1992
+Revenant,Selfish Spirit (Healing per Hit),healing,714.0,0.22,3245
+Revenant,Mender's Rebuke,healing,650.0,0.2,3250
+Revenant,Empowering Misery,healing,4600.0,1.0,4600
+Revenant,Soothing Stone,healing,5501.0,1.0,5501
+Revenant,Soulcleave's Summit,healing,1439.0,0.25,5756
+Revenant,Empowering Misery (Heal per Condition),healing,596.0,0.1,5960
+Revenant,Enchanted Daggers (Initial Heal),healing,1640.0,0.25,6560
+Revenant,Project Tranquility,healing,363.0,0.05,7260
+Revenant,Release Potential: Warrior,barrier,1615.0,0.2,8075
+Revenant,Shielding Hands,healing,1950.0,0.2,9750
+Revenant,Shielding Hands,healing,975.0,0.1,9750
+Revenant,Vengeful Hammers,healing,53.0,0.004,13250
+Thief,Well of Gloom (Area Heal),healing,857.0,0.666,1287
+Thief,Exalted Hammer,healing,2580.0,1.0,2580
+Thief,Shadow Veil,healing,1290.0,0.5,2580
+Thief,Shadow Sap,barrier,1420.0,0.5,2840
+Thief,Siphon,barrier,1428.0,0.5,2856
+Thief,Shadow Refuge,healing,2850.0,0.9,3167
+Thief,Well of Gloom (Self-Heal),healing,3560.0,1.0,3560
+Thief,Skelk Venom,healing,1206.0,0.3,4020
+Thief,Eat Egg,healing,2132.0,0.5,4264
+Thief,Channeled Vigor (Heal if Endurance is Full),healing,7320.0,1.5,4880
+Thief,Channeled Vigor,healing,5520.0,1.123,4915
+Thief,Skelk Venom (Initial Self Heal),healing,4210.0,0.75,5613
+Thief,Hide in Shadows,healing,6026.0,1.0,6026
+Thief,Signet of Malice,healing,3275.0,0.5,6550
+Thief,Withdraw,healing,4778.0,0.66,7239
+Thief,Malicious Restoration,healing,7200.0,0.7,10286
+Warrior,Rampart Splitter,healing,975.0,1.5,650
+Warrior,Path to Victory (Level 1 Healing),healing,975.0,1.0,975
+Warrior,Valiant Leap,healing,1295.0,1.0,1295
+Warrior,Line Breaker,healing,3240.0,2.25,1440
+Warrior,Path to Victory (Level 2 Healing),healing,1950.0,1.25,1560
+Warrior,"""Brace Yourselves!"" (Echo Barrier)",barrier,980.0,0.6,1633
+Warrior,Path to Victory (Level 3 Healing),healing,2925.0,1.5,1950
+Warrior,Defiant Roar,healing,5180.0,2.5,2072
+Warrior,Call of Valor,barrier,2580.0,1.0,2580
+Warrior,"""We Will Never Yield!"" (Minimum Barrier)",barrier,1940.0,0.7,2771
+Warrior,"""We Will Never Yield!"" (Maximum Barrier)",barrier,3880.0,1.4,2771
+Warrior,"""Brace Yourselves!""",barrier,1945.0,0.7,2779
+Warrior,Bloodthirster,healing,650.0,0.2,3250
+Warrior,Banner of Defense,barrier,3412.0,1.0,3412
+Warrior,"""We Shall Return!"" (Echo Healing)",healing,1950.0,0.5,3900
+Warrior,Bloodthirster (Healing per Bleeding Stack),healing,101.0,0.02,5050
+Warrior,Mending,healing,6520.0,1.2,5433
+Warrior,"""We Shall Return!""",healing,3890.0,0.7,5557
+Warrior,Combat Stimulant (Initial Healing),healing,3260.0,0.5,6520
+Warrior,Healing Signet,healing,2320.0,0.35,6629
+Warrior,Pommel Bash,barrier,1359.0,0.2,6795
+Warrior,Combat Stimulant (Delayed Healing),healing,7160.0,1.0,7160
+Warrior,Dolyak Signet,healing,2870.0,0.35,8200
+Warrior,"""To the Limit!""",healing,9100.0,1.0,9100
+Warrior,Blood Reckoning,healing,3230.0,0.3,10767
+Warrior,Imminent Threat (First Hit Barrier),barrier,2261.0,0.2,11305
+Warrior,Imminent Threat (Additional Hit Barrier),barrier,625.0,0.05,12500

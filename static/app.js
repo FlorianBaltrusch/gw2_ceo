@@ -527,12 +527,97 @@ function setMode(mode) {
   el("single-sigil-note").textContent = boon
     ? "(other slot reserved — candidates compete with Transference +10% outgoing healing)"
     : "(other slot reserved, e.g. Energy — candidates compete with Force +5%)";
+  el("row-ranking").classList.toggle("hidden", !boon);
   el("result").classList.add("hidden");
   el("calc-error").classList.add("hidden");
   renderTraitGroups();
 }
 
 setupSegmented("mode-choice", setMode);
+
+// ---------- boon mode: healing-profile slider (the K value) ----------
+// slider position 0 ranks by healing power, 100 by outgoing healing %; in
+// between the K index (K + healing power) x (1 + outgoing%) decides, K on a
+// log scale so both realistic extremes (regen ~1000, big base heals ~6000+)
+// sit comfortably inside
+
+const K_MIN = 100, K_MAX = 40000;
+
+function kFromSlider(position) {
+  return Math.round(K_MIN * Math.pow(K_MAX / K_MIN, (position - 1) / 98));
+}
+
+function sliderFromK(k) {
+  const position = 1 + 98 * Math.log(k / K_MIN) / Math.log(K_MAX / K_MIN);
+  return Math.min(99, Math.max(1, Math.round(position)));
+}
+
+function currentRanking() {
+  const position = Number(el("k-slider").value);
+  if (position === 0) return { ranking: "healing" };
+  if (position === 100) return { ranking: "outgoing" };
+  return { ranking: "k", k: state.k || kFromSlider(position) };
+}
+
+function updateKLabel() {
+  const { ranking, k } = currentRanking();
+  el("k-label").textContent =
+    ranking === "healing" ? "ranking by healing power"
+    : ranking === "outgoing" ? "ranking by outgoing healing %"
+    : `K = ${k.toLocaleString("en-US")}${state.kSkill ? ` (${state.kSkill})` : ""}`;
+}
+
+function reoptimizeIfShown() {
+  if (!el("result").classList.contains("hidden")) optimize();
+}
+
+el("k-slider").addEventListener("input", () => {
+  state.k = null;  // dragging leaves the picked skill
+  state.kSkill = null;
+  state.k = kFromSlider(Number(el("k-slider").value));
+  updateKLabel();
+});
+el("k-slider").addEventListener("change", reoptimizeIfShown);
+
+// the skill picker popup: every healing skill of the profession with its K
+async function openSkillPopup() {
+  const list = el("skill-list");
+  list.innerHTML = "";
+  const skills = await fetch(`/heal-skills?profession=${encodeURIComponent(state.profession)}`)
+    .then(r => r.json());
+  skills.sort((a, b) => a.k - b.k);
+  for (const skill of skills) {
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "skill-row";
+    const name = document.createElement("span");
+    name.className = "skill-name";
+    name.textContent = skill.kind === "barrier" ? `${skill.skill} (barrier)` : skill.skill;
+    const value = document.createElement("span");
+    value.className = "skill-k";
+    value.textContent = `K = ${skill.k.toLocaleString("en-US")}`;
+    const formula = document.createElement("span");
+    formula.className = "skill-formula";
+    formula.textContent = `${skill.base} + ${skill.coefficient} × healing power`;
+    row.append(name, value, formula);
+    row.addEventListener("click", () => {
+      state.k = skill.k;
+      state.kSkill = skill.skill;
+      el("k-slider").value = sliderFromK(skill.k);
+      updateKLabel();
+      el("skill-popup").classList.add("hidden");
+      reoptimizeIfShown();
+    });
+    list.append(row);
+  }
+  el("skill-popup").classList.remove("hidden");
+}
+
+el("k-from-skill").addEventListener("click", openSkillPopup);
+el("skill-popup-close").addEventListener("click", () => el("skill-popup").classList.add("hidden"));
+el("skill-popup").addEventListener("click", (event) => {
+  if (event.target === el("skill-popup")) el("skill-popup").classList.add("hidden");
+});
 
 el("all-asc").addEventListener("click", () => {
   [...weaponSlots(), ...ARMOR_TRINKET_SLOTS].forEach(([key]) => gear.ascended.add(key));
@@ -618,6 +703,11 @@ async function optimize() {
   params.set("single_sigil", el("opt-single-sigil").checked);
   params.set("pie", el("opt-pie").checked);
   params.set("herald", el("opt-herald").checked);
+  if (state.mode === "boon") {
+    const { ranking, k } = currentRanking();
+    params.set("ranking", ranking);
+    if (k) params.set("k", k);
+  }
 
   const errorBox = el("calc-error");
   const resultBox = el("result");
@@ -883,35 +973,33 @@ const BOON_RELIC_NAMES = {
   herald: "Herald (+250 concentration on boon application, max stacks)",
   utility: "utility relic of your choice (Karakosa, Founding, …)",
 };
-const BOON_STACKING = ["bounty", "life", "benevolence"];
 
 function renderBoonResult(data) {
   const resultBox = el("result");
   resultBox.innerHTML = "";
   const singleSigil = el("opt-single-sigil").checked;
 
-  // when both rankings crown the same build, one tab says it all
-  const signature = r => JSON.stringify([r.rune, r.food, r.sigil, r.utility, r.relic,
-                                         r.conc_infusions, r.equipment]);
-  const agree = signature(data.healing.best) === signature(data.outgoing.best);
-  const variants = agree
-    ? [{ label: "Best build (both rankings agree)", solution: data.healing, metric: "healing" }]
-    : [{ label: "Most healing power", solution: data.healing, metric: "healing" },
-       { label: "Most outgoing healing", solution: data.outgoing, metric: "outgoing" }];
+  const note = document.createElement("p");
+  note.className = "rank-note";
+  note.textContent =
+    data.ranking === "healing" ? "ranked by healing power"
+    : data.ranking === "outgoing" ? "ranked by outgoing healing %"
+    : `ranked by effective healing at K = ${Math.round(data.k).toLocaleString("en-US")}`;
+  resultBox.append(note);
 
-  const body = document.createElement("div");
-  const renderVariant = (variant) => {
-    body.innerHTML = "";
-    const best = variant.solution.best;
-    const backup = variant.solution.stable_fallback;
-    if (!backup) {
-      renderBoonBody(body, best, singleSigil, null);
-      return;
-    }
-    const reasons = [];
-    if (BOON_STACKING.includes(best.sigil)) reasons.push("kill stacks vanish on downstate");
-    if (best.relic === "herald") reasons.push("Herald stacks need near-constant boon application");
-
+  const best = data.best;
+  const backup = data.stable_fallback;
+  if (!backup) {
+    const body = document.createElement("div");
+    renderBoonBody(body, best, singleSigil, null);
+    resultBox.append(body);
+  } else {
+    // the backup only guards against kill-stack sigils; the Herald relic
+    // recovers within seconds and has its own checkbox instead
+    const reasons = ["kill stacks vanish on downstate"];
+    const metric = r => data.ranking === "k"
+      ? (data.k + r.healing) * (1 + r.outgoing / 100)
+      : r[data.ranking];
     const tabs = document.createElement("div");
     tabs.className = "result-tabs";
     const inner = document.createElement("div");
@@ -920,7 +1008,7 @@ function renderBoonResult(data) {
     bestTab.textContent = "Best build";
     const backupTab = document.createElement("button");
     backupTab.type = "button";
-    const delta = ((backup[variant.metric] / best[variant.metric] - 1) * 100).toFixed(1);
+    const delta = ((metric(backup) / metric(best) - 1) * 100).toFixed(1);
     backupTab.textContent = `Stable backup (${delta}%)`;
     const activate = (tab, r, backupInfo) => {
       for (const button of tabs.children) button.classList.toggle("active", button === tab);
@@ -930,33 +1018,9 @@ function renderBoonResult(data) {
     bestTab.addEventListener("click", () => activate(bestTab, best, null));
     backupTab.addEventListener("click", () => activate(backupTab, backup, { reasons }));
     tabs.append(bestTab, backupTab);
-    body.append(tabs, inner);
+    resultBox.append(tabs, inner);
     activate(bestTab, best, null);
-  };
-
-  if (variants.length > 1) {
-    const rankTabs = document.createElement("div");
-    rankTabs.className = "result-tabs rank-tabs";
-    for (const variant of variants) {
-      const tab = document.createElement("button");
-      tab.type = "button";
-      tab.textContent = variant.label;
-      tab.addEventListener("click", () => {
-        for (const button of rankTabs.children) button.classList.toggle("active", button === tab);
-        renderVariant(variant);
-      });
-      rankTabs.append(tab);
-    }
-    rankTabs.children[0].classList.add("active");
-    resultBox.append(rankTabs);
-  } else {
-    const heading = document.createElement("p");
-    heading.className = "rank-note";
-    heading.textContent = variants[0].label;
-    resultBox.append(heading);
   }
-  resultBox.append(body);
-  renderVariant(variants[0]);
 
   resultBox.append(chatlinkButton());
   resultBox.classList.remove("hidden");
@@ -1077,7 +1141,8 @@ function renderBoonBody(container, r, singleSigil, backupInfo) {
     const note = document.createElement("p");
     note.className = "warning";
     note.textContent = "Herald relic: the +250 concentration assumes 10 stacks — stacks last " +
-      "3s each, so keep boons pulsing. Untick its checkbox to exclude it.";
+      "3s each and rebuild within seconds of boon pulsing. Untick its checkbox to remove it " +
+      "from the candidate pool.";
     container.append(note);
   }
 }

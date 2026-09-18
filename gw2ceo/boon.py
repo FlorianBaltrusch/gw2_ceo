@@ -430,23 +430,34 @@ def gear_totals(profession: Profession, build: BuildConstraints, row: pd.Series)
     }
 
 
-def calc_boon(profession: Profession, build: BuildConstraints) -> dict:
-    """Two rankings of the same candidate set: most healing power first and
-    most outgoing healing first. Each comes with a stable backup avoiding
-    stacking effects (kill-stack sigils, Relic of the Herald) whenever the
-    best build relies on one."""
+def calc_boon(profession: Profession, build: BuildConstraints,
+              ranking: str = "healing", k: float = 2000.0) -> dict:
+    """One ranking of the candidate set. `ranking` picks the objective once
+    the cap is met: "healing" ranks by healing power (outgoing % as the
+    tie-breaker), "outgoing" the other way around, and "k" by the effective
+    healing index (K + healing power) x (1 + outgoing%), where K is the
+    base-to-coefficient ratio of a reference healing skill - the two named
+    rankings are exactly its K->0 and K->infinity edges.
+
+    The stable backup avoids kill-stack sigils when the best build relies on
+    one (stacks are unrecoverable after a downstate without new kills). The
+    Herald relic needs no backup: its stacks rebuild within seconds of boon
+    pulsing, and its checkbox removes it from the pool entirely."""
     stats = _boon_solve(profession, build)
+    if ranking == "k":
+        stats["effective_healing"] = ((k + stats["healing"])
+                                      * (1 + stats["outgoing"] / 100))
+        order = ("effective_healing", "healing")
+    elif ranking == "outgoing":
+        order = ("outgoing", "healing")
+    else:
+        order = ("healing", "outgoing")
 
-    def best_and_backup(first, second):
-        ranked = _rank(stats, first, second)
-        best = ranked.iloc[0]
-        backup = None
-        if best["sigil"] in STACKING_SIGILS or best["relic"] == "herald":
-            stable = ranked.loc[~ranked["sigil"].isin(STACKING_SIGILS)
-                                & (ranked["relic"] != "herald")]
-            if not stable.empty:
-                backup = stable.iloc[0]
-        return {"best": best, "stable_fallback": backup}
-
-    return {"healing": best_and_backup("healing", "outgoing"),
-            "outgoing": best_and_backup("outgoing", "healing")}
+    ranked = _rank(stats, *order)
+    best = ranked.iloc[0]
+    backup = None
+    if best["sigil"] in STACKING_SIGILS:
+        stable = ranked.loc[~ranked["sigil"].isin(STACKING_SIGILS)]
+        if not stable.empty:
+            backup = stable.iloc[0]
+    return {"best": best, "stable_fallback": backup}

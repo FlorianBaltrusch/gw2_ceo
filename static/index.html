@@ -101,6 +101,17 @@
             e.g. Energy — candidates compete with Force +5%)</span></label>
         </div>
 
+        <div class="control-row hidden" id="row-ranking">
+          <span class="control-label">Healing profile
+            <button type="button" id="k-from-skill" class="mini-button">pick a skill</button>
+          </span>
+          <input type="range" id="k-slider" class="k-slider" min="0" max="100" value="0">
+          <div class="k-readout"><output id="k-label">ranking by healing power</output></div>
+          <p class="hint">Left edge ranks by healing power, right edge by outgoing healing %.
+            In between, builds maximize (K + healing power) × (1 + outgoing%) — pick the K
+            of the skill you spam and both bonuses are weighted like that skill heals.</p>
+        </div>
+
         <div id="build-warnings" class="build-warnings hidden"></div>
 
         <button type="button" id="optimize" class="cta">Optimize</button>
@@ -111,6 +122,19 @@
 
     </div>
   </main>
+
+  <!-- boon mode: healing-skill picker for the K slider -->
+  <div id="skill-popup" class="skill-popup hidden">
+    <div class="skill-popup-inner">
+      <div class="skill-popup-head">
+        <h3>Which heal do you value most?</h3>
+        <button type="button" id="skill-popup-close" class="ghost-button">Close</button>
+      </div>
+      <p class="hint">K = base healing ÷ healing-power coefficient. Picking a skill sets the
+        slider so healing power and outgoing % are weighted exactly like they affect this skill.</p>
+      <div id="skill-list" class="skill-list"></div>
+    </div>
+  </div>
 
   <!-- the selection popup -->
   <div id="overlay" class="overlay">

@@ -14,6 +14,7 @@ runes = pd.read_csv("assets/runes.csv", index_col=0)
 food = pd.read_csv("assets/food.csv", index_col=0)
 boon_runes = pd.read_csv("assets/boon_runes.csv", index_col=0)
 boon_food = pd.read_csv("assets/boon_food.csv", index_col=0)
+heal_skills = pd.read_csv("assets/heal_skills.csv")
 names = [
     "Chest",
     "L/R",
