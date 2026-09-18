@@ -15,9 +15,11 @@ class Profession:
     """
 
     def __init__(self, trait_ids: list[int], profession: str | None = None,
-                 conditions: set[str] | None = None):
+                 conditions: set[str] | None = None,
+                 stacks: dict[int, int] | None = None,
+                 variants: dict[int, list[str]] | None = None):
         table: pd.DataFrame = gd.traits
-        rows = table.loc[table["id"].isin(trait_ids)]
+        rows = table.loc[table["id"].isin(trait_ids)].copy()
 
         missing = set(trait_ids) - set(rows["id"])
         if missing:
@@ -28,7 +30,33 @@ class Profession:
         if conditions is None:
             conditions = {"fury", "might"}
         requires = rows["requires"].fillna("")
-        rows = rows.loc[(requires == "") | requires.isin(conditions)]
+        rows = rows.loc[(requires == "") | requires.isin(conditions)].copy()
+
+        # stack-scaled rows: value = per_stack x chosen stacks, plus a bonus
+        # at full stacks (Empowered Empowerment's jump). Linked rows (the two
+        # Catalyst traits) share one stack count via their stack_group.
+        stacks = stacks or {}
+        scaled = rows.index[rows["max_stacks"].notna()]
+        for index in scaled:
+            row = rows.loc[index]
+            maximum = int(row["max_stacks"])
+            default = int(row["default_stacks"]) if pd.notna(row["default_stacks"]) else maximum
+            chosen = int(stacks.get(int(row["stack_group"]), default))
+            chosen = max(0, min(maximum, chosen))
+            value = float(row["per_stack"]) * chosen
+            if chosen == maximum and pd.notna(row["max_stack_bonus"]):
+                value += float(row["max_stack_bonus"])
+            rows.loc[index, "value"] = value
+
+        # variant rows (Elemental Polyphony's attunements): keep only the
+        # chosen variants; the data marks the default pair (a Weaver holds at
+        # most two distinct attunements, never doubled)
+        variant = rows["variant"].fillna("")
+        for trait_id in rows.loc[variant != "", "id"].unique():
+            of_trait = (rows["id"] == trait_id) & (variant != "")
+            default = rows.loc[of_trait & (rows["variant_default"] == 1), "variant"]
+            chosen_variants = (variants or {}).get(int(trait_id), list(default))
+            rows = rows.loc[~of_trait | rows["variant"].isin(chosen_variants)]
 
         professions = rows["profession"].unique()
         if len(professions) > 1:

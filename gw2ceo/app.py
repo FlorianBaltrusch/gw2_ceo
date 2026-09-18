@@ -150,8 +150,19 @@ def calculate():
             conditions.add("fury")
         if might >= gd.general_buffs.trait_might_threshold:
             conditions.add("might")
+        # per-trait assumptions: "stacks[]=id:n" for stack-scaled traits,
+        # "variants[]=id:fire,air" for attunement-style choices
+        stacks = {}
+        for item in request.args.getlist("stacks[]"):
+            trait_id, _, count = item.partition(":")
+            stacks[int(trait_id)] = int(count)
+        variants = {}
+        for item in request.args.getlist("variants[]"):
+            trait_id, _, names = item.partition(":")
+            variants[int(trait_id)] = [name for name in names.split(",") if name]
+
         profession = Profession(trait_ids, profession=request.args.get("profession"),
-                                conditions=conditions)
+                                conditions=conditions, stacks=stacks, variants=variants)
 
         armor = request.args.getlist("armor[]")
         armor = [piece.replace("1", "").replace("2", "") for piece in armor]

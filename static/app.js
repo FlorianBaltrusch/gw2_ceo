@@ -35,7 +35,7 @@ function urlForState() {
     params.set("profession", state.profession);
     if (state.spec) {
       params.set("spec", state.spec.coreArt ? "core" : state.spec.name);
-      if (state.mode !== "crit") params.set("mode", state.mode);
+      params.set("mode", state.mode);  // explicit for all three, consistently
     }
   }
   const query = params.toString();
@@ -314,6 +314,8 @@ function renderTraitGroups() {
   if (!state.traitRows) return;
   state.selectedTraits = new Set();
   state.conditionHints = [];
+  state.traitStacks = new Map();    // stack-group id -> assumed stacks
+  state.traitVariants = new Map();  // trait id -> chosen attunements
   const traits = state.traitRows;
   const specs = state.specRows;
 
@@ -571,6 +573,65 @@ function traitGroup(title, iconSrc, groupEntries) {
 
     label.append(box, icon, info);
     group.append(label);
+
+    // stack-scaled traits get a slider for the assumed stacks; linked traits
+    // (Empowered Empowerment) share the owning trait's slider via stack_group
+    const stackRow = entry.effects.find(e => e.max_stacks != null);
+    if (stackRow && Number(stackRow.stack_group) === entry.id) {
+      const max = Number(stackRow.max_stacks);
+      const initial = stackRow.default_stacks != null ? Number(stackRow.default_stacks) : max;
+      state.traitStacks.set(entry.id, initial);
+      const options = document.createElement("div");
+      options.className = "trait-options";
+      const slider = document.createElement("input");
+      slider.type = "range";
+      slider.min = "0";
+      slider.max = String(max);
+      slider.value = String(initial);
+      const readout = document.createElement("span");
+      readout.textContent = `assumed stacks: ${initial}/${max}`;
+      slider.addEventListener("input", () => {
+        state.traitStacks.set(entry.id, Number(slider.value));
+        readout.textContent = `assumed stacks: ${slider.value}/${max}`;
+      });
+      options.append(slider, readout);
+      group.append(options);
+    }
+
+    // attunement-style traits (Elemental Polyphony): pick up to two distinct
+    // elements; being fully attuned to one grants its bonus only once
+    const offered = [...new Set(entry.effects.map(e => e.variant).filter(Boolean))];
+    if (offered.length) {
+      const chosen = [...new Set(entry.effects
+        .filter(e => e.variant && e.variant_default)
+        .map(e => e.variant))];
+      state.traitVariants.set(entry.id, chosen);
+      const options = document.createElement("div");
+      options.className = "trait-options";
+      const caption = document.createElement("span");
+      caption.textContent = "attunements (up to 2):";
+      options.append(caption);
+      for (const variant of offered) {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = chosen.includes(variant) ? "variant-chip active" : "variant-chip";
+        chip.textContent = capitalize(variant);
+        chip.addEventListener("click", () => {
+          const current = state.traitVariants.get(entry.id) || [];
+          if (current.includes(variant)) {
+            state.traitVariants.set(entry.id, current.filter(v => v !== variant));
+          } else {
+            state.traitVariants.set(entry.id, [...current, variant].slice(-2));
+          }
+          const active = state.traitVariants.get(entry.id);
+          for (const other of options.querySelectorAll(".variant-chip")) {
+            other.classList.toggle("active", active.includes(other.textContent.toLowerCase()));
+          }
+        });
+        options.append(chip);
+      }
+      group.append(options);
+    }
   }
   return group;
 }
@@ -834,6 +895,10 @@ async function optimize() {
   params.set("mode", state.mode);
   params.set("profession", state.profession);
   for (const id of state.selectedTraits) params.append("traits[]", id);
+  for (const [id, count] of state.traitStacks || []) params.append("stacks[]", `${id}:${count}`);
+  for (const [id, list] of state.traitVariants || []) {
+    params.append("variants[]", `${id}:${list.join(",")}`);
+  }
   params.set("parameters", state.mode === "boon" ? "3p" : gear.env);
   params.set("handedness", gear.weapon);
   for (const key of gear.ascended) params.append("armor[]", key);
