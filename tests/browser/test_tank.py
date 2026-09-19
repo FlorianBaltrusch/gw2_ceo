@@ -56,7 +56,7 @@ try:
           int(ep_nofire.replace(",", "")) < int(ep_fire.replace(",", "")),
           f"{ep_nofire} vs {ep_fire}")
     warnings = driver.find_element(By.ID, "build-warnings").text
-    check("unattuned fire traits warned", "no attunement is chosen" in warnings, warnings)
+    check("unattuned fire traits warned", "no attunement option is chosen" in warnings, warnings)
 finally:
     driver.quit()
 
