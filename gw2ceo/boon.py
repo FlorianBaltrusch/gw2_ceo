@@ -32,7 +32,7 @@ so a sub-point warning can be conservative; the warning keeps that honest
 instead of hiding it.
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import combinations
 
 import numpy as np
@@ -167,27 +167,36 @@ class BoonGear:
         split_rarity("Accessories", "Accessory")
         split_rarity("Back item", "Back item")
 
-        # upgrade slots of exotic trinkets: Platinum Doubloon vs Crest of the
-        # Magi, plus the Exquisite Freshwater Pearl in tank mode
+        # upgrade slots of exotic trinkets: Platinum Doubloon, Brandspark
+        # Jewel (the exotic Harrier's jewel), Crest of the Magi, and the
+        # Exquisite Freshwater Pearl (Minstrel's - banned when zero-toughness)
         buffs = gd.general_buffs
         num_upgrades = int(num_ex.iloc[8:12].sum())
         if num_upgrades:
             options, meta = [], []
             for doubloons in range(num_upgrades + 1):
-                for pearls in (range(num_upgrades - doubloons + 1) if tank else (0,)):
-                    crests = num_upgrades - doubloons - pearls
-                    healing = (float(buffs.crest_healing) * crests
-                               + float(buffs.pearl_healing) * pearls)
-                    precision = float(buffs.crest_precision) * crests
-                    vitality = (float(buffs.crest_vitality) * crests
-                                + float(buffs.pearl_vitality) * pearls)
-                    toughness = float(buffs.pearl_toughness) * pearls
-                    conc = (float(buffs.doubloon_concentration) * doubloons
-                            + float(buffs.pearl_concentration) * pearls
-                            + conv.conc_equivalent(healing, 0, precision, vitality, toughness))
-                    options.append((round(conc, 6), healing, 0.0, precision,
-                                    vitality, toughness))
-                    meta.append((doubloons, crests, pearls))
+                for jewels in range(num_upgrades - doubloons + 1):
+                    remaining = num_upgrades - doubloons - jewels
+                    pearl_range = (0,) if build.zero_toughness else range(remaining + 1)
+                    for pearls in pearl_range:
+                        crests = remaining - pearls
+                        healing = (float(buffs.crest_healing) * crests
+                                   + float(buffs.pearl_healing) * pearls
+                                   + float(buffs.brandspark_healing) * jewels)
+                        power = float(buffs.brandspark_power) * jewels
+                        precision = float(buffs.crest_precision) * crests
+                        vitality = (float(buffs.crest_vitality) * crests
+                                    + float(buffs.pearl_vitality) * pearls)
+                        toughness = float(buffs.pearl_toughness) * pearls
+                        conc = (float(buffs.doubloon_concentration) * doubloons
+                                + float(buffs.brandspark_concentration) * jewels
+                                + float(buffs.pearl_concentration) * pearls
+                                + conv.conc_equivalent(healing, power, precision,
+                                                       vitality, toughness))
+                        options.append((round(conc, 6),
+                                        healing + conv.to_healing_from_power * power,
+                                        power, precision, vitality, toughness))
+                        meta.append((doubloons, jewels, crests, pearls))
             self.equipment.append(options)
             self.groups.append(("Upgrades (in exotic trinkets)", num_upgrades))
             self.option_meta.append(meta)
@@ -374,9 +383,14 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
             relics["relic_outgoing"].append(0.0)
 
     # toughness runes (Herald, Durability, Rebirth, Mercy, Guardian) only
-    # compete when tanking; Leadership's incidental 36 stays allowed
-    runes = gd.boon_runes if build.tank else \
-        gd.boon_runes.loc[gd.boon_runes["toughness"] <= 36]
+    # compete when tanking; Leadership's incidental 36 stays allowed - except
+    # in the zero-added-toughness variant, which bans every toughness source
+    if build.tank:
+        runes = gd.boon_runes
+    elif build.zero_toughness:
+        runes = gd.boon_runes.loc[gd.boon_runes["toughness"] == 0]
+    else:
+        runes = gd.boon_runes.loc[gd.boon_runes["toughness"] <= 36]
     options = pd.merge(food.reset_index(), runes.reset_index(),
                        how="cross", suffixes=("_food", "_rune"))
     options = pd.merge(_sigil_candidates(build), options, how="cross")
@@ -544,4 +558,16 @@ def calc_boon(profession: Profession, build: BuildConstraints,
         stable = ranked.loc[~ranked["sigil_stacking"]]
         if not stable.empty:
             backup = stable.iloc[0]
-    return {"best": best, "stable_fallback": backup}
+
+    # when the unrestricted winner carries any toughness beyond the base
+    # (Freshwater Pearl, Leadership, toughness food), offer an aggro-safe
+    # variant from a pool without any toughness source at all
+    zero_toughness = None
+    if not build.tank and not build.zero_toughness:
+        base_toughness = ((BASE_TOUGHNESS + profession._flat("toughness"))
+                          * profession.attribute_multiplier())
+        if float(best["toughness"]) > base_toughness + 0.5:
+            variant = calc_boon(profession, replace(build, zero_toughness=True),
+                                ranking, k)
+            zero_toughness = variant["best"]
+    return {"best": best, "stable_fallback": backup, "zero_toughness": zero_toughness}

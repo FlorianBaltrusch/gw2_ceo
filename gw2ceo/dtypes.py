@@ -67,3 +67,8 @@ class BuildConstraints:
     # parked in the stowed weapon set keeps its stacks: a third sigil joins
     # the optimization next to a non-stacking active pair
     stowed_stacking: bool = False
+
+    # boon mode, internal: the zero-added-toughness variant bans every
+    # toughness source (Freshwater Pearl, Leadership, toughness food) - shown
+    # as an extra tab whenever the unrestricted best build carries toughness
+    zero_toughness: bool = False

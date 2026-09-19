@@ -339,7 +339,7 @@ def boon_result(profession: Profession, constraints: BuildConstraints,
             "overcapped": bool(row["remainder"] < totals["conc_floor"] - 1),
             "equipment": [
                 {"slot": label, "pieces": int(count),
-                 "harrier": int(meta[0]), "magi": int(meta[1]), "giver": int(meta[2])}
+                 "counts": [int(n) for n in meta]}
                 for label, count, meta in totals["groups"]
             ],
         }
@@ -350,4 +350,5 @@ def boon_result(profession: Profession, constraints: BuildConstraints,
         "k": k,
         "best": render_boon_row(solution["best"]),
         "stable_fallback": render_boon_row(solution["stable_fallback"]),
+        "zero_toughness": render_boon_row(solution["zero_toughness"]),
     })

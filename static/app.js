@@ -1305,38 +1305,52 @@ function renderBoonResult(data) {
   resultBox.append(note);
 
   const best = data.best;
-  const backup = data.stable_fallback;
-  if (!backup) {
+  const metric = r => data.ranking === "k"
+    ? (data.k + r.healing) * (1 + r.outgoing / 100)
+    : r[data.ranking];
+  const deltaLabel = (label, r) =>
+    `${label} (${((metric(r) / metric(best) - 1) * 100).toFixed(1)}%)`;
+
+  // up to three tabs: the best build, the no-kill-stacks backup, and the
+  // aggro-safe variant without any toughness source
+  const variants = [{ label: "Best build", row: best, info: null }];
+  if (data.stable_fallback) {
+    variants.push({
+      label: deltaLabel("Stable backup", data.stable_fallback),
+      row: data.stable_fallback,
+      info: { reasons: ["kill stacks vanish on downstate"] },
+    });
+  }
+  if (data.zero_toughness) {
+    variants.push({
+      label: deltaLabel("Zero added toughness", data.zero_toughness),
+      row: data.zero_toughness,
+      info: { zeroToughness: true },
+    });
+  }
+
+  if (variants.length === 1) {
     const body = document.createElement("div");
     renderBoonBody(body, best, singleSigil, null);
     resultBox.append(body);
   } else {
-    // the backup only guards against kill-stack sigils; the Herald relic
-    // recovers within seconds and has its own checkbox instead
-    const reasons = ["kill stacks vanish on downstate"];
-    const metric = r => data.ranking === "k"
-      ? (data.k + r.healing) * (1 + r.outgoing / 100)
-      : r[data.ranking];
     const tabs = document.createElement("div");
     tabs.className = "result-tabs";
     const inner = document.createElement("div");
-    const bestTab = document.createElement("button");
-    bestTab.type = "button";
-    bestTab.textContent = "Best build";
-    const backupTab = document.createElement("button");
-    backupTab.type = "button";
-    const delta = ((metric(backup) / metric(best) - 1) * 100).toFixed(1);
-    backupTab.textContent = `Stable backup (${delta}%)`;
-    const activate = (tab, r, backupInfo) => {
-      for (const button of tabs.children) button.classList.toggle("active", button === tab);
-      inner.innerHTML = "";
-      renderBoonBody(inner, r, singleSigil, backupInfo);
-    };
-    bestTab.addEventListener("click", () => activate(bestTab, best, null));
-    backupTab.addEventListener("click", () => activate(backupTab, backup, { reasons }));
-    tabs.append(bestTab, backupTab);
+    for (const variant of variants) {
+      const tab = document.createElement("button");
+      tab.type = "button";
+      tab.textContent = variant.label;
+      tab.addEventListener("click", () => {
+        for (const button of tabs.children) button.classList.toggle("active", button === tab);
+        inner.innerHTML = "";
+        renderBoonBody(inner, variant.row, singleSigil, variant.info);
+      });
+      tabs.append(tab);
+    }
     resultBox.append(tabs, inner);
-    activate(bestTab, best, null);
+    tabs.children[0].classList.add("active");
+    renderBoonBody(inner, best, singleSigil, null);
   }
 
   resultBox.append(chatlinkButton());
@@ -1344,11 +1358,18 @@ function renderBoonResult(data) {
 }
 
 function renderBoonBody(container, r, singleSigil, backupInfo) {
-  if (backupInfo) {
+  if (backupInfo?.reasons) {
     const intro = document.createElement("p");
     intro.className = "warning";
     intro.textContent = `This build keeps 100% boon duration when the best build would lose it ` +
       `(${backupInfo.reasons.join("; ")}).`;
+    container.append(intro);
+  }
+  if (backupInfo?.zeroToughness) {
+    const intro = document.createElement("p");
+    intro.className = "warning";
+    intro.textContent = "This build adds no toughness at all — no Freshwater Pearl, " +
+      "Leadership rune or toughness food — so it can never compete for tank aggro.";
     container.append(intro);
   }
 
@@ -1419,14 +1440,14 @@ function renderBoonBody(container, r, singleSigil, backupInfo) {
   addEquipmentRow("Relic", BOON_RELIC_SHORT[r.relic] || capitalize(String(r.relic)));
   addEquipmentRow("Jade bot core", "Tier 10 (+235 vitality, already counted)");
   for (const group of r.equipment) {
-    const upgrades = group.slot.startsWith("Upgrades");
-    const names = upgrades
-      ? ["Platinum Doubloon", "Crest of the Magi", "Exquisite Freshwater Pearl"]
+    const names = group.slot.startsWith("Upgrades")
+      ? ["Platinum Doubloon", "Brandspark Jewel", "Crest of the Magi",
+         "Freshwater Pearl (Minstrel's)"]
       : ["Harrier's", "Magi's", "Giver's"];
     const parts = [];
-    if (group.harrier > 0) parts.push(`${group.harrier}× ${names[0]}`);
-    if (group.magi > 0) parts.push(`${group.magi}× ${names[1]}`);
-    if (group.giver > 0) parts.push(`${group.giver}× ${names[2]}`);
+    group.counts.forEach((count, i) => {
+      if (count > 0) parts.push(`${count}× ${names[i]}`);
+    });
     const text = group.pieces === 1 && parts.length === 1
       ? parts[0].replace("1× ", "") : parts.join(", ");
     addEquipmentRow(group.slot, text);
