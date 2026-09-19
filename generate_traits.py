@@ -114,7 +114,9 @@ def extract_facts(facts):
 
         elif fact_type == "Percent":
             text = fact.get("text", "")
-            if text == "Critical Chance Increase":
+            # covers the conditional variants too: "... per Stack",
+            # "High-Health ...", "... on Defiant Foes", "... at Full Endurance"
+            if "Critical Chance" in text:
                 yield "crit_chance", "", fact["percent"], text, True
             elif text == "Critical Damage Increase":
                 yield "crit_damage_pct", "", fact["percent"], text, True

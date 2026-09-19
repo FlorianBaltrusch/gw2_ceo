@@ -361,7 +361,7 @@ def calc_power(profession: Profession, build: BuildConstraints) -> dict:
         rows = slice(start, min(start + 512, len(stats)))
         # raw (pre-conversion, pre-multiplier) totals: rows x gear points
         precision = (arrays["precision"][rows, None] + gear_precision[None, :]
-                     + vit_prec * gear_vitality[None, :])
+                     + vit_prec * (arrays["vitality"][rows, None] + gear_vitality[None, :]))
         power = arrays["power"][rows, None] + gear_power[None, :]
         ferocity = arrays["ferocity"][rows, None] + gear_ferocity[None, :]
         vitality = arrays["vitality"][rows, None] + gear_vitality[None, :]
