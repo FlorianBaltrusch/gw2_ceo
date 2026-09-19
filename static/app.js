@@ -313,6 +313,9 @@ async function loadBuilder() {
 
 function renderTraitGroups() {
   if (!state.traitRows) return;
+  // only Elementalist and Engineer keep stacks in a stowed weapon set
+  el("stowed-label").classList.toggle(
+    "hidden", !["Elementalist", "Engineer"].includes(state.profession));
   state.selectedTraits = new Set();
   state.conditionHints = [];
   state.traitStacks = new Map();    // stack-group id -> assumed stacks
@@ -376,7 +379,19 @@ function renderTraitGroups() {
   updateConditionHints();
 }
 
-// mirror the solver's gating (requires fury / might >= 10) in the trait list
+// which chip family a variant value belongs to, and each weapon's handedness
+// (for the gear-panel consistency warning)
+const VARIANT_KIND = {
+  fire: "attunement", water: "attunement", air: "attunement", earth: "attunement",
+  hare: "familiar", otter: "familiar", fox: "familiar", toad: "familiar",
+};
+const TWO_HANDED = new Set(["greatsword", "staff", "hammer", "rifle", "longbow",
+                            "shortbow", "spear"]);
+const ONE_HANDED = new Set(["dagger", "sword", "axe", "mace", "pistol", "scepter",
+                            "focus", "shield", "torch", "warhorn"]);
+
+// mirror the solver's gating (requires fury / might >= 10 / weapon type) in
+// the trait list
 function updateConditionHints() {
   const furyOn = el("opt-fury").checked;
   const might = Number(el("opt-might").value);
@@ -384,6 +399,12 @@ function updateConditionHints() {
     const unmet = [];
     if (hint.requiresSet.has("fury") && !furyOn) unmet.push("Fury");
     if (hint.requiresSet.has("might") && might < 10) unmet.push("≥10 might");
+    if (hint.requiresSet.has("weapon_1h") && gear.weapon !== "1h") {
+      unmet.push("two one-handed weapons");
+    }
+    if (hint.requiresSet.has("weapon_2h") && gear.weapon !== "2h") {
+      unmet.push("a two-handed weapon");
+    }
     if (unmet.length) {
       const scope = hint.gated === hint.total ? "Ineffective" : "Partly ineffective";
       hint.span.textContent = `⚠ ${scope} with current settings — needs ${unmet.join(" and ")}.`;
@@ -435,7 +456,8 @@ function updateBuildWarnings() {
     }
   }
 
-  // ticked traits whose current assumptions make them contribute nothing
+  // ticked traits whose current assumptions make them contribute nothing,
+  // or whose wielded weapon contradicts the gear panel's weapon choice
   for (const id of state.selectedTraits) {
     const entry = state.entries?.get(id);
     if (!entry) continue;
@@ -445,8 +467,19 @@ function updateBuildWarnings() {
     }
     if (entry.effects.some(e => e.variant)
         && !(state.traitVariants?.get(id) || []).length) {
-      warnings.push(`${entry.name} is ticked but no attunement is chosen — ` +
-                    `it contributes nothing.`);
+      const kind = VARIANT_KIND[entry.effects.find(e => e.variant).variant] || "wielding";
+      warnings.push(`${entry.name} is ticked but no ${kind} option is chosen — ` +
+                    `its conditional part contributes nothing.`);
+    }
+    for (const variant of state.traitVariants?.get(id) || []) {
+      if (TWO_HANDED.has(variant) && gear.weapon === "1h") {
+        warnings.push(`${entry.name}'s bonus needs a ${variant} — the gear panel ` +
+                      `says two one-handed weapons.`);
+      }
+      if (ONE_HANDED.has(variant) && gear.weapon === "2h") {
+        warnings.push(`${entry.name}'s bonus needs a ${variant} (one-handed) — ` +
+                      `the gear panel says a two-handed weapon.`);
+      }
     }
   }
 
@@ -637,10 +670,11 @@ function traitGroup(title, iconSrc, groupEntries) {
             .filter(e => e.variant && e.variant_default)
             .map(e => e.variant))];
       state.traitVariants.set(entry.id, chosen);
+      const kind = VARIANT_KIND[offered[0]] || "wielding";
       const options = document.createElement("div");
       options.className = "trait-options";
       const caption = document.createElement("span");
-      caption.textContent = offered.length > 1 ? "attunements (up to 2):" : "attunement:";
+      caption.textContent = offered.length > 1 ? `${kind}s (up to 2):` : `${kind}:`;
       options.append(caption);
       for (const variant of offered) {
         const chip = document.createElement("button");
@@ -719,6 +753,8 @@ setupSegmented("weapon-choice", value => {
   gear.weapon = value;
   ["twohanded", "onehanded1", "onehanded2"].forEach(key => gear.ascended.delete(key));
   renderSlotGrid();
+  updateConditionHints();   // weapon-gated traits (Right-Hand Strength)
+  updateBuildWarnings();    // wielding chips vs the chosen weapon type
 });
 
 // ---------- optimizer mode (crit vs boon duration) ----------
@@ -959,6 +995,7 @@ async function optimize() {
   params.set("pie", el("opt-pie").checked);
   params.set("herald", el("opt-herald").checked);
   params.set("relic_reserved", el("opt-reserve-relic").checked);
+  params.set("stowed", el("opt-stowed").checked);
   if (state.mode === "boon") {
     const { ranking, k } = currentRanking();
     params.set("ranking", ranking);

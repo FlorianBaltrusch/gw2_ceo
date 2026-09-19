@@ -35,7 +35,7 @@ id,kind,profession,specialization,elite,slot,tier,name,effect,source,value,note,
 1683,trait,Guardian,Radiance,False,Major,3.0,Righteous Instincts,crit_chance,,25.0,while under resolution,False,Resolution increases your chances to critically strike and grants might each interval.,,,,,,,,
 2148,trait,Guardian,Firebrand,True,Minor,3.0,Imbued Haste,vitality,,250.0,while under quickness (also grants condition damage and healing power),False,Gain increased attributes while affected by quickness.,,,,,,,,
 566,trait,Guardian,Radiance,False,Major,1.0,Right-Hand Strength,precision,,80.0,unconditional,False,Your precision is increased. Gain increased power while wielding a one-handed weapon in your main hand.,,,,,,,,
-566,trait,Guardian,Radiance,False,Major,1.0,Right-Hand Strength,power,,80.0,while wielding a one-handed weapon in the main hand,False,Your precision is increased. Gain increased power while wielding a one-handed weapon in your main hand.,,,,,,,,
+566,trait,Guardian,Radiance,False,Major,1.0,Right-Hand Strength,power,,80.0,while wielding a one-handed weapon in the main hand,False,Your precision is increased. Gain increased power while wielding a one-handed weapon in your main hand.,weapon_1h,,,,,,,
 9093,skill,Guardian,,False,Utility,,Bane Signet,power,,180.0,signet passive,False,Signet Passive: Improved Power.,,,,,,,,
 14404,skill,Warrior,,False,Utility,,Signet of Might,power,,180.0,signet passive,False,Signet Passive: Improves power.,,,,,,,,
 14410,skill,Warrior,,False,Utility,,Signet of Fury,precision,,180.0,signet passive,False,Signet Passive: Improves precision.,,,,,,,,
@@ -97,8 +97,8 @@ id,kind,profession,specialization,elite,slot,tier,name,effect,source,value,note,
 334,trait,Elementalist,Fire,False,Major,2.0,Power Overwhelming,power,,150.0,at or above 10 might,False,"While at or above the might threshold, gain increased power. Power bonuses are doubled while attuned to fire.",might,,,,,,,
 2004,trait,Elementalist,Arcane,False,Minor,3.0,Elemental Enchantment,concentration,,180.0,PvE value,False,Gain concentration and your attunements gain reduced recharge.,,,,,,,,
 1938,trait,Elementalist,Tempest,True,Minor,2.0,Gathered Focus,concentration,,240.0,unconditional since 2024 (PvE value),False,Your concentration is increased.,,,,,,,,
-2351,trait,Elementalist,Evoker,True,Minor,3.0,Familiar's Prowess,outgoing_heal_pct,,15.0,for 5s after the otter familiar skill Splash,False,Gain a temporary bonus after using a familiar skill.,,,,,,,,
-2342,trait,Elementalist,Evoker,True,Major,2.0,Familiar's Focus,outgoing_heal_pct,,15.0,additional otter bonus (30% total with Familiar's Prowess),False,Familiar's Prowess is improved.,,,,,,,,
+2351,trait,Elementalist,Evoker,True,Minor,3.0,Familiar's Prowess,outgoing_heal_pct,,15.0,for 5s after the otter familiar skill Splash,False,Gain a temporary bonus after using a familiar skill.,,,,,,otter,,1.0
+2342,trait,Elementalist,Evoker,True,Major,2.0,Familiar's Focus,outgoing_heal_pct,,15.0,additional otter bonus (30% total with Familiar's Prowess),False,Familiar's Prowess is improved.,,,,,,otter,,1.0
 43638,skill,Elementalist,Weaver,True,Elite,,Weave Self,drop,,,20s stance on 90s cooldown - not a maintainable stat,False,,,,,,,,,
 5567,skill,Elementalist,,False,Utility,,Conjure Frost Bow,healing,,180.0,while wielding the conjured weapon,False,Wielders of this weapon gain increased condition duration and healing power.,,,,,,,,
 413,trait,Engineer,Alchemy,False,Minor,3.0,Compounding Chemicals,concentration,,240.0,PvE value,False,Gain concentration. Heal when you grant yourself a boon.,,,,,,,,
@@ -143,3 +143,17 @@ id,kind,profession,specialization,elite,slot,tier,name,effect,source,value,note,
 2081,trait,Elementalist,Weaver,True,Minor,,Elemental Polyphony,healing,,200.0,while attuned to water,False,Gain attributes based on your current attunement.,,,,,,water,,
 334,trait,Elementalist,Fire,False,Major,2.0,Power Overwhelming,power,,150.0,doubled while attuned to fire,False,"While at or above the might threshold, gain increased power. Power bonuses are doubled while attuned to fire.",might,,,,,fire,,1.0
 320,trait,Elementalist,Fire,False,Minor,1.0,Empowering Flame,power,,150.0,while attuned to fire,False,Gain increased power while attuned to fire.,,,,,,fire,,1.0
+653,trait,Guardian,Zeal,False,Major,2.0,Zealous Blade,power,,120.0,,False,Your power is increased. Gain additional power while wielding a greatsword. Your greatsword skills have reduced recharge.,,,,,,,,
+653,trait,Guardian,Zeal,False,Major,2.0,Zealous Blade,power,,120.0,while wielding a greatsword,False,Your power is increased. Gain additional power while wielding a greatsword. Your greatsword skills have reduced recharge.,,,,,,greatsword,,1.0
+1245,trait,Thief,Deadly Arts,False,Major,1.0,Dagger Training,power,,80.0,,False,"Gain bonus power, which is increased when wielding a dagger.",,,,,,,,
+1245,trait,Thief,Deadly Arts,False,Major,1.0,Dagger Training,power,,80.0,while wielding a dagger,False,"Gain bonus power, which is increased when wielding a dagger.",,,,,,dagger,,1.0
+1884,trait,Thief,Daredevil,True,Major,2.0,Staff Master,power,,120.0,,False,"While wielding a staff, gain endurance for each initiative point spent. Gain bonus power, which is increased when wielding a staff.",,,,,,,,
+1884,trait,Thief,Daredevil,True,Major,2.0,Staff Master,power,,120.0,while wielding a staff,False,"While wielding a staff, gain endurance for each initiative point spent. Gain bonus power, which is increased when wielding a staff.",,,,,,staff,,1.0
+1192,trait,Thief,Acrobatics,False,Major,2.0,Swindler's Equilibrium,power,,120.0,,False,Gain power and additional power while wielding a sword or underwater spear. Successfully evading an attack while wielding a sword or underwater spear recharges ,,,,,,,,
+1192,trait,Thief,Acrobatics,False,Major,2.0,Swindler's Equilibrium,power,,120.0,while wielding a sword (or underwater spear),False,Gain power and additional power while wielding a sword or underwater spear. Successfully evading an attack while wielding a sword or underwater spear recharges ,,,,,,sword,,1.0
+1369,trait,Warrior,Discipline,False,Major,3.0,Axe Mastery,ferocity,,120.0,,False,Gain ferocity. Gain additional ferocity when wielding an axe. Axe skills gain reduced recharge and grant adrenaline when critically striking.,,,,,,,,
+1369,trait,Warrior,Discipline,False,Major,3.0,Axe Mastery,ferocity,,120.0,while wielding an axe,False,Gain ferocity. Gain additional ferocity when wielding an axe. Axe skills gain reduced recharge and grant adrenaline when critically striking.,,,,,,axe,,1.0
+223,trait,Elementalist,Air,False,Minor,3.0,Aeromancer's Training,ferocity,,150.0,,False,"Gain ferocity, and gain additional ferocity while attuned to air. Air weapon skills get a reduced recharge time.",,,,,,,,
+223,trait,Elementalist,Air,False,Minor,3.0,Aeromancer's Training,ferocity,,150.0,while attuned to air,False,"Gain ferocity, and gain additional ferocity while attuned to air. Air weapon skills get a reduced recharge time.",,,,,,air,,1.0
+580,trait,Guardian,Valor,False,Major,2.0,Stalwart Defender,toughness,,240.0,while wielding a shield,False,"Gain toughness when wielding a shield, and shield skills gain reduced recharge.",,,,,,shield,,1.0
+2382,trait,Elementalist,Evoker,True,Minor,2.0,Enhanced Potency,crit_chance,,15.0,fury grants additional critical chance with the hare familiar (PvE value),False,Boons you apply are enhanced based on your active familiar.,fury,,,,,hare,,1.0

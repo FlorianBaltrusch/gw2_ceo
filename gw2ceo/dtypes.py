@@ -62,3 +62,8 @@ class BuildConstraints:
     # pieces, toughness runes and Freshwater Pearl upgrades enter the pool,
     # and toughness ranks right after the healing objective
     tank: bool = False
+
+    # Elementalist/Engineer cannot weapon-swap in combat, so a stacking sigil
+    # parked in the stowed weapon set keeps its stacks: a third sigil joins
+    # the optimization next to a non-stacking active pair
+    stowed_stacking: bool = False

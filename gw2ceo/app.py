@@ -144,12 +144,17 @@ def calculate():
         trait_ids = [int(trait_id) for trait_id in request.args.getlist("traits[]")]
         fury = request.args.get("fury") == "true"
         might = int(request.args.get("might", "25"))
+        weapon_type = request.args.get("handedness")
+        if weapon_type not in ("1h", "2h"):
+            raise ValueError("handedness must be '1h' or '2h'")
 
         conditions = set()
         if fury:
             conditions.add("fury")
         if might >= gd.general_buffs.trait_might_threshold:
             conditions.add("might")
+        # weapon-gated trait rows (Right-Hand Strength) follow the gear toggle
+        conditions.add(f"weapon_{weapon_type}")
         # per-trait assumptions: "stacks[]=id:n" for stack-scaled traits,
         # "variants[]=id:fire,air" for attunement-style choices
         stacks = {}
@@ -178,9 +183,6 @@ def calculate():
             raise ValueError("boon mode is 3-stat only (Harrier's/Magi's)")
         if gear_environment not in ("3p", "4p"):
             raise ValueError("parameters must be '3p' or '4p'")
-        weapon_type = request.args.get("handedness")
-        if weapon_type not in ("1h", "2h"):
-            raise ValueError("handedness must be '1h' or '2h'")
 
         constraints = BuildConstraints(
             gear_environment=gear_environment,
@@ -202,6 +204,7 @@ def calculate():
             relic_reserved=request.args.get("relic_reserved", "false") == "true",
             ascended_food=request.args.get("ascended_food", "true") == "true",
             tank=request.args.get("tank", "false") == "true",
+            stowed_stacking=request.args.get("stowed", "false") == "true",
         )
 
         if mode == "boon":
