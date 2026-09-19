@@ -239,8 +239,9 @@ def calculate():
         # the least precision the gear can possibly give: below this the crit
         # chance was already over the cap before gear (0 with Valkyrie pieces)
         result["armor_floor"] = float(sum(min(options) for options in gear.equipment))
-        # among equal-precision splits the most power (Valkyrie splits differ)
-        assignment = gear.get_best_equipment(row["armor_precision"])
+        # among equal-precision splits the most power (Valkyrie splits differ);
+        # near-miss rows show the achievable split, overshoot included
+        assignment = gear.get_best_equipment(row["armor_precision_actual"])
         result["equipment"] = None
         if assignment is not None:
             groups = [(label, int(count), meta[choice])
@@ -282,7 +283,7 @@ def power_result(profession: Profession, constraints: BuildConstraints):
             return None
         result = json.loads(row.to_json())
         result["total_infusions"] = total_infusions
-        result["exact"] = True  # no cap, hence no cap warnings
+        result["no_cap"] = True  # this mode has no crit cap to miss
         result["crit_pct"] = round(float(row["crit_pct"]), 1)
         choice = choices[int(row["best_point"])]
         groups = [(label, int(count), meta[j])

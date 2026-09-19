@@ -124,7 +124,13 @@ class Profession:
         """Apply attribute conversions; all conversions read the pre-conversion
         values (they do not chain). The vitality-to-precision conversion is
         excluded here because calculate.py already accounts for it when
-        distributing the armor stats."""
+        distributing the armor stats.
+
+        Order of operations beyond that is undocumented in the game: the only
+        wiki note (Zealous Blade: its conditional half feeds conversions, the
+        base does not) concerns a profession without any conversion trait, so
+        modeling every flat bonus as conversion input is consistent with all
+        that is actually known."""
         base = {
             "power": power,
             "precision": precision,

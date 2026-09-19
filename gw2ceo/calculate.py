@@ -226,14 +226,6 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
         stats["ferocity"] += min_stats + maj_stats - stats["armor_precision"]
         stats["vitality"] += min_stats
 
-    stats["vitality"], stats["power"], stats["ferocity"] = profession.stat_conversion(
-        stats["vitality"], stats["power"], stats["precision"], stats["ferocity"])
-
-    # sharpening stones convert precision and ferocity into power
-    stones = (stats["utility"] == "stones").astype(float)
-    stats["power"] += stones * (stats["precision"] * gd.general_buffs.stones_prec
-                                + stats["ferocity"] * gd.general_buffs.stones_fero)
-
     # the low-remainder region (armor precision below the all-minor floor) is
     # priced with the Valkyrie trade in 3-stat gear, so the gear check gets
     # the Valkyrie-capable options there; 4-stat gear has no such prefix
@@ -252,17 +244,37 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
     stats["exact"] = stats["capped"] & (np.abs(stats["absolute_overshoot"]) <= 1e-4)
     stats["shortfall"] = np.where(stats["capped"], 0.0, stats["absolute_overshoot"])
 
+    # every stat column becomes the HONEST total of the achievable gear split:
+    # a forced overshoot adds precision and takes it from whichever stat pays
+    # for it (power in 3-stat gear, vitality in its Valkyrie region, ferocity
+    # in 4-stat gear); a shortfall works the other way around
+    signed_extra = np.where(stats["capped"], stats["absolute_overshoot"],
+                            -stats["absolute_overshoot"])
+    stats["armor_precision_actual"] = stats["armor_precision"] + signed_extra
+    stats["precision"] += signed_extra
+    if build.gear_environment == "3p":
+        stats["power"] -= np.where(low_region, 0.0, signed_extra)
+        stats["vitality"] -= np.where(low_region, signed_extra, 0.0)
+    else:
+        stats["ferocity"] -= signed_extra
+
+    stats["vitality"], stats["power"], stats["ferocity"] = profession.stat_conversion(
+        stats["vitality"], stats["power"], stats["precision"], stats["ferocity"])
+
+    # sharpening stones convert precision and ferocity into power
+    stones = (stats["utility"] == "stones").astype(float)
+    stats["power"] += stones * (stats["precision"] * gd.general_buffs.stones_prec
+                                + stats["ferocity"] * gd.general_buffs.stones_fero)
+
     # the multiplier scales every attribute (conversions read raw values);
     # overshoot and shortfall are reported in panel (multiplied) points too
     for column in ("power", "precision", "ferocity", "vitality",
                    "absolute_overshoot", "shortfall"):
         stats[column] = stats[column] * multiplier
 
-    # a forced overshoot eats into the armor budget, so rank those rows with
-    # the (approximate) honest effective power instead of the ideal one
+    # the columns already price the overshoot, so effective power is honest
     stats["ferocity_equivalent"] = profession.ferocity_equivalent(stats["ferocity"])
-    stats["effective_power"] = ((stats["power"] - stats["capped"] * stats["absolute_overshoot"])
-                                * (1.5 + stats["ferocity_equivalent"] / 1500))
+    stats["effective_power"] = stats["power"] * (1.5 + stats["ferocity_equivalent"] / 1500)
 
     stats["absolute_remainder"] = np.minimum(abs(stats["armor_precision"] - min_stats),
                                              abs(stats["armor_precision"] - maj_stats))

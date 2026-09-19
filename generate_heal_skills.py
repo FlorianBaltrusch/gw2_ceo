@@ -35,7 +35,7 @@ EXTRA_SKILLS = {
                  "Chapter 4: Shining River", "Epilogue: Eternal Oasis",
                  "Wings of Resolve", "Virtue of Resolve"],
     "Ranger": ["Cosmic Ray", "Seed of Life", "Lunar Impact", "Rejuvenating Tides"],
-    "Elementalist": ["Overload Water"],
+    "Elementalist": ["Overload Water", "Splash"],
     "Engineer": ["Med Blaster", "Vital Burst"],
     "Revenant": ["Project Tranquility", "Ventari's Will", "Natural Harmony",
                  "Purifying Essence"],

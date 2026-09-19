@@ -179,22 +179,31 @@ class GearSelect:
                 yield equip.copy() + [j]
 
     def get_best_equipment(self, target):
-        """The exact assignment with the most power (then vitality), or None.
+        """The exact assignment with the best complementary stats, or None.
 
         In the normal region every split reaching the same precision has
-        identical totals (Assassin's<->Berserker's trades 1:1), but with
+        identical totals (the major<->minor swap trades 1:1), but with
         Valkyrie pieces they differ: an Assassin's piece paid for with an
-        extra Valkyrie loses power. The solver's ranking assumes all majors
-        go into power, so the displayed split must provably match that."""
+        extra Valkyrie loses power. Ranked like point_table: by the stat the
+        precision trades against per environment (power in 3-stat gear,
+        ferocity in 4-stat gear - their sum, since the other is fixed),
+        then vitality."""
+        four_stats = self.constraints.gear_environment == "4p"
         best, best_value = None, None
         for assignment in self.get_equipment(target):
-            power = vitality = 0.0
+            power = ferocity = vitality = 0.0
             for (maj, mino), metas, choice in zip(self.group_budgets,
                                                   self.option_meta, assignment):
                 major, minor, none = metas[choice]
-                power += mino * major + maj * minor + maj * none
-                vitality += mino * none
-            value = (power, vitality)
+                if four_stats:
+                    power += maj * (major + minor)
+                    ferocity += mino * major + maj * minor
+                    vitality += mino * (major + minor)
+                else:
+                    power += mino * major + maj * (minor + none)
+                    ferocity += mino * (major + minor + none)
+                    vitality += mino * none
+            value = (power + ferocity, vitality)
             if best_value is None or value > best_value:
                 best, best_value = assignment, value
         return best

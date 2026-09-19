@@ -270,7 +270,7 @@ const MODE_EFFECTS = {
   crit: CRIT_EFFECTS,
   power: CRIT_EFFECTS,
   boon: new Set(["concentration", "healing", "boon_duration_pct", "outgoing_heal_pct",
-                 "all_stats_flat", "all_stats_pct"]),
+                 "toughness", "all_stats_flat", "all_stats_pct"]),
 };
 
 const ATTRIBUTE_LABELS = { healing: "healing power" };
@@ -481,6 +481,21 @@ function updateBuildWarnings() {
                       `the gear panel says a two-handed weapon.`);
       }
     }
+  }
+
+  // traits can assume more attunements at once than the profession can hold
+  const attuned = new Set();
+  for (const id of state.selectedTraits) {
+    for (const variant of state.traitVariants?.get(id) || []) {
+      if (VARIANT_KIND[variant] === "attunement") attuned.add(variant);
+    }
+  }
+  const attunementLimit = state.spec?.name === "Weaver" ? 2 : 1;
+  if (attuned.size > attunementLimit) {
+    warnings.push(`Your traits assume being attuned to ${[...attuned].join(", ")} at ` +
+                  `the same time — only ${attunementLimit === 2
+                    ? "two elements are held at once (Weaver)"
+                    : "one element is active at a time"}.`);
   }
 
   // equipping a trait line activates ALL its minor traits automatically, so
@@ -1211,7 +1226,8 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
   container.append(heading, equipmentList);
 
   // severity order: the red cap-miss first, aureus advisories after
-  if (!r.exact) {
+  // (the free-crit mode has no cap and therefore no cap warnings)
+  if (!r.exact && !r.no_cap) {
     const overcapped = r.armor_precision < r.armor_floor;
     const warning = document.createElement("p");
     warning.className = "warning cap-miss";

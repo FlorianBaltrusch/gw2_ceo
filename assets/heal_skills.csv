@@ -8,6 +8,7 @@ Elementalist,Geyser,healing,2760.0,2.0,1380
 Elementalist,Water Blast,healing,372.0,0.25,1488
 Elementalist,Signet of Water,healing,1940.0,1.3,1492
 Elementalist,Cone of Cold,healing,1888.0,1.2,1573
+Elementalist,Splash,healing,1359.0,0.8,1699
 Elementalist,Water Trident (First-Hit Healing),healing,1832.0,1.0,1832
 Elementalist,"""Rebound!""",healing,2836.0,1.5,1891
 Elementalist,Undercurrent,healing,1940.0,1.0,1940
@@ -17,6 +18,7 @@ Elementalist,Signet of Restoration (Healing per Cast),healing,202.0,0.1,2020
 Elementalist,Cleansing Wave,healing,2222.0,1.0,2222
 Elementalist,Pressure Blast (Ally Healing),healing,1285.0,0.5,2570
 Elementalist,Tidal Surge,healing,1302.0,0.5,2604
+Elementalist,Splash,healing,157.0,0.06,2617
 Elementalist,"""Wash the Pain Away!"" (Second Heal)",healing,1310.0,0.5,2620
 Elementalist,"""Wash the Pain Away!"" (Third Heal)",healing,660.0,0.25,2640
 Elementalist,"""Wash the Pain Away!"" (First Heal)",healing,2344.0,0.75,3125
