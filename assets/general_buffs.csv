@@ -40,3 +40,7 @@ crest_precision,14.0
 crest_vitality,14.0
 relic_monk_pct,10.0
 relic_castora_pct,12.5
+pearl_healing,20.0
+pearl_toughness,20.0
+pearl_vitality,10.0
+pearl_concentration,10.0

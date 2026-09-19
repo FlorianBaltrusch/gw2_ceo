@@ -62,13 +62,15 @@ class Conversions:
     to_conc_from_healing: float = 0.0
     to_conc_from_vitality: float = 0.0
     to_conc_from_precision: float = 0.0
+    to_conc_from_toughness: float = 0.0
     to_healing_from_power: float = 0.0
 
-    def conc_equivalent(self, healing, power, precision, vitality):
+    def conc_equivalent(self, healing, power, precision, vitality, toughness=0.0):
         return (self.to_conc_from_power * power
                 + self.to_conc_from_healing * healing
                 + self.to_conc_from_vitality * vitality
-                + self.to_conc_from_precision * precision)
+                + self.to_conc_from_precision * precision
+                + self.to_conc_from_toughness * toughness)
 
 
 class BoonGear:
@@ -108,25 +110,33 @@ class BoonGear:
         self.groups: list[tuple] = []
         self.option_meta: list[list[tuple]] = []
 
-        def piece_option(gear, slot, harrier, magi):
-            """Stat tuple of harrier+magi pieces of one slot; the healing
-            value already includes the power->healing conversion share."""
+        tank = build.tank
+
+        def piece_option(gear, slot, harrier, magi, giver):
+            """Stat tuple of a slot split across Harrier's/Magi's/Giver's
+            pieces; Giver's (tank mode only) mirrors Harrier's with toughness
+            as the major stat. The healing value already includes the
+            power->healing conversion share."""
             major, minor = float(gear["Maj", slot]), float(gear["Min", slot])
-            healing = minor * harrier + major * magi
+            healing = minor * (harrier + giver) + major * magi
             power = major * harrier
+            toughness = major * giver
             precision = minor * magi
             vitality = minor * magi
-            conc = minor * harrier + conv.conc_equivalent(healing, power, precision, vitality)
+            conc = (minor * (harrier + giver)
+                    + conv.conc_equivalent(healing, power, precision, vitality, toughness))
             return (round(conc, 6), healing + conv.to_healing_from_power * power,
-                    power, precision, vitality)
+                    power, precision, vitality, toughness)
 
         def add_group(label, count, gear, slot):
             if count == 0:
                 return
             options, meta = [], []
             for harrier in range(count + 1):
-                options.append(piece_option(gear, slot, harrier, count - harrier))
-                meta.append((harrier, count - harrier, 0))
+                for giver in (range(count - harrier + 1) if tank else (0,)):
+                    magi = count - harrier - giver
+                    options.append(piece_option(gear, slot, harrier, magi, giver))
+                    meta.append((harrier, magi, giver))
             self.equipment.append(options)
             self.groups.append((label, count))
             self.option_meta.append(meta)
@@ -157,38 +167,52 @@ class BoonGear:
         split_rarity("Accessories", "Accessory")
         split_rarity("Back item", "Back item")
 
-        # upgrade slots of exotic trinkets: Platinum Doubloon vs Crest of the Magi
+        # upgrade slots of exotic trinkets: Platinum Doubloon vs Crest of the
+        # Magi, plus the Exquisite Freshwater Pearl in tank mode
         buffs = gd.general_buffs
         num_upgrades = int(num_ex.iloc[8:12].sum())
         if num_upgrades:
             options, meta = [], []
             for doubloons in range(num_upgrades + 1):
-                crests = num_upgrades - doubloons
-                healing = float(buffs.crest_healing) * crests
-                precision = float(buffs.crest_precision) * crests
-                vitality = float(buffs.crest_vitality) * crests
-                conc = (float(buffs.doubloon_concentration) * doubloons
-                        + conv.conc_equivalent(healing, 0, precision, vitality))
-                options.append((round(conc, 6), healing, 0.0, precision, vitality))
-                meta.append((doubloons, crests, 0))
+                for pearls in (range(num_upgrades - doubloons + 1) if tank else (0,)):
+                    crests = num_upgrades - doubloons - pearls
+                    healing = (float(buffs.crest_healing) * crests
+                               + float(buffs.pearl_healing) * pearls)
+                    precision = float(buffs.crest_precision) * crests
+                    vitality = (float(buffs.crest_vitality) * crests
+                                + float(buffs.pearl_vitality) * pearls)
+                    toughness = float(buffs.pearl_toughness) * pearls
+                    conc = (float(buffs.doubloon_concentration) * doubloons
+                            + float(buffs.pearl_concentration) * pearls
+                            + conv.conc_equivalent(healing, 0, precision, vitality, toughness))
+                    options.append((round(conc, 6), healing, 0.0, precision,
+                                    vitality, toughness))
+                    meta.append((doubloons, crests, pearls))
             self.equipment.append(options)
             self.groups.append(("Upgrades (in exotic trinkets)", num_upgrades))
             self.option_meta.append(meta)
 
         # bottom-up enumeration of every reachable gear point: effective
-        # concentration -> best (healing, vitality, power, precision) tuple
-        # and the option choices behind it. A few thousand points at most,
-        # so every query afterwards is a binary search.
-        points: dict[float, tuple[tuple, tuple]] = {0.0: ((0.0, 0.0, 0.0, 0.0), ())}
+        # concentration -> best stat tuple and the option choices behind it.
+        # "Best" follows the agreed order - toughness slots in right after
+        # healing when tanking, dead last otherwise.
+        def rank_key(value):
+            healing, vitality, power, precision, toughness = value
+            if tank:
+                return (healing, toughness, vitality, power, precision)
+            return (healing, vitality, power, precision, toughness)
+
+        points: dict[float, tuple[tuple, tuple]] = {0.0: ((0.0, 0.0, 0.0, 0.0, 0.0), ())}
         for options in self.equipment:
             merged: dict[float, tuple[tuple, tuple]] = {}
             for conc_sum, (value, choices) in points.items():
-                for j, (conc, healing, power, precision, vitality) in enumerate(options):
+                for j, (conc, healing, power, precision, vitality, toughness) in enumerate(options):
                     key = round(conc_sum + conc, 6)
                     candidate = ((value[0] + healing, value[1] + vitality,
-                                  value[2] + power, value[3] + precision),
+                                  value[2] + power, value[3] + precision,
+                                  value[4] + toughness),
                                  choices + (j,))
-                    if key not in merged or candidate[0] > merged[key][0]:
+                    if key not in merged or rank_key(candidate[0]) > rank_key(merged[key][0]):
                         merged[key] = candidate
             points = merged
         self.conc_points = np.array(sorted(points))
@@ -282,20 +306,19 @@ def _oil_conversions(utility: str) -> dict[str, float]:
     }.get(utility, {})
 
 
-def _row_conversions(profession: Profession, utility: str) -> tuple[Conversions, float]:
-    """Conversion profile of one candidate row and the toughness->conc rate
-    (toughness is fixed at its base, so it never enters the gear model)."""
+def _row_conversions(profession: Profession, utility: str) -> Conversions:
+    """Conversion profile of one candidate row (oil + trait conversions)."""
     rates = profession.conversion_rates("concentration")
     for source, rate in _oil_conversions(utility).items():
         rates[source] = rates.get(source, 0.0) + rate
-    conv = Conversions(
+    return Conversions(
         to_conc_from_power=rates.get("power", 0.0),
         to_conc_from_healing=rates.get("healing", 0.0),
         to_conc_from_vitality=rates.get("vitality", 0.0),
         to_conc_from_precision=rates.get("precision", 0.0),
+        to_conc_from_toughness=rates.get("toughness", 0.0),
         to_healing_from_power=profession.conversion_rates("healing").get("power", 0.0),
     )
-    return conv, rates.get("toughness", 0.0)
 
 
 def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame:
@@ -307,8 +330,13 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
 
     if build.food:
         food = gd.boon_food
+        if not build.ascended_food:
+            food = food.loc[food["ascended"] == 0]
+        if not build.tank:  # toughness food would pull tank aggro
+            food = food.loc[food["toughness"] == 0]
     else:
-        food = pd.DataFrame(data={"concentration": [0], "healing": [0], "outgoing_pct": [0]},
+        food = pd.DataFrame(data={"concentration": [0], "healing": [0],
+                                  "outgoing_pct": [0], "toughness": [0]},
                             index=["no food"])
         food.index.name = "food"
 
@@ -336,7 +364,11 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
             relics["relic_conc"].append(float(buffs.relic_herald))
             relics["relic_outgoing"].append(0.0)
 
-    options = pd.merge(food.reset_index(), gd.boon_runes.reset_index(),
+    # toughness runes (Herald, Durability, Rebirth, Mercy, Guardian) only
+    # compete when tanking; Leadership's incidental 36 stays allowed
+    runes = gd.boon_runes if build.tank else \
+        gd.boon_runes.loc[gd.boon_runes["toughness"] <= 36]
+    options = pd.merge(food.reset_index(), runes.reset_index(),
                        how="cross", suffixes=("_food", "_rune"))
     options = pd.merge(_sigil_candidates(build), options, how="cross")
     options = pd.merge(_utility_candidates(build), options, how="cross")
@@ -344,7 +376,6 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
     options = pd.merge(infusions, options, how="cross")
 
     heal_from_power = profession.conversion_rates("healing").get("power", 0.0)
-    toughness = BASE_TOUGHNESS + profession._flat("toughness")
 
     stats = options
     stats["power_base"] = (buffs.base_power
@@ -356,6 +387,8 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
                                + profession.additional_precision() + stats["precision"])
     stats["vitality_base"] = (buffs.base_vitality + buffs.jade_bot
                               + profession.additional_vitality() + stats["vitality"])
+    stats["toughness_base"] = (BASE_TOUGHNESS + profession._flat("toughness")
+                               + stats["toughness_rune"] + stats["toughness_food"])
     # power feeds healing (Vigorous Shouts / Wellspring) before conversions
     stats["healing_raw"] = (profession.additional_healing()
                             + stats["healing_rune"] + stats["healing_food"]
@@ -374,20 +407,21 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
     # per-oil conversion profiles: each needs its own gear model, because the
     # gear's side stats feed the conversions ("effective" concentration).
     # Only a handful of profiles exist, so everything runs vectorized per oil.
-    for name in ("remainder", "overshoot", "healing", "vitality", "power", "precision"):
+    for name in ("remainder", "overshoot", "healing", "vitality", "power",
+                 "precision", "toughness"):
         stats[name] = 0.0
     stats["exact"] = False
     utilities = stats["utility"].to_numpy()
     for utility in dict.fromkeys(utilities):
         mask = utilities == utility
-        conv, toughness_rate = _row_conversions(profession, str(utility))
+        conv = _row_conversions(profession, str(utility))
         gear = BoonGear(build, conv)
 
         # conversions read pre-conversion (and pre-multiplier) values
-        conc_from_base = (conv.conc_equivalent(
+        conc_from_base = conv.conc_equivalent(
             stats.loc[mask, "healing_raw"], stats.loc[mask, "power_base"],
-            stats.loc[mask, "precision_base"], stats.loc[mask, "vitality_base"])
-            + toughness_rate * toughness)
+            stats.loc[mask, "precision_base"], stats.loc[mask, "vitality_base"],
+            stats.loc[mask, "toughness_base"])
         remainder = ((target - stats.loc[mask, "bd_equiv"]) / multiplier
                      - stats.loc[mask, "conc_attr"] - conc_from_base).round(6)
 
@@ -405,6 +439,8 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
                                     + gear_values[:, 2]) * multiplier
         stats.loc[mask, "precision"] = (stats.loc[mask, "precision_base"]
                                         + gear_values[:, 3]) * multiplier
+        stats.loc[mask, "toughness"] = (stats.loc[mask, "toughness_base"]
+                                        + gear_values[:, 4]) * multiplier
 
     stats["concentration_total"] = target + stats["overshoot"]
 
@@ -429,11 +465,12 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
     return stats
 
 
-def _rank(stats: pd.DataFrame, first: str, second: str) -> pd.DataFrame:
+def _rank(stats: pd.DataFrame, first: str, second: str, tank: bool = False) -> pd.DataFrame:
     """Hitting the cap exactly is the point of the tool; a forced overcap
     (never an undershoot) is priced into the stats and only breaks late ties.
-    The remaining keys implement the agreed stat order."""
-    by, ascending = zip(
+    The remaining keys implement the agreed stat order - when tanking,
+    toughness ranks directly after the healing objective."""
+    keys = [
         ("exact", False),
         ("capped", False),
         ("shortfall", True),
@@ -446,14 +483,17 @@ def _rank(stats: pd.DataFrame, first: str, second: str) -> pd.DataFrame:
         ("conc_infusions", True),
         ("sigil_prio", True),
         ("relic_prio", True),
-    )
+    ]
+    if tank:
+        keys.insert(5, ("toughness", False))
+    by, ascending = zip(*keys)
     return stats.sort_values(by=list(by), ascending=list(ascending))
 
 
 def gear_totals(profession: Profession, build: BuildConstraints, row: pd.Series) -> dict:
     """The gear assignment behind a rendered row: equipment groups (with the
     (harrier, magi, 0) split per group) and the gear model's bounds."""
-    conv, _ = _row_conversions(profession, str(row["utility"]))
+    conv = _row_conversions(profession, str(row["utility"]))
     gear = BoonGear(build, conv)
     _, _, _, choices = gear.query(float(row["remainder"]))  # type: ignore
     groups = [(label, count, meta[choice]) for (label, count), meta, choice
@@ -488,7 +528,7 @@ def calc_boon(profession: Profession, build: BuildConstraints,
     else:
         order = ("healing", "outgoing")
 
-    ranked = _rank(stats, *order)
+    ranked = _rank(stats, *order, tank=build.tank)
     best = ranked.iloc[0]
     backup = None
     if best["sigil_stacking"]:

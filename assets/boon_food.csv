@@ -1,3 +1,6 @@
-food,concentration,healing,outgoing_pct
-mint_brulee,100,70,10
-mint_salad,70,100,10
+food,concentration,healing,outgoing_pct,toughness,ascended
+mint_brulee,100,70,10,0,1
+mint_salad,70,100,10,0,1
+rice_ball,0,100,10,0,0
+eggs_benedict,100,0,0,0,0
+nopalitos,100,0,0,70,0

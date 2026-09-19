@@ -53,3 +53,12 @@ class BuildConstraints:
     # boon mode: the relic slot is reserved for a proc relic the model cannot
     # price (Karakosa's blast heal ...) - no stat relic competes
     relic_reserved: bool = False
+
+    # boon mode: allow the ascended feasts in the food pool (untick for the
+    # Fine/Masterwork alternatives)
+    ascended_food: bool = True
+
+    # boon mode: toughness becomes desirable (tank aggro is wanted): Giver's
+    # pieces, toughness runes and Freshwater Pearl upgrades enter the pool,
+    # and toughness ranks right after the healing objective
+    tank: bool = False

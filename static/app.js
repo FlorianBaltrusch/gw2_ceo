@@ -640,7 +640,7 @@ function traitGroup(title, iconSrc, groupEntries) {
       const options = document.createElement("div");
       options.className = "trait-options";
       const caption = document.createElement("span");
-      caption.textContent = "attunements (up to 2):";
+      caption.textContent = offered.length > 1 ? "attunements (up to 2):" : "attunement:";
       options.append(caption);
       for (const variant of offered) {
         const chip = document.createElement("button");
@@ -747,6 +747,7 @@ function setMode(mode) {
   el("row-env").classList.toggle("hidden", boon);       // boon mode is 3-stat only
   el("fury-label").classList.toggle("hidden", boon);    // fury only affects crit
   el("pie-label").classList.toggle("hidden", boon);
+  el("ascended-food-label").classList.toggle("hidden", !boon);
   el("writs-label").classList.toggle("hidden", boon);   // no concentration writ exists
   el("herald-label").classList.toggle("hidden", !boon);
   el("utility-name").textContent = boon ? "Maintenance oils" : "Sharpening stones";
@@ -962,6 +963,8 @@ async function optimize() {
     const { ranking, k } = currentRanking();
     params.set("ranking", ranking);
     if (k) params.set("k", k);
+    params.set("ascended_food", el("opt-ascended-food").checked);
+    params.set("tank", el("opt-tank").checked);
   }
 
   const errorBox = el("calc-error");
@@ -1205,10 +1208,18 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
 const BOON_RUNE_NAMES = {
   water: "Water", monk: "Monk", altruism: "Altruism", leadership: "Leadership",
   radiance: "Radiance", sanctuary: "Sanctuary", fireworks: "Fireworks", pack: "Pack",
+  herald: "Herald (+175 toughness, +25% boon duration)",
+  durability: "Durability (+175 toughness, +125 vitality, +15% boon duration)",
+  rebirth: "Rebirth (+175 healing, +125 toughness, +15% boon duration)",
+  mercy: "Mercy (+225 healing, +175 toughness)",
+  guardian: "Guardian (+100 healing, +300 toughness)",
 };
 const BOON_FOOD_NAMES = {
   mint_brulee: "Mint Creme Brulee (+100 concentration, +70 healing, +10% outgoing)",
   mint_salad: "Bowl of Fruit Salad with Mint Garnish (+100 healing, +70 concentration, +10% outgoing)",
+  rice_ball: "Delicious Rice Ball (+100 healing, +10% outgoing — Fine rarity)",
+  eggs_benedict: "Plate of Eggs Benedict (+100 concentration, +70 expertise — Masterwork)",
+  nopalitos: "Bowl of Nopalitos Sauté (+100 concentration, +70 toughness — Fine rarity)",
   "no food": "none",
 };
 const BOON_SIGIL_NAMES = {
@@ -1335,9 +1346,11 @@ function renderBoonBody(container, r, singleSigil, backupInfo) {
 
   const stats = document.createElement("div");
   stats.className = "stats";
+  const tank = el("opt-tank").checked;
   for (const [name, value] of [
     ["Healing Power", r.healing], ["Concentration", 1500 + r.conc_delta],
-    ["Vitality", r.vitality], ["Power", r.power],
+    tank ? ["Toughness", r.toughness] : ["Vitality", r.vitality],
+    tank ? ["Vitality", r.vitality] : ["Power", r.power],
   ]) {
     const cell = document.createElement("div");
     const statValue = document.createElement("span");
@@ -1370,10 +1383,13 @@ function renderBoonBody(container, r, singleSigil, backupInfo) {
   addEquipmentRow("Jade bot core", "Tier 10 (+235 vitality, already counted)");
   for (const group of r.equipment) {
     const upgrades = group.slot.startsWith("Upgrades");
-    const names = upgrades ? ["Platinum Doubloon", "Crest of the Magi"] : ["Harrier's", "Magi's"];
+    const names = upgrades
+      ? ["Platinum Doubloon", "Crest of the Magi", "Exquisite Freshwater Pearl"]
+      : ["Harrier's", "Magi's", "Giver's"];
     const parts = [];
     if (group.harrier > 0) parts.push(`${group.harrier}× ${names[0]}`);
     if (group.magi > 0) parts.push(`${group.magi}× ${names[1]}`);
+    if (group.giver > 0) parts.push(`${group.giver}× ${names[2]}`);
     const text = group.pieces === 1 && parts.length === 1
       ? parts[0].replace("1× ", "") : parts.join(", ");
     addEquipmentRow(group.slot, text);
@@ -1399,7 +1415,7 @@ function renderBoonBody(container, r, singleSigil, backupInfo) {
     container.append(warning);
   }
 
-  if (r.rune === "leadership") {
+  if (r.rune === "leadership" && !tank) {
     const note = document.createElement("p");
     note.className = "warning";
     note.textContent = "Rune of Leadership carries +36 toughness — negligible next to a " +

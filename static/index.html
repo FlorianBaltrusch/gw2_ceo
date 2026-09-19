@@ -79,6 +79,9 @@
         <div class="control-row">
           <span class="control-label">Allow the optimizer to use</span>
           <label class="check"><input type="checkbox" id="opt-food" checked> Food</label>
+          <label class="check hidden" id="ascended-food-label"><input type="checkbox"
+            id="opt-ascended-food" checked> Ascended food <span class="check-note">(the feasts —
+            untick for Fine/Masterwork food only)</span></label>
           <label class="check" id="pie-label"><input type="checkbox" id="opt-pie">
             Omnomberry Pie instead <span class="check-note">(open world: +70 precision
             + lifesteal on crit — replaces the food options)</span></label>
@@ -109,6 +112,10 @@
           <span class="control-label">Healing profile
             <button type="button" id="k-from-skill" class="mini-button">pick a skill</button>
           </span>
+          <label class="check"><input type="checkbox" id="opt-tank">
+            I want to tank <span class="check-note">(toughness becomes desirable —
+            Giver's pieces, toughness runes, Freshwater Pearls — ranked right after
+            the healing objective)</span></label>
           <input type="range" id="k-slider" class="k-slider" min="0" max="100" value="0">
           <div class="k-readout"><output id="k-label">ranking by healing power</output></div>
           <p class="hint">The edges rank purely by healing power (left) or purely by outgoing

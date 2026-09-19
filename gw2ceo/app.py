@@ -200,6 +200,8 @@ def calculate():
             omnomberry_pie=request.args.get("pie", "false") == "true",
             herald_relic=request.args.get("herald", "true") == "true",
             relic_reserved=request.args.get("relic_reserved", "false") == "true",
+            ascended_food=request.args.get("ascended_food", "true") == "true",
+            tank=request.args.get("tank", "false") == "true",
         )
 
         if mode == "boon":
@@ -319,6 +321,7 @@ def boon_result(profession: Profession, constraints: BuildConstraints,
             "vitality": float(row["vitality"]),
             "power": float(row["power"]),
             "precision": float(row["precision"]),
+            "toughness": float(row["toughness"]),
             "exact": bool(row["exact"]),
             # positive: concentration wasted beyond the cap; negative: missing
             "conc_delta": float(row["overshoot"]) if not row["exact"] else 0.0,
@@ -333,7 +336,7 @@ def boon_result(profession: Profession, constraints: BuildConstraints,
             "overcapped": bool(row["remainder"] < totals["conc_floor"] - 1),
             "equipment": [
                 {"slot": label, "pieces": int(count),
-                 "harrier": int(meta[0]), "magi": int(meta[1])}
+                 "harrier": int(meta[0]), "magi": int(meta[1]), "giver": int(meta[2])}
                 for label, count, meta in totals["groups"]
             ],
         }
