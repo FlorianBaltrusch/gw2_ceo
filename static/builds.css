@@ -441,7 +441,7 @@
   stroke: var(--silver-satin, #898989);
   stroke-width: 2;
   stroke-linecap: round;
-  opacity: .9;
+  opacity: var(--alpha-soft, 30%);   /* 70% transparent */
 }
 
 .traitline-picks {
