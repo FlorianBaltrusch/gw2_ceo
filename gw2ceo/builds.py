@@ -105,7 +105,9 @@ def decode_template(link: str) -> dict:
             "name": spec["name"],
             "elite": bool(spec["elite"]),
             "icon": f"/icons/spec_{spec_id}.png",
-            "background": f"/icons/spec_panel_{spec_id}.png",
+            # the border-trimmed banner: the painted part without the black
+            # margins the in-game trait UI covers
+            "background": f"/icons/spec_bg_{spec_id}.png",
             "minors": [_trait_entry(traits[trait_id]) for trait_id in spec["minor_traits"]],
             "majors": [[_trait_entry(traits[trait_id]) for trait_id in majors[3 * tier:3 * tier + 3]]
                        for tier in range(3)],

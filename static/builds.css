@@ -345,14 +345,15 @@
   --hex-x: clamp(14px, 9vw, 72px);       /* hexagon's left edge: over the art's subject */
   --frame: 3px;                          /* the hexagon's dark rim */
   --trim: 9%;                            /* trims the icons' own black frame (4-6px of 64) */
-  /* the whole 1024x256 banner fitted into the 4:1 panel (cover: a couple
-     of pixels of height are cropped), so the hexagon covers a larger part
-     of the picture than at natural scale */
+  /* the border-trimmed banner (the painted part, mostly ~3.1:1) fills
+     the frame; the frame takes that shape, so the whole picture is shown
+     and the hexagon covers a good part of it */
   --art: var(--panel, none) left center / cover no-repeat;
   position: relative;
   display: flex;
   align-items: center;
   gap: clamp(10px, 2.6vw, 24px);
+  aspect-ratio: 3.2 / 1;
   min-height: calc(var(--trait) * 3 + 32px);
   padding: 12px var(--pad-x);
   margin-bottom: 6px;
