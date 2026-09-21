@@ -343,6 +343,7 @@
   --hex: clamp(74px, 10vw, 100px);      /* hexagon width; height is 1.15x */
   --pad-x: clamp(8px, 2vw, 16px);
   --hex-x: clamp(14px, 9vw, 72px);       /* hexagon's left edge: over the art's subject */
+  --hex-dy: 5px;                         /* hexagon sits a touch below the center line */
   --frame: 3px;                          /* the hexagon's dark rim */
   --trim: 9%;                            /* trims the icons' own black frame (4-6px of 64) */
   /* the 1024x256 banner at roughly natural size (165% of the ~152px panel
@@ -375,12 +376,12 @@
   background: var(--art);
   pointer-events: none;
   clip-path: polygon(
-    calc(var(--hex-x) + var(--hex) * .5)                calc(50% - var(--hex) * .575 + var(--frame) * 1.15),
-    calc(var(--hex-x) + var(--hex) - var(--frame))      calc(50% - var(--hex) * .2875 + var(--frame) * .58),
-    calc(var(--hex-x) + var(--hex) - var(--frame))      calc(50% + var(--hex) * .2875 - var(--frame) * .58),
-    calc(var(--hex-x) + var(--hex) * .5)                calc(50% + var(--hex) * .575 - var(--frame) * 1.15),
-    calc(var(--hex-x) + var(--frame))                   calc(50% + var(--hex) * .2875 - var(--frame) * .58),
-    calc(var(--hex-x) + var(--frame))                   calc(50% - var(--hex) * .2875 + var(--frame) * .58));
+    calc(var(--hex-x) + var(--hex) * .5)                calc(50% + var(--hex-dy) - var(--hex) * .575 + var(--frame) * 1.15),
+    calc(var(--hex-x) + var(--hex) - var(--frame))      calc(50% + var(--hex-dy) - var(--hex) * .2875 + var(--frame) * .58),
+    calc(var(--hex-x) + var(--hex) - var(--frame))      calc(50% + var(--hex-dy) + var(--hex) * .2875 - var(--frame) * .58),
+    calc(var(--hex-x) + var(--hex) * .5)                calc(50% + var(--hex-dy) + var(--hex) * .575 - var(--frame) * 1.15),
+    calc(var(--hex-x) + var(--frame))                   calc(50% + var(--hex-dy) + var(--hex) * .2875 - var(--frame) * .58),
+    calc(var(--hex-x) + var(--frame))                   calc(50% + var(--hex-dy) - var(--hex) * .2875 + var(--frame) * .58));
 }
 .traitline > * { position: relative; }
 
@@ -388,6 +389,7 @@
    (::after) is drawn on top of it, inset by the rim width */
 .traitline-hex {
   flex-shrink: 0;
+  top: var(--hex-dy);
   margin-left: calc(var(--hex-x) - var(--pad-x));
   width: var(--hex);
   height: calc(var(--hex) * 1.15);
@@ -425,6 +427,22 @@
   opacity: var(--alpha-soft, 30%);
 }
 .major.selected, .major:hover { opacity: 1; }
+
+/* connectors minor → chosen major → next minor, in silver satin, drawn
+   under the icons from the rendered layout */
+.traitline > .trait-lines {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.trait-lines line {
+  stroke: var(--silver-satin, #898989);
+  stroke-width: 2;
+  stroke-linecap: round;
+  opacity: .9;
+}
 
 .traitline-picks {
   display: flex;

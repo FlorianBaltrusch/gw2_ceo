@@ -287,6 +287,7 @@ async function showDetail(slug) {
     section("Links", links(build)),
   );
   if (build.notes.trim()) view.append(section("Notes", notes(build.notes)));
+  requestAnimationFrame(drawAllTraitLines);
 }
 
 function backLink() {
@@ -386,7 +387,9 @@ function traitLines(lines) {
       column.append(majors);
       tree.append(column);
     }
-    panel.append(hex, tree);
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.classList.add("trait-lines");
+    panel.append(hex, svg, tree);   // the lines paint under the icons
     wrap.append(panel);
 
     // the line's name and its chosen majors in words, below the panel
@@ -414,6 +417,40 @@ function traitLines(lines) {
   }
   return wrap;
 }
+
+// the connectors run minor → chosen major → next minor; measured from the
+// rendered layout so every viewport width works, redrawn on resize
+function drawTraitLines(panel) {
+  const svg = panel.querySelector(".trait-lines");
+  if (!svg) return;
+  const box = panel.getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
+  svg.innerHTML = "";
+  const center = (node) => {
+    const rect = node.getBoundingClientRect();
+    return [rect.left - box.left + rect.width / 2, rect.top - box.top + rect.height / 2];
+  };
+  const points = [];
+  for (const tier of panel.querySelectorAll(".tier")) {
+    points.push(center(tier.querySelector(".minor")));
+    const chosen = tier.querySelector(".major.selected");
+    if (chosen) points.push(center(chosen));
+  }
+  for (let i = 1; i < points.length; i++) {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", points[i - 1][0]);
+    line.setAttribute("y1", points[i - 1][1]);
+    line.setAttribute("x2", points[i][0]);
+    line.setAttribute("y2", points[i][1]);
+    svg.append(line);
+  }
+}
+
+function drawAllTraitLines() {
+  for (const panel of document.querySelectorAll(".traitline")) drawTraitLines(panel);
+}
+
+new ResizeObserver(() => drawAllTraitLines()).observe(document.body);
 
 // --- skills ---
 

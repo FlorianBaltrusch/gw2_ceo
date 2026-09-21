@@ -73,7 +73,7 @@ try:
     check("nine minors, 27 majors", count(".minor") == 9 and count(".major") == 27,
           f"{count('.minor')} / {count('.major')}")
     check("nine chosen majors", count(".major.selected") == 9, str(count(".major.selected")))
-    check("no connector lines (armory look)", count(".trait-lines") == 0)
+    check("five connector lines per panel", count(".trait-lines line") == 15, str(count(".trait-lines line")))
     check("one art hexagon per panel", count(".traitline-hex") == 3)
     picks = [p.text for p in driver.find_elements(By.CSS_SELECTOR, ".traitline-picks")]
     check("chosen traits named", "Chronophantasma" in picks[2], picks[2])
