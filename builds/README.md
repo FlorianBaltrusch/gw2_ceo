@@ -16,8 +16,10 @@ and the offending key.
    toggles, mode) and press "Copy optimizer link" under the result. Paste
    it into `optimizer`. The build page runs the same calculation and lists
    the result per slot: stat prefix and rarity of every piece, rune, sigils,
-   relic, food, utility and infusions, plus the headline numbers. The
-   weapon sets come from the chat link's weapon types.
+   relic, food, utility and infusions. The character card next to the
+   skills shows the resulting attributes with their in-game meaning
+   (critical chance, critical damage, health, boon duration). The weapon
+   sets come from the chat link's weapon types.
 3. **Name, category, text.** Exactly one category, optional tags, a
    summary and notes.
 
