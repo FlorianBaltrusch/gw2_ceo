@@ -340,7 +340,7 @@
    brightness (same size, same position), like the armory widget */
 .traitline {
   --trait: clamp(30px, 4vw, 40px);
-  --hex: clamp(74px, 10vw, 100px);      /* hexagon width; height is 1.15x */
+  --hex: clamp(80px, 11vw, 116px);      /* hexagon width; height 1.15x ~ 88% of the panel */
   --pad-x: clamp(8px, 2vw, 16px);
   --hex-x: clamp(14px, 9vw, 72px);       /* hexagon's left edge: over the art's subject */
   --frame: 3px;                          /* the hexagon's dark rim */
@@ -374,14 +374,14 @@
   inset: 0;
   background: var(--art);
   pointer-events: none;
-  /* the hexagon (height 1.15 x width) stands on the panel's bottom edge */
+  /* the hexagon (height 1.15 x width), centered like the flex item */
   clip-path: polygon(
-    calc(var(--hex-x) + var(--hex) * .5)                calc(100% - var(--hex) * 1.15 + var(--frame) * 1.15),
-    calc(var(--hex-x) + var(--hex) - var(--frame))      calc(100% - var(--hex) * .8625 + var(--frame) * .58),
-    calc(var(--hex-x) + var(--hex) - var(--frame))      calc(100% - var(--hex) * .2875 - var(--frame) * .58),
-    calc(var(--hex-x) + var(--hex) * .5)                calc(100% - var(--frame) * 1.15),
-    calc(var(--hex-x) + var(--frame))                   calc(100% - var(--hex) * .2875 - var(--frame) * .58),
-    calc(var(--hex-x) + var(--frame))                   calc(100% - var(--hex) * .8625 + var(--frame) * .58));
+    calc(var(--hex-x) + var(--hex) * .5)                calc(50% - var(--hex) * .575 + var(--frame) * 1.15),
+    calc(var(--hex-x) + var(--hex) - var(--frame))      calc(50% - var(--hex) * .2875 + var(--frame) * .58),
+    calc(var(--hex-x) + var(--hex) - var(--frame))      calc(50% + var(--hex) * .2875 - var(--frame) * .58),
+    calc(var(--hex-x) + var(--hex) * .5)                calc(50% + var(--hex) * .575 - var(--frame) * 1.15),
+    calc(var(--hex-x) + var(--frame))                   calc(50% + var(--hex) * .2875 - var(--frame) * .58),
+    calc(var(--hex-x) + var(--frame))                   calc(50% - var(--hex) * .2875 + var(--frame) * .58));
 }
 .traitline > * { position: relative; }
 
@@ -389,8 +389,6 @@
    (::after) is drawn on top of it, inset by the rim width */
 .traitline-hex {
   flex-shrink: 0;
-  align-self: flex-end;
-  margin-bottom: -12px;                 /* through the panel padding: tip on the edge */
   margin-left: calc(var(--hex-x) - var(--pad-x));
   width: var(--hex);
   height: calc(var(--hex) * 1.15);
