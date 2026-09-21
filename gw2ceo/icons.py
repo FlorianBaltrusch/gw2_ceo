@@ -52,20 +52,23 @@ def crop_banner_bleed(path):
         image.crop((left, top, min(right, image.width), min(bottom, image.height))).save(path)
 
 
-def trim_banner_border(path, threshold=18, content_fraction=0.01):
+def trim_banner_border(path, threshold=18, content_fraction=0.01, min_mean=12):
     """The spec banners bleed into the in-game UI panel and pad the painted
     area with fully transparent or near-black margins; crop to the painted
     area (idempotent). A row/column only counts as content if more than 1%
-    of its pixels are bright and visible, so a few stray specks in a black
-    region do not stop the trim - while dark artwork in the middle of a
-    banner stays safe because only the border is removed."""
+    of its pixels are bright and visible AND its mean brightness is not
+    near black, so a few stray specks in a black region do not stop the
+    trim - while dark artwork in the middle of a banner stays safe because
+    only the border is removed."""
     crop_banner_bleed(path)
     image = Image.open(path).convert("RGBA")
     pixels = np.asarray(image)
-    content = (pixels[..., :3].max(axis=2) > threshold) & (pixels[..., 3] > 8)
+    visible = pixels[..., 3] > 8
+    brightness = pixels[..., :3].max(axis=2) * visible
+    content = (brightness > threshold) & visible
 
-    row_has_content = content.mean(axis=1) > content_fraction
-    col_has_content = content.mean(axis=0) > content_fraction
+    row_has_content = (content.mean(axis=1) > content_fraction) & (brightness.mean(axis=1) > min_mean)
+    col_has_content = (content.mean(axis=0) > content_fraction) & (brightness.mean(axis=0) > min_mean)
     if not row_has_content.any() or not col_has_content.any():
         return
     top, bottom = np.flatnonzero(row_has_content)[[0, -1]]
