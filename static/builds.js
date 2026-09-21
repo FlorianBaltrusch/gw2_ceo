@@ -270,11 +270,17 @@ async function showDetail(slug) {
   document.title = `${build.name} — GW2 Builds`;
   window.scrollTo({ top: 0 });
 
+  const columns = document.createElement("div");
+  columns.className = "build-columns";
+  const traits = section("Traits", traitLines(build.lines));
+  traits.classList.add("col-traits");
+  const skills = section("Skills", skillBars(build.skills));
+  skills.classList.add("col-skills");
+  columns.append(traits, skills);
   view.append(
     backLink(),
     header(build),
-    section("Traits", traitLines(build.lines)),
-    section("Skills", skillBars(build.skills)),
+    columns,
     section("Gear", gearPanel(build.gear)),
     section("Links", links(build)),
   );

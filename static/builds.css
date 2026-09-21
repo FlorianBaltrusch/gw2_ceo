@@ -321,15 +321,29 @@
    art-filled hexagon on the left, 40px icons, and the chosen traits told
    apart by opacity alone - no lines, no text on the panel */
 
+/* two columns on wide screens: the trait panels keep a fixed width (they
+   must not stretch with the window), the skills sit beside them; below
+   ~1020px the skills drop under the traits */
+.build-columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 18px;
+}
+.build-columns > .build-section { margin-top: 0; }
+.col-traits { flex: 0 1 660px; min-width: 0; }
+.col-skills { flex: 1 1 340px; min-width: 0; }
+
 .traitline {
-  --trait: clamp(30px, 4.2vw, 42px);
-  --hex: clamp(78px, 11vw, 112px);
+  --trait: clamp(30px, 4vw, 40px);
+  --hex: clamp(74px, 10vw, 100px);
   position: relative;
   display: flex;
   align-items: center;
-  gap: clamp(10px, 3vw, 34px);
-  min-height: calc(var(--trait) * 3 + 36px);
-  padding: 14px clamp(10px, 2.5vw, 26px);
+  gap: clamp(10px, 2.6vw, 24px);
+  min-height: calc(var(--trait) * 3 + 32px);
+  padding: 12px clamp(8px, 2vw, 16px);
   margin-bottom: 6px;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -340,14 +354,13 @@
   content: "";
   position: absolute;
   inset: 0;
-  /* scaled up so the painted left part of the 1024x256 banner spans the
-     whole panel; the empty dark right part stays out of view */
-  background: var(--panel, none) left 62% / auto 150% no-repeat;
-  opacity: .4;
+  background: var(--panel, none) left center / cover no-repeat;
+  opacity: .38;
   /* the banners stop painting around 60% of their width with a hard edge
-     (in game the trait UI covers that part): fade out before it */
-  -webkit-mask-image: linear-gradient(90deg, #000 42%, transparent 66%);
-  mask-image: linear-gradient(90deg, #000 42%, transparent 66%);
+     (in game the trait UI covers that part): fade out before it, which
+     also keeps the trait icons on a calm dark ground */
+  -webkit-mask-image: linear-gradient(90deg, #000 40%, transparent 70%);
+  mask-image: linear-gradient(90deg, #000 40%, transparent 70%);
 }
 .traitline > * { position: relative; }
 
@@ -374,10 +387,10 @@
   display: flex;
   justify-content: space-around;
   align-items: center;
-  max-width: 780px;
+  max-width: 440px;   /* packed like the armory widget, whatever the window */
   gap: 4px;
 }
-.tier { display: flex; align-items: center; gap: clamp(8px, 1.8vw, 22px); }
+.tier { display: flex; align-items: center; gap: clamp(6px, 1.4vw, 14px); }
 .trait-node {
   position: relative;
   display: block;
@@ -414,47 +427,38 @@
 .traitline-picks b { font-weight: 400; color: var(--text); }
 .traitline-picks .sep { padding: 0 8px; }
 
-/* skill bars */
+/* skill bars (in the side column on wide screens, full width below) */
 
-.skillbar { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+.skillbar { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.skillbar:last-child { margin-bottom: 0; }
 .skillbar-label {
-  flex: 0 0 90px;
-  padding-top: 18px;
   font-size: .78rem;
   letter-spacing: .12em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
-.skills { display: flex; flex-wrap: wrap; gap: 8px; }
+.skills { display: flex; flex-wrap: wrap; gap: 6px; }
 .skill {
   margin: 0;
-  width: 84px;
+  width: 58px;
   text-align: center;
 }
-.skill.utility1 { margin-left: 10px; }
-.skill.elite { margin-left: 10px; }
+.skill.utility1 { margin-left: 8px; }
+.skill.elite { margin-left: 8px; }
 .skill img, .skill .empty {
   display: block;
-  width: 58px;
-  height: 58px;
+  width: 48px;
+  height: 48px;
   margin: 0 auto;
-  border-radius: 8px;
+  border-radius: 7px;
   border: 2px solid rgba(255, 255, 255, .14);
   background: #1b1f2e;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, .8);
 }
 .skill.heal img { border-color: color-mix(in srgb, var(--growth, #009400) 75%, white); }
 .skill.elite img { border-color: var(--gold); }
-.skill figcaption { font-size: .76rem; color: var(--text-dim); margin-top: 5px; line-height: 1.25; }
+.skill figcaption { font-size: .7rem; color: var(--text-dim); margin-top: 4px; line-height: 1.25; }
 .skill .empty { opacity: .5; }
-
-@media (max-width: 600px) {
-  .skillbar { flex-direction: column; gap: 6px; }
-  .skillbar-label { flex: none; padding-top: 0; }
-  .skill { width: 62px; }
-  .skill img, .skill .empty { width: 48px; height: 48px; }
-  .skill figcaption { font-size: .68rem; }
-}
 
 /* gear panel */
 
