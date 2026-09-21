@@ -354,7 +354,7 @@
   display: flex;
   align-items: center;
   gap: clamp(10px, 2.6vw, 24px);
-  min-height: calc(var(--trait) * 3 + 32px);
+  min-height: calc(var(--trait) * 3 + 36px);   /* room for the lowered hexagon's tip */
   padding: 12px var(--pad-x);
   margin-bottom: 6px;
   border: 1px solid var(--border);
