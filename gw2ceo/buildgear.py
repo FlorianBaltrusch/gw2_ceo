@@ -242,7 +242,7 @@ def character(row: dict, mode: str, profession: str) -> dict:
     critical chance, ferocity as critical damage, vitality as health,
     concentration as boon duration."""
     def pct(value):
-        return f"{value:.1f}%"
+        return f"{value:.2f}%"
 
     health = BASE_HEALTH.get(profession, 5922) + 10 * float(row["vitality"])
     attributes = []
@@ -250,15 +250,16 @@ def character(row: dict, mode: str, profession: str) -> dict:
         boon_duration = 100.0 if row.get("exact") else 100.0 + float(row.get("conc_delta", 0)) / CONCENTRATION_PER_BOON_PCT
         attributes += [
             {"name": "Healing power", "value": round(row["healing"]),
-             "effect": "Outgoing healing bonus", "effect_value": f"+{row['outgoing']:.1f}%"},
+             "effect": "Outgoing healing bonus", "effect_value": f"+{row['outgoing']:.2f}%"},
             {"name": "Boon duration", "value": pct(boon_duration),
              "effect": "Concentration and flat bonuses, capped at +100%", "effect_value": ""},
         ]
         precision = float(row["precision"])
     else:
         precision = float(row["precision"]) + float(row.get("chance", 0))
-    crit_chance = row["crit_pct"] if row.get("crit_pct") is not None \
-        else max(0.0, min(100.0, (precision - PRECISION_AT_ZERO_CRIT) / PRECISION_PER_CRIT_PCT))
+    # from the precision total in every mode (the solver's own crit_pct is
+    # rounded to one decimal for the optimizer's card)
+    crit_chance = max(0.0, min(100.0, (precision - PRECISION_AT_ZERO_CRIT) / PRECISION_PER_CRIT_PCT))
     attributes.append({"name": "Power", "value": round(row["power"]), "effect": None, "effect_value": None})
     attributes.append({"name": "Precision", "value": round(precision),
                        "effect": "Critical chance", "effect_value": pct(float(crit_chance))})
@@ -274,10 +275,9 @@ def character(row: dict, mode: str, profession: str) -> dict:
     if mode == "boon":
         headline = {"value": round(row["healing"]), "caption": "healing power at 100% boon duration"}
     else:
-        crit_pct = row.get("crit_pct")
         headline = {"value": round(row["effective_power"]),
-                    "caption": (f"effective power at {crit_pct}% critical chance"
-                                if crit_pct is not None else "effective power at 100% crit")}
+                    "caption": (f"effective power at {pct(crit_chance)} critical chance"
+                                if row.get("no_cap") else "effective power at 100% crit")}
     return {"headline": headline, "attributes": attributes}
 
 

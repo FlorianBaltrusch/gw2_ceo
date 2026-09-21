@@ -87,7 +87,7 @@ try:
           count(".character-headline") == 1 and count(".attribute") >= 4
           and count(".attribute .effect") >= 3)
     effects = [e.text for e in driver.find_elements(By.CSS_SELECTOR, ".attribute .effect")]
-    check("crit chance and health derived", any("Critical chance" in e and "100.0%" in e for e in effects)
+    check("crit chance and health derived", any("Critical chance" in e and "100.00%" in e for e in effects)
           and any("Health" in e for e in effects), str(effects))
     check("skin from the build file shows on the head slot",
           "Placeholder skin name" in driver.find_element(By.CSS_SELECTOR, ".gear-column .gear-slot").text)
