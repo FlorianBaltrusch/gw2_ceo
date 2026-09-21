@@ -340,15 +340,15 @@
    brightness (same size, same position), like the armory widget */
 .traitline {
   --trait: clamp(30px, 4vw, 40px);
-  --hex: clamp(80px, 11vw, 116px);      /* hexagon width; height 1.15x ~ 88% of the panel */
+  --hex: clamp(74px, 10vw, 100px);      /* hexagon width; height is 1.15x */
   --pad-x: clamp(8px, 2vw, 16px);
   --hex-x: clamp(14px, 9vw, 72px);       /* hexagon's left edge: over the art's subject */
   --frame: 3px;                          /* the hexagon's dark rim */
   --trim: 9%;                            /* trims the icons' own black frame (4-6px of 64) */
-  /* the 1024x256 banner at roughly natural size (165% of the ~152px panel
-     height): its painted left ~62% then spans the whole 624px panel, and
-     the hard edge where the art stops stays outside */
-  --art: var(--panel, none) left 55% / auto 165% no-repeat;
+  /* the whole 1024x256 banner fitted into the 4:1 panel (cover: a couple
+     of pixels of height are cropped), so the hexagon covers a larger part
+     of the picture than at natural scale */
+  --art: var(--panel, none) left center / cover no-repeat;
   position: relative;
   display: flex;
   align-items: center;
