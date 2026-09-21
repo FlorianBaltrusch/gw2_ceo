@@ -279,7 +279,6 @@ async function showDetail(slug) {
     section("Links", links(build)),
   );
   if (build.notes.trim()) view.append(section("Notes", notes(build.notes)));
-  drawAllTraitLines();
 }
 
 function backLink() {
@@ -354,18 +353,15 @@ function traitLines(lines) {
     panel.className = "traitline";
     panel.style.setProperty("--panel", `url("${line.background}")`);
 
-    const title = document.createElement("div");
-    title.className = "traitline-title";
-    const icon = document.createElement("img");
-    icon.src = line.icon;
-    icon.alt = "";
-    const name = document.createElement("span");
-    name.className = "name";
-    name.textContent = line.name;
-    const kind = document.createElement("span");
-    kind.className = "kind";
-    kind.textContent = line.elite ? "elite specialization" : "specialization";
-    title.append(icon, name, kind);
+    // the big hexagon on the left shows a crop of the line's own banner art
+    const hex = document.createElement("div");
+    hex.className = "traitline-hex";
+    hex.title = line.name;
+    const frame = document.createElement("span");
+    frame.className = "frame";
+    const art = document.createElement("span");
+    art.className = "art";
+    hex.append(frame, art);
 
     const tree = document.createElement("div");
     tree.className = "trait-tree";
@@ -382,15 +378,19 @@ function traitLines(lines) {
       column.append(majors);
       tree.append(column);
     }
-
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.classList.add("trait-lines");
-    panel.append(title, tree, svg);
+    panel.append(hex, tree);
     wrap.append(panel);
 
-    // the chosen majors in words, for readers who don't know the icons
+    // the line's name and its chosen majors in words, below the panel
     const picks = document.createElement("p");
     picks.className = "traitline-picks";
+    const icon = document.createElement("img");
+    icon.src = line.icon;
+    icon.alt = "";
+    const name = document.createElement("span");
+    name.className = "line-name";
+    name.textContent = line.name;
+    picks.append(icon, name);
     line.selected.forEach((choice, tier) => {
       if (tier) {
         const sep = document.createElement("span");
@@ -406,41 +406,6 @@ function traitLines(lines) {
   }
   return wrap;
 }
-
-// the connecting lines run minor → chosen major → next minor, like in game;
-// they are measured from the rendered layout so every viewport width works
-function drawTraitLines(panel) {
-  const svg = panel.querySelector(".trait-lines");
-  const box = panel.getBoundingClientRect();
-  svg.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
-  svg.innerHTML = "";
-  const center = (node) => {
-    const rect = node.getBoundingClientRect();
-    return [rect.left - box.left + rect.width / 2, rect.top - box.top + rect.height / 2];
-  };
-  const tiers = [...panel.querySelectorAll(".tier")];
-  const points = [];
-  tiers.forEach((tier) => {
-    points.push(center(tier.querySelector(".minor")));
-    const chosen = tier.querySelector(".major.selected");
-    if (chosen) points.push(center(chosen));
-  });
-  for (let i = 1; i < points.length; i++) {
-    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-    line.setAttribute("x1", points[i - 1][0]);
-    line.setAttribute("y1", points[i - 1][1]);
-    line.setAttribute("x2", points[i][0]);
-    line.setAttribute("y2", points[i][1]);
-    svg.append(line);
-  }
-}
-
-function drawAllTraitLines() {
-  for (const panel of document.querySelectorAll(".traitline")) drawTraitLines(panel);
-}
-
-const relayout = new ResizeObserver(() => drawAllTraitLines());
-relayout.observe(document.body);
 
 // --- skills ---
 

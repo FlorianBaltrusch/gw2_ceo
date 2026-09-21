@@ -316,113 +316,103 @@
 }
 .build-section .hint { margin-top: -6px; }
 
-/* trait lines like the in-game specialization panel */
+/* trait lines, styled after the GW2 Armory specialization widget (as on
+   Snow Crows): the banner art as a flat 40% layer over near-black, one
+   art-filled hexagon on the left, 40px icons, and the chosen traits told
+   apart by opacity alone - no lines, no text on the panel */
 
 .traitline {
-  --trait: clamp(38px, 4.6vw, 52px);
-  --minor: calc(var(--trait) * .78);
+  --trait: clamp(30px, 4.2vw, 42px);
+  --hex: clamp(78px, 11vw, 112px);
   position: relative;
   display: flex;
-  align-items: stretch;
-  min-height: calc(var(--trait) * 3 + 44px);
-  margin-bottom: 8px;
+  align-items: center;
+  gap: clamp(10px, 3vw, 34px);
+  min-height: calc(var(--trait) * 3 + 36px);
+  padding: 14px clamp(10px, 2.5vw, 26px);
+  margin-bottom: 6px;
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
-  background:
-    linear-gradient(90deg, rgba(6, 8, 16, .05) 0%, rgba(6, 8, 16, .35) 26%, rgba(6, 8, 16, .72) 42%, rgba(6, 8, 16, .82) 100%),
-    var(--panel, none) left center / cover no-repeat,
-    #0b0e18;
+  background: #101216;
 }
-.traitline-title {
-  flex: 0 0 24%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: 4px;
-  padding: 12px 14px;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, .9);
-  /* a soft dark foot so the name stays legible over bright art */
-  background: linear-gradient(0deg, rgba(4, 6, 12, .78) 0%, rgba(4, 6, 12, .35) 45%, transparent 75%);
+.traitline::before {                 /* the banner art, dimmed uniformly */
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* scaled up so the painted left part of the 1024x256 banner spans the
+     whole panel; the empty dark right part stays out of view */
+  background: var(--panel, none) left 62% / auto 150% no-repeat;
+  opacity: .4;
+  /* the banners stop painting around 60% of their width with a hard edge
+     (in game the trait UI covers that part): fade out before it */
+  -webkit-mask-image: linear-gradient(90deg, #000 42%, transparent 66%);
+  mask-image: linear-gradient(90deg, #000 42%, transparent 66%);
 }
-.traitline-title img { width: 40px; height: 40px; filter: drop-shadow(0 1px 4px rgba(0, 0, 0, .8)); }
-.traitline-title .name { font-size: 1.15rem; letter-spacing: .08em; color: var(--text); }
-.traitline-title .kind { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-dim); }
+.traitline > * { position: relative; }
+
+/* the big hexagon holds a crop of the same banner art, like in game */
+.traitline-hex {
+  flex-shrink: 0;
+  width: var(--hex);
+  height: calc(var(--hex) * 1.15);
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, .9));
+}
+.traitline-hex .frame, .traitline-hex .art {
+  position: absolute;
+  inset: 0;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+}
+.traitline-hex .frame { background: rgba(10, 11, 14, .85); }
+.traitline-hex .art {
+  inset: 4px;
+  background: var(--panel, none) 10% 70% / auto 145% no-repeat, #2a2d34;
+}
 
 .trait-tree {
   flex: 1;
   display: flex;
-  justify-content: space-evenly;
+  justify-content: space-around;
   align-items: center;
-  padding: 14px 10px;
+  max-width: 780px;
   gap: 4px;
 }
-.tier { display: flex; align-items: center; gap: clamp(14px, 2.6vw, 30px); }
+.tier { display: flex; align-items: center; gap: clamp(8px, 1.8vw, 22px); }
 .trait-node {
   position: relative;
   display: block;
+  width: var(--trait);
+  height: var(--trait);
   padding: 0;
   border: none;
-  background: none;
+  background: #151718;
   cursor: help;
+  transition: opacity .15s;
 }
 .trait-node img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .minor {
-  width: var(--minor);
-  height: var(--minor);
   clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
-  background: #1b1f2e;
 }
-.minor img { transform: scale(1.06); }
-.majors { display: flex; flex-direction: column; gap: 7px; }
+.majors { display: flex; flex-direction: column; }
 .major {
-  width: var(--trait);
-  height: var(--trait);
-  border-radius: 7px;
-  overflow: hidden;
-  border: 2px solid rgba(255, 255, 255, .12);
-  background: #1b1f2e;
-  opacity: .34;
-  filter: saturate(.35);
-  transition: opacity .15s, filter .15s;
+  clip-path: inset(2px);   /* trims the icon's own frame: 4px visual gaps */
+  opacity: .4;
 }
-.major.selected {
-  opacity: 1;
-  filter: none;
-  border-color: var(--gold);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, .8), 0 0 14px color-mix(in srgb, var(--gold) 55%, transparent);
-}
-.major:hover { opacity: 1; filter: none; }
-.trait-lines {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-.trait-lines line {
-  stroke: color-mix(in srgb, var(--gold) 80%, white);
-  stroke-width: 2;
-  stroke-linecap: round;
-  opacity: .8;
-  filter: drop-shadow(0 0 3px rgba(0, 0, 0, .9));
-}
+.major.selected, .major:hover { opacity: 1; }
+
 .traitline-picks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 0;
   margin: 0 0 16px 4px;
   font-size: .86rem;
   color: var(--text-dim);
 }
+.traitline-picks img { width: 20px; height: 20px; margin-right: 7px; }
+.traitline-picks .line-name { color: var(--gold); letter-spacing: .05em; margin-right: 10px; }
 .traitline-picks b { font-weight: 400; color: var(--text); }
 .traitline-picks .sep { padding: 0 8px; }
-
-@media (max-width: 760px) {
-  .traitline { flex-direction: column; }
-  .traitline-title { flex: none; flex-direction: row; align-items: center; padding: 10px 12px 0; }
-  .traitline-title img { width: 30px; height: 30px; }
-  .trait-tree { justify-content: space-between; padding: 10px 8px 12px; }
-  .tier { gap: 8px; }
-}
 
 /* skill bars */
 
