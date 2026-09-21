@@ -227,7 +227,7 @@ def merge_gear(derived: dict | None, manual: dict) -> dict:
         for weapon_set in manual["weapon_sets"]:
             for weapon in weapon_set["weapons"]:
                 _fill(weapon)
-        return manual | {"headline": None, "stats": [], "notes": [], "mode": None}
+        return manual | {"character": None, "notes": [], "mode": None}
 
     overrides = {item["slot"]: item for item in manual["armor"] + manual["trinkets"]}
     for item in derived["armor"] + derived["trinkets"]:
@@ -313,6 +313,7 @@ def load_build(path: str) -> dict:
         "weapon_summary": weapon_summary,
         "gear": gear,
         "gear_warning": gear_warning,
+        "character": gear.get("character"),
     }
 
 

@@ -274,9 +274,11 @@ async function showDetail(slug) {
   columns.className = "build-columns";
   const traits = section("Traits", traitLines(build.lines));
   traits.classList.add("col-traits");
-  const skills = section("Skills", skillBars(build.skills));
-  skills.classList.add("col-skills");
-  columns.append(traits, skills);
+  const side = document.createElement("div");
+  side.className = "col-side";
+  side.append(section("Skills", skillBars(build.skills)));
+  if (build.character) side.append(section("Character", characterCard(build.character)));
+  columns.append(traits, side);
   view.append(
     backLink(),
     header(build),
@@ -517,37 +519,6 @@ function gearPanel(gear, warning) {
     wrap.append(box);
   }
 
-  // the optimizer's numbers behind this gear, like its own result card
-  if (gear.headline) {
-    const head = document.createElement("div");
-    head.className = "gear-headline";
-    const value = document.createElement("span");
-    value.className = "value";
-    value.textContent = Number(gear.headline.value).toLocaleString("en-US");
-    const caption = document.createElement("span");
-    caption.className = "caption";
-    caption.textContent = gear.headline.caption;
-    head.append(value, caption);
-    wrap.append(head);
-  }
-  if (gear.stats && gear.stats.length) {
-    const stats = document.createElement("div");
-    stats.className = "gear-stats";
-    for (const stat of gear.stats) {
-      const cell = document.createElement("div");
-      const value = document.createElement("span");
-      value.className = "stat-value";
-      value.textContent = typeof stat.value === "number"
-        ? stat.value.toLocaleString("en-US") : stat.value;
-      const name = document.createElement("span");
-      name.className = "stat-name";
-      name.textContent = stat.label;
-      cell.append(value, name);
-      stats.append(cell);
-    }
-    wrap.append(stats);
-  }
-
   const panel = document.createElement("div");
   panel.className = "gear-panel";
 
@@ -610,6 +581,53 @@ function gearPanel(gear, warning) {
     note.textContent = text;
     wrap.append(note);
   }
+  return wrap;
+}
+
+// --- character card: attributes and what they mean in game ---
+
+const fmt = (value) => typeof value === "number" ? value.toLocaleString("en-US") : value;
+
+function characterCard(character) {
+  const wrap = document.createElement("div");
+  wrap.className = "character-card";
+  if (character.headline) {
+    const head = document.createElement("div");
+    head.className = "character-headline";
+    const value = document.createElement("span");
+    value.className = "value";
+    value.textContent = fmt(character.headline.value);
+    const caption = document.createElement("span");
+    caption.className = "caption";
+    caption.textContent = character.headline.caption;
+    head.append(value, caption);
+    wrap.append(head);
+  }
+  const list = document.createElement("div");
+  list.className = "attributes";
+  for (const attribute of character.attributes) {
+    const row = document.createElement("div");
+    row.className = "attribute";
+    const name = document.createElement("span");
+    name.className = "name";
+    name.textContent = attribute.name;
+    const value = document.createElement("span");
+    value.className = "value";
+    value.textContent = fmt(attribute.value);
+    row.append(name, value);
+    if (attribute.effect) {
+      const effect = document.createElement("span");
+      effect.className = "effect";
+      const label = document.createElement("span");
+      label.textContent = attribute.effect;
+      const number = document.createElement("b");
+      number.textContent = fmt(attribute.effect_value);
+      effect.append(label, number);
+      row.append(effect);
+    }
+    list.append(row);
+  }
+  wrap.append(list);
   return wrap;
 }
 

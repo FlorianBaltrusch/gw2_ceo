@@ -93,6 +93,16 @@ FAMILIES = {
 # the solver counts exotic-trinket upgrades over amulet, rings, accessories, back
 UPGRADE_ORDER = ["amulet", "ring1", "ring2", "accessory1", "accessory2", "back-item"]
 
+# level-80 base health per profession (wiki: Health); max health adds 10 per vitality
+BASE_HEALTH = {"Warrior": 9212, "Necromancer": 9212,
+               "Revenant": 5922, "Engineer": 5922, "Ranger": 5922, "Mesmer": 5922,
+               "Guardian": 1645, "Thief": 1645, "Elementalist": 1645}
+# level-80 conversions (wiki: Precision, Ferocity, Concentration)
+PRECISION_PER_CRIT_PCT = 21     # 1000 precision = 5% critical chance
+PRECISION_AT_ZERO_CRIT = 895
+FEROCITY_PER_CRIT_DAMAGE_PCT = 15  # on top of the 150% base
+CONCENTRATION_PER_BOON_PCT = 15
+
 TOGGLE_DEFAULTS = {"fury": "1", "food": "1", "utility": "1", "stacking": "1", "writs": "1",
                    "single_sigil": "0", "pie": "0", "herald": "1", "relic_reserved": "0",
                    "stowed": "0", "ascended_food": "1", "tank": "0"}
@@ -227,6 +237,50 @@ def _sigil_lists(sigil_field: str, single_sigil: bool) -> tuple[list[str], list[
     return names, names
 
 
+def character(row: dict, mode: str, profession: str) -> dict:
+    """The build's attributes with what they mean in game: precision as
+    critical chance, ferocity as critical damage, vitality as health,
+    concentration as boon duration."""
+    def pct(value):
+        return f"{value:.1f}%"
+
+    health = BASE_HEALTH.get(profession, 5922) + 10 * float(row["vitality"])
+    attributes = []
+    if mode == "boon":
+        boon_duration = 100.0 if row.get("exact") else 100.0 + float(row.get("conc_delta", 0)) / CONCENTRATION_PER_BOON_PCT
+        attributes += [
+            {"name": "Healing power", "value": round(row["healing"]),
+             "effect": "Outgoing healing bonus", "effect_value": f"+{row['outgoing']:.1f}%"},
+            {"name": "Boon duration", "value": pct(boon_duration),
+             "effect": "Concentration and flat bonuses, capped at +100%", "effect_value": ""},
+        ]
+        precision = float(row["precision"])
+    else:
+        precision = float(row["precision"]) + float(row.get("chance", 0))
+    crit_chance = row["crit_pct"] if row.get("crit_pct") is not None \
+        else max(0.0, min(100.0, (precision - PRECISION_AT_ZERO_CRIT) / PRECISION_PER_CRIT_PCT))
+    attributes.append({"name": "Power", "value": round(row["power"]), "effect": None, "effect_value": None})
+    attributes.append({"name": "Precision", "value": round(precision),
+                       "effect": "Critical chance", "effect_value": pct(float(crit_chance))})
+    if "ferocity" in row:
+        attributes.append({"name": "Ferocity", "value": round(row["ferocity"]),
+                           "effect": "Critical damage",
+                           "effect_value": pct(150 + float(row["ferocity"]) / FEROCITY_PER_CRIT_DAMAGE_PCT)})
+    attributes.append({"name": "Vitality", "value": round(row["vitality"]),
+                       "effect": "Health", "effect_value": round(health)})
+    if mode == "boon":
+        attributes.append({"name": "Toughness", "value": round(row["toughness"]),
+                           "effect": None, "effect_value": None})
+    if mode == "boon":
+        headline = {"value": round(row["healing"]), "caption": "healing power at 100% boon duration"}
+    else:
+        crit_pct = row.get("crit_pct")
+        headline = {"value": round(row["effective_power"]),
+                    "caption": (f"effective power at {crit_pct}% critical chance"
+                                if crit_pct is not None else "effective power at 100% crit")}
+    return {"headline": headline, "attributes": attributes}
+
+
 def derive(link: str, profession: str, template_weapons: list[str]) -> dict:
     """Run the optimizer link and list its result per slot."""
     args, ascended, env, handedness = solver_args(link)
@@ -326,29 +380,18 @@ def derive(link: str, profession: str, template_weapons: list[str]) -> dict:
                             "weapons": weapons})
         primary_done = primary_done or primary
 
-    # consumables and the headline numbers
+    # consumables
     total = int(row["total_infusions"])
     if mode == "boon":
         conc = int(row["conc_infusions"])
         infusions = " + ".join(part for part in (
             f"{conc}× +5 Concentration" if conc else "",
             f"{total - conc}× +5 Healing Power" if total - conc else "") if part) or "none"
-        headline = {"value": round(row["healing"]), "caption": "healing power at 100% boon duration"}
-        stats = [("Healing power", round(row["healing"])),
-                 ("Outgoing healing", f"+{row['outgoing']:.1f}%"),
-                 ("Vitality", round(row["vitality"])), ("Power", round(row["power"]))]
     else:
         prec = int(row["prec_infusions"])
         infusions = " + ".join(part for part in (
             f"{prec}× +5 Precision" if prec else "",
             f"{total - prec}× +5 Power" if total - prec else "") if part) or "none"
-        crit_pct = row.get("crit_pct")
-        headline = {"value": round(row["effective_power"]),
-                    "caption": (f"effective power at {crit_pct}% critical chance"
-                                if crit_pct is not None else "effective power at 100% crit")}
-        stats = [("Power", round(row["power"])),
-                 ("Precision", round(row["precision"] + row.get("chance", 0))),
-                 ("Ferocity", round(row["ferocity"])), ("Vitality", round(row["vitality"]))]
     consumables = [
         ("Rune", rune_text),
         ("Relic", RELICS.get(str(row["relic"]), str(row["relic"]).capitalize())),
@@ -372,8 +415,7 @@ def derive(link: str, profession: str, template_weapons: list[str]) -> dict:
         "weapon_sets": weapon_sets,
         "consumables": [{"label": label, "value": value} for label, value in consumables],
         "rune": rune_text,
-        "headline": headline,
-        "stats": [{"label": label, "value": value} for label, value in stats],
+        "character": character(row, mode, profession),
         "notes": notes,
         "mode": mode,
     }

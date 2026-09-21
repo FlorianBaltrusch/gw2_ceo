@@ -322,8 +322,8 @@
    apart by opacity alone - no lines, no text on the panel */
 
 /* two columns on wide screens: the trait panels keep a fixed width (they
-   must not stretch with the window), the skills sit beside them; below
-   ~1020px the skills drop under the traits */
+   must not stretch with the window), skills and character card sit beside
+   them; below ~1020px the right column drops under the traits */
 .build-columns {
   display: flex;
   flex-wrap: wrap;
@@ -331,55 +331,66 @@
   gap: 16px;
   margin-top: 18px;
 }
-.build-columns > .build-section { margin-top: 0; }
+.build-columns > .build-section, .build-columns > .col-side > .build-section { margin-top: 0; }
 .col-traits { flex: 0 1 660px; min-width: 0; }
-.col-skills { flex: 1 1 340px; min-width: 0; }
+.col-side { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 16px; }
 
+/* the panel: ONE banner picture behind everything at the theme's soft
+   alpha, and the hexagon is a window onto the very same picture at full
+   brightness (same size, same position), like the armory widget */
 .traitline {
   --trait: clamp(30px, 4vw, 40px);
-  --hex: clamp(74px, 10vw, 100px);
+  --hex: clamp(74px, 10vw, 100px);      /* hexagon width; height is 1.15x */
+  --pad-x: clamp(8px, 2vw, 16px);
+  --frame: 3px;                          /* the hexagon's dark rim */
+  --trim: 9%;                            /* trims the icons' own black frame (4-6px of 64) */
+  /* the 1024x256 banner at roughly natural size (165% of the ~152px panel
+     height): its painted left ~62% then spans the whole 624px panel, and
+     the hard edge where the art stops stays outside */
+  --art: var(--panel, none) left 55% / auto 165% no-repeat;
   position: relative;
   display: flex;
   align-items: center;
   gap: clamp(10px, 2.6vw, 24px);
   min-height: calc(var(--trait) * 3 + 32px);
-  padding: 12px clamp(8px, 2vw, 16px);
+  padding: 12px var(--pad-x);
   margin-bottom: 6px;
   border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
   background: #101216;
 }
-.traitline::before {                 /* the banner art, dimmed uniformly */
+.traitline::before {                 /* the dimmed picture */
   content: "";
   position: absolute;
   inset: 0;
-  background: var(--panel, none) left center / cover no-repeat;
-  opacity: .38;
-  /* the banners stop painting around 60% of their width with a hard edge
-     (in game the trait UI covers that part): fade out before it, which
-     also keeps the trait icons on a calm dark ground */
-  -webkit-mask-image: linear-gradient(90deg, #000 40%, transparent 70%);
-  mask-image: linear-gradient(90deg, #000 40%, transparent 70%);
+  background: var(--art);
+  opacity: var(--alpha-soft, 30%);
+}
+.traitline::after {                  /* the same picture, bright, inside the hexagon */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--art);
+  pointer-events: none;
+  clip-path: polygon(
+    calc(var(--pad-x) + var(--hex) * .5)                calc(50% - var(--hex) * .575 + var(--frame) * 1.15),
+    calc(var(--pad-x) + var(--hex) - var(--frame))      calc(50% - var(--hex) * .2875 + var(--frame) * .58),
+    calc(var(--pad-x) + var(--hex) - var(--frame))      calc(50% + var(--hex) * .2875 - var(--frame) * .58),
+    calc(var(--pad-x) + var(--hex) * .5)                calc(50% + var(--hex) * .575 - var(--frame) * 1.15),
+    calc(var(--pad-x) + var(--frame))                   calc(50% + var(--hex) * .2875 - var(--frame) * .58),
+    calc(var(--pad-x) + var(--frame))                   calc(50% - var(--hex) * .2875 + var(--frame) * .58));
 }
 .traitline > * { position: relative; }
 
-/* the big hexagon holds a crop of the same banner art, like in game */
+/* the hexagon's rim: a dark hexagon in the flex flow, the bright window
+   (::after) is drawn on top of it, inset by the rim width */
 .traitline-hex {
   flex-shrink: 0;
   width: var(--hex);
   height: calc(var(--hex) * 1.15);
-  filter: drop-shadow(0 0 10px rgba(0, 0, 0, .9));
-}
-.traitline-hex .frame, .traitline-hex .art {
-  position: absolute;
-  inset: 0;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-}
-.traitline-hex .frame { background: rgba(10, 11, 14, .85); }
-.traitline-hex .art {
-  inset: 4px;
-  background: var(--panel, none) 10% 70% / auto 145% no-repeat, #2a2d34;
+  background: rgba(8, 9, 12, .9);
 }
 
 .trait-tree {
@@ -398,7 +409,7 @@
   height: var(--trait);
   padding: 0;
   border: none;
-  background: #151718;
+  background: none;
   cursor: help;
   transition: opacity .15s;
 }
@@ -408,8 +419,8 @@
 }
 .majors { display: flex; flex-direction: column; }
 .major {
-  clip-path: inset(2px);   /* trims the icon's own frame: 4px visual gaps */
-  opacity: .4;
+  clip-path: inset(var(--trim));   /* no icon frame left, small visual gaps */
+  opacity: var(--alpha-soft, 30%);
 }
 .major.selected, .major:hover { opacity: 1; }
 
@@ -525,21 +536,24 @@
   font-size: .88rem;
 }
 .gear-warning::before { content: "⚠ "; color: var(--gold); }
-.gear-headline { text-align: center; padding: 2px 0 10px; }
-.gear-headline .value { display: block; font-size: 2.1rem; line-height: 1.1; color: var(--gold); }
-.gear-headline .caption { font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); }
-.gear-stats {
+/* character card: the build's attributes with what they mean in game */
+.character-headline { text-align: center; padding: 2px 0 12px; border-bottom: 1px solid var(--border); }
+.character-headline .value { display: block; font-size: 2.1rem; line-height: 1.1; color: var(--gold); }
+.character-headline .caption { font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); }
+.attributes { display: flex; flex-direction: column; margin-top: 4px; }
+.attribute {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  padding: 10px 0 12px;
-  margin-bottom: 6px;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  grid-template-columns: 1fr auto;
+  gap: 0 14px;
+  align-items: baseline;
+  padding: 7px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
 }
-.gear-stats div { text-align: center; }
-.gear-stats .stat-value { display: block; color: var(--text); }
-.gear-stats .stat-name { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); }
+.attribute:last-child { border-bottom: none; }
+.attribute .name { color: var(--text); }
+.attribute .value { color: var(--gold); text-align: right; font-variant-numeric: tabular-nums; }
+.attribute .effect { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 14px; font-size: .84rem; color: var(--text-dim); }
+.attribute .effect b { font-weight: 400; color: var(--text); font-variant-numeric: tabular-nums; }
 .gear-note { font-size: .76rem; color: var(--text-dim); font-style: italic; }
 .build-section .gear-footnote { margin: 14px 0 0; }
 

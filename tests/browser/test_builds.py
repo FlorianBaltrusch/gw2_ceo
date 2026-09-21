@@ -42,6 +42,8 @@ try:
           and "Fire · Air · Tempest" in card.find_element(By.CSS_SELECTOR, ".card-lines").text)
 
     # category filter
+    groups = driver.find_elements(By.CSS_SELECTOR, ".filter-group .control-label")
+    check("profession filter comes first", groups[0].text.lower() == "profession", str([g.text for g in groups]))
     driver.find_element(By.CSS_SELECTOR, "#category-filter button[data-value='raid']").click()
     wait.until(lambda d: count(".build-card") == 1)
     check("raid filter keeps the chronomancer",
@@ -81,8 +83,12 @@ try:
     check("gear: 6 armor + 6 trinkets + 3 weapons", count(".gear-slot") == 15, str(count(".gear-slot")))
     check("gear shows the rune per armor piece",
           "Superior Rune of" in driver.find_element(By.CSS_SELECTOR, ".gear-column .gear-slot .gear-sub").text)
-    check("gear carries the optimizer's headline and stats",
-          count(".gear-headline") == 1 and count(".gear-stats div") == 4)
+    check("character card with headline and derived effects",
+          count(".character-headline") == 1 and count(".attribute") >= 4
+          and count(".attribute .effect") >= 3)
+    effects = [e.text for e in driver.find_elements(By.CSS_SELECTOR, ".attribute .effect")]
+    check("crit chance and health derived", any("Critical chance" in e and "100.0%" in e for e in effects)
+          and any("Health" in e for e in effects), str(effects))
     check("skin from the build file shows on the head slot",
           "Placeholder skin name" in driver.find_element(By.CSS_SELECTOR, ".gear-column .gear-slot").text)
     check("no gear warning", count(".gear-warning") == 0)
