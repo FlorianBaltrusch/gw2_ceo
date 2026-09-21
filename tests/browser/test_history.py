@@ -21,7 +21,7 @@ def wait_url(fragment, absent=None, timeout=10):
 
 
 try:
-    driver.get(BASE + "/")
+    driver.get(BASE + "/ceo")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#prof-grid .prof-char")) == 9)
     check("landing URL clean", "?" not in driver.current_url)
     driver.find_element(By.XPATH, "//button[contains(@class,'prof-char')][.//span[text()='Guardian']]").click()
@@ -51,7 +51,7 @@ try:
     wait.until(lambda d: visible(d, "profession-picker"))
     check("back to landing", "?" not in driver.current_url)
 
-    driver.get(BASE + "/?profession=Elementalist&spec=Catalyst&mode=power")
+    driver.get(BASE + "/ceo?profession=Elementalist&spec=Catalyst&mode=power")
     wait.until(lambda d: visible(d, "main"))
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     active = driver.find_element(By.CSS_SELECTOR, "#mode-choice button.active")
@@ -59,7 +59,7 @@ try:
     check("power: K row hidden", not visible(driver, "row-ranking"))
     check("power: env row shown", visible(driver, "row-env"))
 
-    driver.get(BASE + "/?profession=Ranger&spec=Druid&mode=boon")
+    driver.get(BASE + "/ceo?profession=Ranger&spec=Druid&mode=boon")
     wait.until(lambda d: visible(d, "main"))
     wait.until(lambda d: not visible(d, "row-env"))
     active = driver.find_element(By.CSS_SELECTOR, "#mode-choice button.active")

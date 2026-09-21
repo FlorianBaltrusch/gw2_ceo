@@ -103,14 +103,26 @@ async function applyLocation() {
   }
 
   if (mode !== state.mode) setMode(mode);  // before the builder renders
+  const fromLink = query.has("traits");
+  if (fromLink) restoreOptimizerLink(query, mode);
   const specs = await selectProfession(match.name);
+  let ready = null;
   if (wantCore) {
-    selectSpec({ name: `Core ${match.name}`, icon: `/icons/tango_${match.name}.png`, coreArt: true });
-    return;
+    ready = selectSpec({ name: `Core ${match.name}`, icon: `/icons/tango_${match.name}.png`, coreArt: true });
+  } else {
+    const spec = specs.find(s => s.elite && s.name.toLowerCase() === specParam.toLowerCase());
+    if (spec) ready = selectSpec(spec);
+    // unknown spec name: stay on the spec picker selectProfession opened
   }
-  const spec = specs.find(s => s.elite && s.name.toLowerCase() === specParam.toLowerCase());
-  if (spec) selectSpec(spec);
-  // unknown spec name: stay on the spec picker selectProfession opened
+  if (fromLink && ready) {
+    await ready;
+    if (mode === "boon" && query.has("kpos")) {
+      await loadHealSkills();  // the slider's K scale comes from the class's skills
+      el("k-slider").value = Math.max(0, Math.min(100, Number(query.get("kpos")) || 0));
+      el("k-slider").dispatchEvent(new Event("input"));
+    }
+    optimize();
+  }
 }
 
 window.addEventListener("popstate", () => { applyLocation(); });
@@ -208,7 +220,7 @@ function selectSpec(spec) {
   loaded.profession = state.profession;
   loaded.spec = spec;
   finishSelection();
-  loadBuilder();
+  return loadBuilder();  // resolves once the trait panel is rendered
 }
 
 // ---------- hand over to the main app ----------
@@ -300,7 +312,9 @@ function effectText(row) {
 async function loadBuilder() {
   el("result").classList.add("hidden");
   el("calc-error").classList.add("hidden");
-  state.traitMemory = {};  // a new profession/spec starts fresh
+  // a new profession/spec starts fresh - unless a permalink brought a selection
+  state.traitMemory = state.pendingMemory || {};
+  state.pendingMemory = null;
 
   const [traits, specs] = await Promise.all([
     fetch(`/traits?profession=${encodeURIComponent(state.profession)}`).then(r => r.json()),
@@ -427,6 +441,7 @@ const joinNames = (names) =>
     : names[0];
 
 function updateBuildWarnings() {
+  if (!state.selectedTraits) return;  // gear controls can change before the builder renders
   const warnings = [];
   const majorsPerTier = new Map();
   const lines = new Set();
@@ -754,23 +769,115 @@ function renderSlotGrid() {
 
 function setupSegmented(id, onChange) {
   const seg = el(id);
+  const select = (value) => {
+    seg.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.value === value));
+    onChange(value);
+  };
   seg.addEventListener("click", (event) => {
     const button = event.target.closest("button");
-    if (!button) return;
-    seg.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-    button.classList.add("active");
-    onChange(button.dataset.value);
+    if (button) select(button.dataset.value);
   });
+  return select;  // for setting the control from a permalink
 }
 
-setupSegmented("env-choice", value => { gear.env = value; });
-setupSegmented("weapon-choice", value => {
+const setEnv = setupSegmented("env-choice", value => { gear.env = value; });
+const setWeapon = setupSegmented("weapon-choice", value => {
   gear.weapon = value;
   ["twohanded", "onehanded1", "onehanded2"].forEach(key => gear.ascended.delete(key));
   renderSlotGrid();
   updateConditionHints();   // weapon-gated traits (Right-Hand Strength)
   updateBuildWarnings();    // wielding chips vs the chosen weapon type
 });
+
+// ---------- optimizer link (the whole builder state in one URL) ----------
+// The navigation URLs above only name profession, spec and mode. The
+// optimizer link adds everything else - ticked traits, stack/attunement
+// assumptions, gear toggles - so a build can be reopened exactly as it was;
+// loading one restores the panel and runs the optimizer. The builds pages
+// store such links to open a curated build in the optimizer.
+
+const TOGGLES = {  // URL key -> checkbox id
+  fury: "opt-fury", food: "opt-food", ascended_food: "opt-ascended-food", pie: "opt-pie",
+  utility: "opt-utility", writs: "opt-writs", stacking: "opt-stacking", herald: "opt-herald",
+  single_sigil: "opt-single-sigil", relic_reserved: "opt-reserve-relic", stowed: "opt-stowed",
+  tank: "opt-tank",
+};
+
+function optimizerLink() {
+  const params = new URLSearchParams();
+  params.set("profession", state.profession);
+  params.set("spec", state.spec.coreArt ? "core" : state.spec.name);
+  params.set("mode", state.mode);
+  params.set("traits", [...state.selectedTraits].join(","));
+  const stacks = [...(state.traitStacks || [])].map(([group, count]) => `${group}:${count}`);
+  if (stacks.length) params.set("stacks", stacks.join(","));
+  const variants = [...(state.traitVariants || [])]
+    .filter(([, list]) => list.length)
+    .map(([id, list]) => `${id}:${list.join(".")}`);
+  if (variants.length) params.set("variants", variants.join(","));
+  params.set("env", gear.env);
+  params.set("weapon", gear.weapon);
+  params.set("asc", [...gear.ascended].join(","));
+  for (const [key, id] of Object.entries(TOGGLES)) params.set(key, el(id).checked ? "1" : "0");
+  params.set("might", el("opt-might").value);
+  if (state.mode === "boon") params.set("kpos", el("k-slider").value);
+  return `${location.origin}${location.pathname}?${params}`;
+}
+
+// apply the gear side of an optimizer link (before the builder renders) and
+// queue the trait side for the builder
+function restoreOptimizerLink(query, mode) {
+  const list = (key) => (query.get(key) || "").split(",").filter(Boolean);
+  const pairs = (key) => list(key).map(item => item.split(":"));
+
+  if (["3p", "4p"].includes(query.get("env"))) setEnv(query.get("env"));
+  if (["1h", "2h"].includes(query.get("weapon"))) setWeapon(query.get("weapon"));
+  if (query.has("asc")) {
+    const all = [...weaponSlots(), ...ARMOR_TRINKET_SLOTS].map(([key]) => key);
+    const wanted = query.get("asc") === "all" ? all : list("asc").filter(key => all.includes(key));
+    gear.ascended = new Set(wanted);
+    renderSlotGrid();
+  }
+  for (const [key, id] of Object.entries(TOGGLES)) {
+    if (!query.has(key)) continue;
+    const box = el(id);
+    const checked = query.get(key) === "1";
+    if (box.checked !== checked) {
+      box.checked = checked;
+      box.dispatchEvent(new Event("change"));
+    }
+  }
+  if (query.has("might")) {
+    el("opt-might").value = Math.max(0, Math.min(25, Number(query.get("might")) || 0));
+    el("opt-might").dispatchEvent(new Event("input"));
+  }
+
+  state.pendingMemory = {
+    [TRAIT_FAMILY[mode]]: {
+      selected: new Set(list("traits").map(Number).filter(Number.isFinite)),
+      stacks: new Map(pairs("stacks").map(([group, count]) => [Number(group), Number(count)])),
+      variants: new Map(pairs("variants")
+        .map(([id, chosen]) => [Number(id), (chosen || "").split(".").filter(Boolean)])),
+    },
+  };
+}
+
+function optimizerLinkButton() {
+  const copyButton = document.createElement("button");
+  copyButton.type = "button";
+  copyButton.className = "ghost-button copy-link";
+  copyButton.textContent = "Copy optimizer link";
+  copyButton.addEventListener("click", async () => {
+    const link = optimizerLink();
+    try {
+      await navigator.clipboard.writeText(link);
+      copyButton.textContent = "Copied — this link reopens the builder exactly like this and optimizes";
+    } catch {
+      copyButton.textContent = link;
+    }
+  });
+  return copyButton;
+}
 
 // ---------- optimizer mode (crit vs boon duration) ----------
 
@@ -1115,7 +1222,7 @@ function renderResult(data, env, singleSigil) {
     renderSolutionBody(body, data, env, singleSigil, null);
   }
 
-  resultBox.append(chatlinkButton());
+  resultBox.append(chatlinkButton(), optimizerLinkButton());
   resultBox.classList.remove("hidden");
 }
 
@@ -1369,7 +1476,7 @@ function renderBoonResult(data) {
     renderBoonBody(inner, best, singleSigil, null);
   }
 
-  resultBox.append(chatlinkButton());
+  resultBox.append(chatlinkButton(), optimizerLinkButton());
   resultBox.classList.remove("hidden");
 }
 

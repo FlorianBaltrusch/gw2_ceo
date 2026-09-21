@@ -1,0 +1,49 @@
+# Placeholder build - traits and gear are subject to change.
+name = "Open World Tempest"
+category = "openworld"          # openworld | raid | support | wvw
+tags = []
+summary = "Fresh Air scepter/warhorn burst with a staff for events; 4-stat Marauder for open-world padding."
+chatlink = "[&DQYfHSkvMBvHEscSywClEr4BwxJyAHQSJgCZEgAAAAAAAAAAAAAAAAAAAAADWQBWAGcAAA==]"
+optimizer = "/ceo?profession=Elementalist&spec=Tempest&mode=crit&traits=320%2C334%2C221%2C223%2C232%2C1503%2C1938%2C5542&env=4p&weapon=1h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0"
+notes = """
+Placeholder text. Overload Air on cooldown, keep Fresh Air resets flowing with the scepter
+air skills, swap to staff for large events.
+
+Gear is the Marauder set the optimizer suggests for the 4-stat environment.
+"""
+
+[gear]
+rune = "Superior Rune of the Scholar"
+relic = "Relic of the Thief"
+food = "Bowl of Curry Butternut Squash Soup"
+utility = "Superior Sharpening Stone"
+infusions = "18 × +5 Power"
+jade_core = "Tier 10"
+
+[gear.armor]                    # head shoulders chest gloves legs boots
+head = "Marauder"
+shoulders = "Marauder"
+chest = "Marauder"
+gloves = "Marauder"
+legs = "Marauder"
+boots = "Marauder"
+
+[gear.trinkets]                 # back accessory1 accessory2 amulet ring1 ring2
+back = "Marauder"
+accessory1 = "Marauder"
+accessory2 = "Marauder"
+amulet = "Marauder"
+ring1 = "Marauder"
+ring2 = "Marauder"
+
+[gear.weapons]                  # set1 set2 aquatic - a list of weapons each
+set1 = [
+  { type = "Scepter", prefix = "Marauder", sigil = "Superior Sigil of Force" },
+  { type = "Warhorn", prefix = "Marauder", sigil = "Superior Sigil of Accuracy" },
+]
+set2 = [
+  { type = "Staff", prefix = "Marauder", sigils = ["Superior Sigil of Force", "Superior Sigil of Accuracy"] },
+]
+aquatic = [
+  { type = "Trident", prefix = "Marauder", rarity = "exotic", sigils = ["Superior Sigil of Force", "Superior Sigil of Accuracy"] },
+]

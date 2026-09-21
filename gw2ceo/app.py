@@ -4,10 +4,10 @@ from collections import Counter
 
 import numpy as np
 import pandas as pd
-from flask import Flask, Response, jsonify, request, send_from_directory
+from flask import Flask, Response, abort, jsonify, redirect, request, send_from_directory
 
 import gw2ceo.general_data as gd
-from gw2ceo import boon, buildlink, custom_colors
+from gw2ceo import boon, buildlink, builds, custom_colors
 from gw2ceo.calculate import calc_ep, calc_power
 from gw2ceo.dtypes import BuildConstraints
 from gw2ceo.gearselect import GearSelect
@@ -29,8 +29,57 @@ ARMOR_SLOTS = ["onehanded", "twohanded", "chest", "legs", "head", "shoulders",
 
 
 @app.route("/")
-def index():
+def landing():
+    """The two doors: build your own (the optimizer) or browse the curated
+    builds. Deep links from before the landing page existed carried the
+    optimizer's query on the root - send them on."""
+    if request.args.get("profession"):
+        return redirect("/ceo?" + request.query_string.decode(), code=302)
+    return app.send_static_file("landing.html")
+
+
+@app.route("/ceo")
+def optimizer():
     return app.send_static_file("index.html")
+
+
+@app.route("/builds")
+@app.route("/builds/<slug>")
+def builds_page(slug=None):
+    """One page renders both the list and a single build, from the URL."""
+    return app.send_static_file("builds.html")
+
+
+# ---------- curated builds (builds/*.toml) ----------
+
+_build_cache: dict = {"stamp": None, "builds": []}
+
+
+def build_library() -> list[dict]:
+    """The decoded builds, reloaded whenever a file in builds/ changes (so
+    editing a build while the dev server runs needs no restart). Loading is
+    lazy because it may hit the GW2 API for uncached traits/skills."""
+    folder = builds.BUILDS_DIR
+    names = sorted(name for name in os.listdir(folder) if name.endswith(".toml")) \
+        if os.path.isdir(folder) else []
+    stamp = tuple((name, os.path.getmtime(os.path.join(folder, name))) for name in names)
+    if stamp != _build_cache["stamp"]:
+        _build_cache["builds"] = builds.load_all()
+        _build_cache["stamp"] = stamp
+    return _build_cache["builds"]
+
+
+@app.route("/api/builds")
+def builds_list():
+    return jsonify([builds.summary(build) for build in build_library()])
+
+
+@app.route("/api/builds/<slug>")
+def build_detail(slug):
+    for build in build_library():
+        if build["slug"] == slug:
+            return jsonify(build)
+    abort(404)
 
 
 @app.route("/theme.css")

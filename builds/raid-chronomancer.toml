@@ -1,0 +1,44 @@
+# Placeholder build - traits and gear are subject to change.
+name = "Raid Chronomancer"
+category = "raid"
+tags = []
+summary = "Power Chronomancer for raids: sword/sword and greatsword, 3-stat Berserker's with an Assassin's touch for exactly 100% crit."
+chatlink = "[&DQcKGQEdKD4jDyMPjwGPAQQTawFpAWkBvAG8AQAAAAAAAAAAAAAAAAAAAAACWgAyAAA=]"
+optimizer = "/ceo?profession=Mesmer&spec=Chronomancer&mode=crit&traits=708%2C692%2C1927&env=3p&weapon=1h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0"
+notes = """
+Placeholder text. Open with Continuum Split into Time Warp and the wells, keep phantasms
+rolling, and use Signet of the Ether to reset them.
+"""
+
+[gear]
+rune = "Superior Rune of the Scholar"
+relic = "Relic of the Thief"
+food = "Bowl of Curry Butternut Squash Soup"
+utility = "Superior Sharpening Stone"
+infusions = "18 × +5 Power"
+jade_core = "Tier 10"
+
+[gear.armor]
+head = "Berserker's"
+shoulders = "Berserker's"
+chest = "Berserker's"
+gloves = "Assassin's"
+legs = "Berserker's"
+boots = "Assassin's"
+
+[gear.trinkets]
+back = "Berserker's"
+accessory1 = "Berserker's"
+accessory2 = "Assassin's"
+amulet = "Berserker's"
+ring1 = "Berserker's"
+ring2 = "Berserker's"
+
+[gear.weapons]
+set1 = [
+  { type = "Sword", prefix = "Berserker's", sigil = "Superior Sigil of Force" },
+  { type = "Sword", prefix = "Berserker's", sigil = "Superior Sigil of Impact" },
+]
+set2 = [
+  { type = "Greatsword", prefix = "Berserker's", sigils = ["Superior Sigil of Force", "Superior Sigil of Impact"] },
+]

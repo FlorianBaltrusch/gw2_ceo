@@ -197,8 +197,9 @@ button { font: inherit; cursor: pointer; }
 
 /* ---------- specialization grid ---------- */
 
-.back { position: absolute; left: 0; top: 0; }
+.back { position: absolute; left: 0; top: 0; text-decoration: none; }
 #spec-picker { position: relative; padding-top: 56px; }
+#profession-picker { position: relative; padding-top: 44px; }
 
 .spec-grid {
   display: grid;
@@ -283,6 +284,8 @@ button { font: inherit; cursor: pointer; }
   padding: 10px 14px;
 }
 .selection { display: flex; align-items: center; gap: 12px; }
+.topbar-actions { display: flex; gap: 8px; }
+.topbar-actions a { text-decoration: none; }
 .topbar-icon { width: 44px; height: 44px; }
 .topbar-title { color: var(--gold); letter-spacing: .04em; }
 .topbar-subtitle { color: var(--text-dim); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }

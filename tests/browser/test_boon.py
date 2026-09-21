@@ -9,7 +9,7 @@ driver = make_driver(1500, 1100)
 wait = WebDriverWait(driver, 15)
 
 try:
-    driver.get(BASE + "/?profession=Guardian&spec=Firebrand")
+    driver.get(BASE + "/ceo?profession=Guardian&spec=Firebrand")
     wait.until(lambda d: visible(d, "main"))
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
 

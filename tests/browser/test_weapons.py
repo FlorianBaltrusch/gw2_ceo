@@ -19,7 +19,7 @@ def tick(name):
 
 try:
     # Right-Hand Strength: aureus hint appears with a two-handed weapon
-    driver.get(BASE + "/?profession=Guardian&spec=Firebrand&mode=crit")
+    driver.get(BASE + "/ceo?profession=Guardian&spec=Firebrand&mode=crit")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     hints = lambda: " ".join(h.text for h in driver.find_elements(
         By.CSS_SELECTOR, ".trait-condition:not(.hidden)"))
@@ -45,7 +45,7 @@ try:
     check("conflict warning on 1h gear", "needs a greatsword" in warnings(), warnings())
 
     # Evoker: Enhanced Potency with the hare familiar chip
-    driver.get(BASE + "/?profession=Elementalist&spec=Evoker&mode=crit")
+    driver.get(BASE + "/ceo?profession=Elementalist&spec=Evoker&mode=crit")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     text = driver.find_element(By.ID, "trait-groups").text
     check("Enhanced Potency listed", "Enhanced Potency" in text)
@@ -66,7 +66,7 @@ try:
     check("three sigils in result", sigil_line.count(" + ") >= 2, sigil_line)
 
     # hidden for professions with a weapon swap
-    driver.get(BASE + "/?profession=Guardian&spec=Firebrand&mode=crit")
+    driver.get(BASE + "/ceo?profession=Guardian&spec=Firebrand&mode=crit")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     check("stowed checkbox hidden for guardian", not visible(driver, "stowed-label"))
 finally:

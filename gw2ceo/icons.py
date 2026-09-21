@@ -3,7 +3,8 @@
 assets/icons/ is gitignored, so a fresh clone has none of the images. Any
 missing file is downloaded on first request, resolving its source from the
 committed CSVs (trait icons, specialization icons/banners), the GW2 API
-(profession icons) or the wiki (tango icons). generate_traits.py pre-warms
+(profession icons, any trait/skill by id for the builds pages) or the wiki
+(tango icons). generate_traits.py pre-warms
 the same cache in bulk.
 """
 
@@ -72,6 +73,20 @@ def _resolve(filename: str):
     if match := re.fullmatch(r"spec_(\d+)\.png", filename):
         rows = specs.loc[specs["id"] == int(match.group(1)), "icon"]
         return (rows.iloc[0], False) if len(rows) else (None, False)
+
+    # the untrimmed 1024x256 banner: the in-game trait panel background
+    # (art on the left, dark space for the trait icons on the right)
+    if match := re.fullmatch(r"spec_panel_(\d+)\.png", filename):
+        rows = specs.loc[specs["id"] == int(match.group(1)), "background"]
+        return (rows.iloc[0], False) if len(rows) else (None, False)
+
+    # any trait or skill by API id (the builds page shows whole trait lines
+    # and skill bars, not just the stat-relevant rows of traits.csv)
+    if match := re.fullmatch(r"trait_(\d+)\.png", filename):
+        return (get_api_data(f"traits/{match.group(1)}").get("icon"), False)
+
+    if match := re.fullmatch(r"skill_(\d+)\.png", filename):
+        return (get_api_data(f"skills/{match.group(1)}").get("icon"), False)
 
     if match := re.fullmatch(r"prof_([A-Za-z]+)\.png", filename):
         return (get_api_data(f"professions/{match.group(1)}").get("icon_big"), False)

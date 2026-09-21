@@ -9,7 +9,7 @@ driver = make_driver(1500, 1200)
 wait = WebDriverWait(driver, 15)
 
 try:
-    driver.get(BASE + "/?profession=Elementalist&spec=Catalyst")
+    driver.get(BASE + "/ceo?profession=Elementalist&spec=Catalyst")
     wait.until(lambda d: visible(d, "main"))
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     boxes = {}

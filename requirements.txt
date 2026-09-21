@@ -4,3 +4,4 @@ numpy
 requests
 pillow
 gunicorn
+tomli; python_version < "3.11"

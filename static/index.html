@@ -18,7 +18,10 @@
         <div class="topbar-subtitle">Critical Effect Optimizer</div>
       </div>
     </div>
-    <button id="change-selection" class="ghost-button">Change</button>
+    <div class="topbar-actions">
+      <a class="ghost-button" href="/builds">Builds</a>
+      <button id="change-selection" class="ghost-button">Change</button>
+    </div>
   </header>
 
   <main id="main" class="main hidden">
@@ -156,6 +159,7 @@
   <!-- the selection popup -->
   <div id="overlay" class="overlay">
     <section id="profession-picker" class="picker">
+      <a class="ghost-button back" href="/">&larr; Home</a>
       <h1 class="brand"><span class="versal">C</span>ritical <span class="versal">E</span>ffect <span class="versal">O</span>ptimizer</h1>
       <p class="tagline">Reach exactly 100% critical chance. Waste nothing.</p>
       <h2 class="question">Choose your profession</h2>

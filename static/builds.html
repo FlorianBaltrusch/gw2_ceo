@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Builds — GW2 Critical Effect Optimizer</title>
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/builds.css">
+</head>
+<body class="builds">
+
+  <header class="site-bar">
+    <a class="site-brand" href="/"><span class="versal">C</span>ritical <span class="versal">E</span>ffect <span class="versal">O</span>ptimizer</a>
+    <nav class="site-nav">
+      <a href="/builds" class="active">Builds</a>
+      <a href="/ceo">Optimizer</a>
+    </nav>
+  </header>
+
+  <!-- list view: filters + cards -->
+  <main id="list-view" class="builds-main hidden">
+    <div class="filters">
+      <div class="filter-group">
+        <span class="control-label">Content</span>
+        <div class="segmented" id="category-filter"></div>
+      </div>
+      <div class="filter-group">
+        <span class="control-label">Profession</span>
+        <div class="dropdown" id="profession-filter">
+          <button type="button" class="dropdown-toggle" id="profession-toggle"
+                  aria-haspopup="listbox" aria-expanded="false"></button>
+          <ul class="dropdown-menu hidden" id="profession-menu" role="listbox"></ul>
+        </div>
+      </div>
+    </div>
+    <p id="list-status" class="hint list-status hidden"></p>
+    <div id="build-list" class="build-list"></div>
+  </main>
+
+  <!-- detail view: one build -->
+  <main id="detail-view" class="builds-main hidden"></main>
+
+  <script src="/static/builds.js"></script>
+</body>
+</html>
