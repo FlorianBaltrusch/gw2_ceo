@@ -54,6 +54,16 @@ RARITIES = ("exotic", "ascended", "legendary")
 SKILL_LABELS = ["Heal", "Utility", "Utility", "Utility", "Elite"]
 
 
+def _icon_url(filename: str) -> str:
+    """/icons/ URL stamped with the cached file's mtime, so a re-trimmed or
+    re-downloaded image gets past the browser's one-hour image cache (a
+    file not cached yet is served unstamped and downloaded on request)."""
+    path = os.path.join("assets", "icons", filename)
+    if os.path.isfile(path):
+        return f"/icons/{filename}?v={int(os.path.getmtime(path))}"
+    return f"/icons/{filename}"
+
+
 def _trait_entry(trait: dict) -> dict:
     return {
         "id": trait["id"],
@@ -104,10 +114,10 @@ def decode_template(link: str) -> dict:
             "id": spec_id,
             "name": spec["name"],
             "elite": bool(spec["elite"]),
-            "icon": f"/icons/spec_{spec_id}.png",
+            "icon": _icon_url(f"spec_{spec_id}.png"),
             # the border-trimmed banner: the painted part without the black
             # margins the in-game trait UI covers
-            "background": f"/icons/spec_bg_{spec_id}.png",
+            "background": _icon_url(f"spec_bg_{spec_id}.png"),
             "minors": [_trait_entry(traits[trait_id]) for trait_id in spec["minor_traits"]],
             "majors": [[_trait_entry(traits[trait_id]) for trait_id in majors[3 * tier:3 * tier + 3]]
                        for tier in range(3)],
