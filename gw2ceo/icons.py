@@ -25,6 +25,33 @@ WIKI_API = "https://wiki.guildwars2.com/api.php"
 _known_missing: set[str] = set()
 
 
+# Four banners (the Mesmer core lines) were exported with a piece of the
+# in-game panel frame still in them: a purple band along the top and a
+# diagonal frame on the right, Inspiration even bleeds into the next
+# picture. The brightness trim cannot see that, so these get a fixed crop
+# box first (left, top, right, bottom in the original 1024x256 pixels;
+# checked by eye against the images, 2026-09-21).
+BANNER_CROPS = {
+    1: (0, 26, 665, 256),    # Dueling
+    45: (0, 28, 730, 256),   # Chaos
+    23: (0, 28, 648, 256),   # Inspiration
+    24: (0, 0, 830, 256),    # Illusions
+}
+
+
+def crop_banner_bleed(path):
+    """Apply the fixed crop of BANNER_CROPS to spec_bg_<id>.png files that
+    still carry the panel frame (idempotent: a cropped file is smaller
+    than its box and is left alone)."""
+    match = re.fullmatch(r"spec_bg_(\d+)\.png", os.path.basename(path))
+    if not match or int(match.group(1)) not in BANNER_CROPS:
+        return
+    left, top, right, bottom = BANNER_CROPS[int(match.group(1))]
+    image = Image.open(path)
+    if image.width > right or (top and image.height == bottom):
+        image.crop((left, top, min(right, image.width), min(bottom, image.height))).save(path)
+
+
 def trim_banner_border(path, threshold=18, content_fraction=0.01):
     """The spec banners bleed into the in-game UI panel and pad the painted
     area with fully transparent or near-black margins; crop to the painted
@@ -32,6 +59,7 @@ def trim_banner_border(path, threshold=18, content_fraction=0.01):
     of its pixels are bright and visible, so a few stray specks in a black
     region do not stop the trim - while dark artwork in the middle of a
     banner stays safe because only the border is removed."""
+    crop_banner_bleed(path)
     image = Image.open(path).convert("RGBA")
     pixels = np.asarray(image)
     content = (pixels[..., :3].max(axis=2) > threshold) & (pixels[..., 3] > 8)
