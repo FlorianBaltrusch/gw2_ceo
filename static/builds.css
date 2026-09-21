@@ -343,7 +343,7 @@
   --hex: clamp(74px, 10vw, 100px);      /* hexagon width; height is 1.15x */
   --pad-x: clamp(8px, 2vw, 16px);
   --hex-x: clamp(14px, 9vw, 72px);       /* hexagon's left edge: over the art's subject */
-  --hex-dy: 10px;                        /* hexagon sits a little below the center line */
+  --hex-dy: 15px;                        /* hexagon sits a little below the center line */
   --frame: 3px;                          /* the hexagon's dark rim */
   --trim: 9%;                            /* trims the icons' own black frame (4-6px of 64) */
   /* the 1024x256 banner at roughly natural size (165% of the ~152px panel
