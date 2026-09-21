@@ -80,7 +80,14 @@ try:
     check("underwater row differs where the build does", "Mirror Images" in names, str(names))
     check("gear: 6 armor + 6 trinkets + 3 weapons", count(".gear-slot") == 15, str(count(".gear-slot")))
     check("gear shows the rune per armor piece",
-          "Scholar" in driver.find_element(By.CSS_SELECTOR, ".gear-column .gear-slot .gear-sub").text)
+          "Superior Rune of" in driver.find_element(By.CSS_SELECTOR, ".gear-column .gear-slot .gear-sub").text)
+    check("gear carries the optimizer's headline and stats",
+          count(".gear-headline") == 1 and count(".gear-stats div") == 4)
+    check("skin from the build file shows on the head slot",
+          "Placeholder skin name" in driver.find_element(By.CSS_SELECTOR, ".gear-column .gear-slot").text)
+    check("no gear warning", count(".gear-warning") == 0)
+    labels = [d.text for d in driver.find_elements(By.CSS_SELECTOR, ".consumables dt")]
+    check("consumables listed", {"Rune", "Relic", "Food", "Utility", "Infusions"} <= set(labels), str(labels))
     check("chat link shown", driver.find_element(By.CSS_SELECTOR, ".linkbox code").text.startswith("[&DQ"))
     optimizer_link = driver.find_element(By.CSS_SELECTOR, ".cta-link").get_attribute("href")
     check("optimizer link present", "/ceo?" in optimizer_link and "traits=" in optimizer_link)

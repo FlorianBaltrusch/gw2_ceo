@@ -10,35 +10,6 @@ Placeholder text. Open with Continuum Split into Time Warp and the wells, keep p
 rolling, and use Signet of the Ether to reset them.
 """
 
-[gear]
-rune = "Superior Rune of the Scholar"
-relic = "Relic of the Thief"
-food = "Bowl of Curry Butternut Squash Soup"
-utility = "Superior Sharpening Stone"
-infusions = "18 × +5 Power"
-jade_core = "Tier 10"
-
+# Optional refinements of the optimizer's gear - here just a skin example.
 [gear.armor]
-head = "Berserker's"
-shoulders = "Berserker's"
-chest = "Berserker's"
-gloves = "Assassin's"
-legs = "Berserker's"
-boots = "Assassin's"
-
-[gear.trinkets]
-back = "Berserker's"
-accessory1 = "Berserker's"
-accessory2 = "Assassin's"
-amulet = "Berserker's"
-ring1 = "Berserker's"
-ring2 = "Berserker's"
-
-[gear.weapons]
-set1 = [
-  { type = "Sword", prefix = "Berserker's", sigil = "Superior Sigil of Force" },
-  { type = "Sword", prefix = "Berserker's", sigil = "Superior Sigil of Impact" },
-]
-set2 = [
-  { type = "Greatsword", prefix = "Berserker's", sigils = ["Superior Sigil of Force", "Superior Sigil of Impact"] },
-]
+head = { skin = "Placeholder skin name" }

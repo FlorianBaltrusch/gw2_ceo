@@ -1,10 +1,11 @@
 """Curated builds: one TOML file per build in builds/.
 
-A build file names the build, its category and the in-game build template
-chat link; traits, skills and weapon types are decoded from that link (the
-game exports all of them). Gear is listed explicitly per slot because the
-optimizer's result is only a per-slot-family count, while the build page
-shows every slot (later with its skin). See builds/README.md for the schema.
+A build file names the build, its category, the in-game build template
+chat link and the optimizer link. Traits, skills and weapon types are
+decoded from the chat link (the game exports all of them); the gear is
+derived from the optimizer link by running the solver (gw2ceo/buildgear.py).
+A [gear] section in the file only adds what the solver cannot know (skins,
+an aquatic set) or overrides single slots. See builds/README.md.
 
 Everything the page needs (trait icons, skill icons, the specialization
 panel backgrounds) is served through /icons/, whose cache downloads missing
@@ -20,6 +21,7 @@ try:
 except ModuleNotFoundError:  # Python < 3.11
     import tomli as tomllib  # type: ignore[no-redef]
 
+from gw2ceo import buildgear
 from gw2ceo.api import get_api_data, get_api_data_bulk
 from gw2ceo.buildlink import PROFESSION_CODES
 
@@ -142,8 +144,8 @@ def _item(value, where: str, weapon: bool = False) -> dict:
         value = {"prefix": value}
     if not isinstance(value, dict):
         raise ValueError(f"{where}: expected a prefix string or a table, got {value!r}")
-    rarity = value.get("rarity", "ascended")
-    if rarity not in RARITIES:
+    rarity = value.get("rarity")  # None: keep the derived rarity (ascended if none)
+    if rarity is not None and rarity not in RARITIES:
         raise ValueError(f"{where}: rarity must be one of {', '.join(RARITIES)}")
     sigils = value.get("sigils", [value["sigil"]] if "sigil" in value else [])
     if isinstance(sigils, str):
@@ -156,6 +158,8 @@ def _item(value, where: str, weapon: bool = False) -> dict:
         "rune": value.get("rune"),
         "sigils": list(sigils),
         "infusions": value.get("infusions"),
+        "upgrade": value.get("upgrade"),
+        "note": value.get("note"),
     }
     if weapon:
         if not value.get("type"):
@@ -206,6 +210,53 @@ def _gear(raw: dict, where: str) -> dict:
     }
 
 
+def _fill(item: dict) -> dict:
+    item["rarity"] = item.get("rarity") or "ascended"
+    return item
+
+
+def merge_gear(derived: dict | None, manual: dict) -> dict:
+    """The optimizer's gear with the build file's per-slot additions on top
+    (skins, rarity, a different piece); a weapon set named in the file
+    replaces the derived one, extra sets (aquatic) are appended. Without an
+    optimizer result the file's gear stands alone."""
+    if derived is None:
+        for group in (manual["armor"], manual["trinkets"]):
+            for item in group:
+                _fill(item)
+        for weapon_set in manual["weapon_sets"]:
+            for weapon in weapon_set["weapons"]:
+                _fill(weapon)
+        return manual | {"headline": None, "stats": [], "notes": [], "mode": None}
+
+    overrides = {item["slot"]: item for item in manual["armor"] + manual["trinkets"]}
+    for item in derived["armor"] + derived["trinkets"]:
+        override = overrides.get(item["slot"])
+        if not override:
+            continue
+        for key, value in override.items():
+            if key not in ("slot", "label") and value not in (None, "", []):
+                item[key] = value
+
+    manual_sets = {weapon_set["set"]: weapon_set for weapon_set in manual["weapon_sets"]}
+    for weapon_set in manual_sets.values():
+        for weapon in weapon_set["weapons"]:
+            _fill(weapon)
+    sets = {weapon_set["set"]: weapon_set for weapon_set in derived["weapon_sets"]}
+    sets.update(manual_sets)
+    order = [key for key, _ in WEAPON_SETS]
+    weapon_sets = [sets[key] for key in order if key in sets]
+
+    consumables = {entry["label"]: entry["value"] for entry in derived["consumables"]}
+    consumables.update({entry["label"]: entry["value"] for entry in manual["consumables"]})
+
+    return derived | {
+        "weapon_sets": weapon_sets,
+        "consumables": [{"label": label, "value": value} for label, value in consumables.items()],
+        "rune": manual["rune"] or derived["rune"],
+    }
+
+
 def load_build(path: str) -> dict:
     with open(path, "rb") as file:
         raw = tomllib.load(file)
@@ -220,9 +271,21 @@ def load_build(path: str) -> dict:
 
     template = decode_template(raw["chatlink"])
     elite = next((line for line in template["lines"] if line["elite"]), None)
-    gear = _gear(raw.get("gear", {}), where)
+    manual = _gear(raw.get("gear", {}), where)
 
-    # the card's weapon summary: the explicit sets, or the chat link's types
+    # the gear comes from the optimizer link; the file's [gear] refines it
+    derived = None
+    gear_warning = None
+    if raw.get("optimizer"):
+        try:
+            derived = buildgear.derive(raw["optimizer"], template["profession"],
+                                       template["weapons"])
+        except (ValueError, NotImplementedError, KeyError) as error:
+            gear_warning = (f"The optimizer link could not be evaluated ({error}). "
+                            "Showing only the gear written in the build file.")
+    gear = merge_gear(derived, manual)
+
+    # the card's weapon summary: the land sets, or the chat link's types
     if gear["weapon_sets"]:
         weapon_summary = [" / ".join(weapon["type"] for weapon in weapon_set["weapons"])
                           for weapon_set in gear["weapon_sets"] if weapon_set["set"] != "aquatic"]
@@ -249,6 +312,7 @@ def load_build(path: str) -> dict:
         "template_weapons": template["weapons"],
         "weapon_summary": weapon_summary,
         "gear": gear,
+        "gear_warning": gear_warning,
     }
 
 

@@ -516,6 +516,33 @@
 .weapon-sets { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 6px 28px; margin-top: 4px; }
 .weapon-set { display: flex; flex-direction: column; gap: 6px; }
 
+.gear-warning {
+  border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  background: color-mix(in srgb, var(--gold) 8%, transparent);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 12px;
+  font-size: .88rem;
+}
+.gear-warning::before { content: "⚠ "; color: var(--gold); }
+.gear-headline { text-align: center; padding: 2px 0 10px; }
+.gear-headline .value { display: block; font-size: 2.1rem; line-height: 1.1; color: var(--gold); }
+.gear-headline .caption { font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); }
+.gear-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 10px 0 12px;
+  margin-bottom: 6px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.gear-stats div { text-align: center; }
+.gear-stats .stat-value { display: block; color: var(--text); }
+.gear-stats .stat-name { font-size: .72rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); }
+.gear-note { font-size: .76rem; color: var(--text-dim); font-style: italic; }
+.build-section .gear-footnote { margin: 14px 0 0; }
+
 .consumables {
   display: grid;
   grid-template-columns: max-content 1fr;

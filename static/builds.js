@@ -281,7 +281,7 @@ async function showDetail(slug) {
     backLink(),
     header(build),
     columns,
-    section("Gear", gearPanel(build.gear)),
+    section("Gear", gearPanel(build.gear, build.gear_warning)),
     section("Links", links(build)),
   );
   if (build.notes.trim()) view.append(section("Notes", notes(build.notes)));
@@ -496,13 +496,58 @@ function gearSlot(item, name, subline, shortLabel) {
     skin.textContent = item.skin;
     text.append(skin);
   }
+  if (item.note) {
+    const note = document.createElement("span");
+    note.className = "gear-note";
+    note.textContent = item.note;
+    text.append(note);
+  }
   slot.title = `${item.rarity} ${name}`;
   slot.append(icon, text);
   return slot;
 }
 
-function gearPanel(gear) {
+function gearPanel(gear, warning) {
   const wrap = document.createElement("div");
+
+  if (warning) {
+    const box = document.createElement("p");
+    box.className = "gear-warning";
+    box.textContent = warning;
+    wrap.append(box);
+  }
+
+  // the optimizer's numbers behind this gear, like its own result card
+  if (gear.headline) {
+    const head = document.createElement("div");
+    head.className = "gear-headline";
+    const value = document.createElement("span");
+    value.className = "value";
+    value.textContent = Number(gear.headline.value).toLocaleString("en-US");
+    const caption = document.createElement("span");
+    caption.className = "caption";
+    caption.textContent = gear.headline.caption;
+    head.append(value, caption);
+    wrap.append(head);
+  }
+  if (gear.stats && gear.stats.length) {
+    const stats = document.createElement("div");
+    stats.className = "gear-stats";
+    for (const stat of gear.stats) {
+      const cell = document.createElement("div");
+      const value = document.createElement("span");
+      value.className = "stat-value";
+      value.textContent = typeof stat.value === "number"
+        ? stat.value.toLocaleString("en-US") : stat.value;
+      const name = document.createElement("span");
+      name.className = "stat-name";
+      name.textContent = stat.label;
+      cell.append(value, name);
+      stats.append(cell);
+    }
+    wrap.append(stats);
+  }
+
   const panel = document.createElement("div");
   panel.className = "gear-panel";
 
@@ -523,7 +568,7 @@ function gearPanel(gear) {
     panel.append(column("Armor", gear.armor, item => item.rune || gear.rune || ""));
   }
   if (gear.trinkets.length) {
-    panel.append(column("Trinkets", gear.trinkets, () => ""));
+    panel.append(column("Trinkets", gear.trinkets, item => item.upgrade || ""));
   }
   wrap.append(panel);
 
@@ -558,6 +603,12 @@ function gearPanel(gear) {
       list.append(dt, dd);
     }
     wrap.append(list);
+  }
+  for (const text of gear.notes || []) {
+    const note = document.createElement("p");
+    note.className = "hint gear-footnote";
+    note.textContent = text;
+    wrap.append(note);
   }
   return wrap;
 }
