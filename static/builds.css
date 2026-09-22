@@ -234,9 +234,9 @@
   white-space: nowrap;
 }
 .badge.cat-openworld { border-color: color-mix(in srgb, var(--growth, #009400) 70%, transparent); color: color-mix(in srgb, var(--growth, #009400) 55%, white); }
-.badge.cat-raid { border-color: color-mix(in srgb, var(--ruby-red, #bd000b) 75%, transparent); color: color-mix(in srgb, var(--ruby-red, #bd000b) 45%, white); }
+.badge.cat-raid { border-color: color-mix(in srgb, var(--sunfire-lava, #ff9303) 75%, transparent); color: color-mix(in srgb, var(--sunfire-lava, #ff9303) 55%, white); }
 .badge.cat-support { border-color: color-mix(in srgb, var(--sand-shark, #1a8ac5) 75%, transparent); color: color-mix(in srgb, var(--sand-shark, #1a8ac5) 45%, white); }
-.badge.cat-wvw { border-color: color-mix(in srgb, var(--sunfire-lava, #ff9303) 75%, transparent); color: color-mix(in srgb, var(--sunfire-lava, #ff9303) 55%, white); }
+.badge.cat-wvw { border-color: color-mix(in srgb, var(--ruby-red, #bd000b) 75%, transparent); color: color-mix(in srgb, var(--ruby-red, #bd000b) 45%, white); }
 .badge.tag { border-style: dashed; }
 
 .card-row2 {
