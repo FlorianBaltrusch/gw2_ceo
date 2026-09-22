@@ -83,11 +83,16 @@ def theme_css():
     # bright (text/headings) - the default until a profession is chosen
     lines += ["  --theme-dark: var(--phthalo-blue);", "  --theme-mid: var(--ruby-red);",
               "  --theme-bright: var(--aureus);"]
+    # the glow at the top of the page: the default mixes phthalo blue at the
+    # strong alpha; the classes' dark colours are near black, so their glow
+    # comes from the mid colour at the soft alpha instead
+    lines += ["  --theme-glow: var(--phthalo-blue);", "  --glow-mix: var(--alpha-strong);"]
     css = ":root {\n" + "\n".join(lines) + "\n}\n"
     for profession, (dark, mid, bright) in custom_colors.profession_palettes.items():
         css += (f':root[data-profession="{profession}"] {{\n'
                 f"  --theme-dark: {dark[:7]};\n  --theme-mid: {mid[:7]};\n"
-                f"  --theme-bright: {bright[:7]};\n}}\n")
+                f"  --theme-bright: {bright[:7]};\n"
+                f"  --theme-glow: {mid[:7]};\n  --glow-mix: var(--alpha-soft);\n}}\n")
     return Response(css, mimetype="text/css")
 
 
