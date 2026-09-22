@@ -12,7 +12,9 @@ panel backgrounds) is served through /icons/, whose cache downloads missing
 images on demand - a fresh clone renders every build without preparation.
 """
 
+import html
 import os
+import re
 import struct
 from base64 import b64decode
 
@@ -64,11 +66,20 @@ def _icon_url(filename: str) -> str:
     return f"/icons/{filename}"
 
 
+def plain_text(description: str) -> str:
+    """The API's descriptions carry the game's own markup: <br> line
+    breaks and <c=@reminder>...</c> colour spans. Tooltips show plain text."""
+    text = re.sub(r"<br\s*/?>", "\n", description or "")
+    text = re.sub(r"</?c[^>]*>", "", text)
+    text = html.unescape(text)
+    return re.sub(r"[ \t]+\n", "\n", text).strip()
+
+
 def _trait_entry(trait: dict) -> dict:
     return {
         "id": trait["id"],
         "name": trait["name"],
-        "description": trait.get("description", ""),
+        "description": plain_text(trait.get("description", "")),
         "icon": f"/icons/trait_{trait['id']}.png",
     }
 
@@ -79,7 +90,7 @@ def _skill_entry(skill: dict | None, label: str) -> dict | None:
     return {
         "id": skill["id"],
         "name": skill["name"],
-        "description": skill.get("description", ""),
+        "description": plain_text(skill.get("description", "")),
         "icon": f"/icons/skill_{skill['id']}.png",
         "slot": label,
     }
