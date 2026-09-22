@@ -4,6 +4,13 @@
 
 const el = (id) => document.getElementById(id);
 
+// the chosen profession recolors the site (theme.css carries one palette
+// per profession, keyed by this attribute); no profession = the default
+function applyTheme(profession) {
+  if (profession) document.documentElement.dataset.profession = profession;
+  else delete document.documentElement.dataset.profession;
+}
+
 const CATEGORIES = [
   ["", "All"], ["openworld", "Open world"], ["raid", "Raid"],
   ["support", "Support"], ["wvw", "WvW"],
@@ -64,6 +71,7 @@ async function showList() {
     summaries = response.ok ? await response.json() : [];
   }
   lastListUrl = listUrl();
+  applyTheme(filters.profession);
   renderCategoryFilter();
   renderProfessionFilter();
   renderCards();
@@ -140,6 +148,7 @@ function renderProfessionFilter() {
       closeMenu();
       history.replaceState(null, "", listUrl());
       lastListUrl = listUrl();
+      applyTheme(profession);
       renderProfessionFilter();
       renderCards();
     });
@@ -267,6 +276,7 @@ async function showDetail(slug) {
     return;
   }
   const build = await response.json();
+  applyTheme(build.profession);
   document.title = `${build.name} — GW2 Builds`;
   window.scrollTo({ top: 0 });
 

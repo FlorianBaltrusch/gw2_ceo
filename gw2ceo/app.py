@@ -79,7 +79,15 @@ def theme_css():
               if isinstance(value, str) and value.startswith("#")}
     lines = [f"  --{name.replace('_', '-')}: {value[:7]};" for name, value in colors.items()]
     lines += ["  --alpha-strong: 70%;", "  --alpha-soft: 30%;"]
+    # the three theme roles: dark (backgrounds), mid (buttons, borders),
+    # bright (text/headings) - the default until a profession is chosen
+    lines += ["  --theme-dark: var(--phthalo-blue);", "  --theme-mid: var(--ruby-red);",
+              "  --theme-bright: var(--aureus);"]
     css = ":root {\n" + "\n".join(lines) + "\n}\n"
+    for profession, (dark, mid, bright) in custom_colors.profession_palettes.items():
+        css += (f':root[data-profession="{profession}"] {{\n'
+                f"  --theme-dark: {dark[:7]};\n  --theme-mid: {mid[:7]};\n"
+                f"  --theme-bright: {bright[:7]};\n}}\n")
     return Response(css, mimetype="text/css")
 
 

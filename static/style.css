@@ -27,12 +27,16 @@
 
 :root {
   /* palette comes from gw2ceo/custom_colors.py, served as /theme.css */
-  --gold: var(--aureus, #c8aa6e);
-  --accent: var(--ruby-red, #c02f2f);
-  --bg: color-mix(in srgb, var(--phthalo-blue, #001c67) var(--alpha-soft, 30%), var(--shadow-abyss, #000));
-  --bg-glow: color-mix(in srgb, var(--phthalo-blue, #001c67) var(--alpha-strong, 70%), var(--shadow-abyss, #000));
-  --bg-card: #101623;
-  --border: #28304a;
+  /* the three theme roles (theme.css): default phthalo blue / ruby red /
+     aureus, one palette per profession once one is chosen */
+  --gold: var(--theme-bright, var(--aureus, #c8aa6e));
+  --accent: var(--theme-mid, var(--ruby-red, #c02f2f));
+  --bg: color-mix(in srgb, var(--theme-dark, #001c67) var(--alpha-soft, 30%), var(--shadow-abyss, #000));
+  --bg-glow: color-mix(in srgb, var(--theme-dark, #001c67) var(--alpha-strong, 70%), var(--shadow-abyss, #000));
+  /* cards and borders: a neutral dark slate with a hint of the theme */
+  --bg-card: color-mix(in srgb, var(--theme-dark, #001c67) 35%, #12141c);
+  --border: color-mix(in srgb, var(--theme-mid, #28304a) 22%, #262b3a);
+  transition: background .3s ease;
   --text: #e8e4da;
   --text-dim: #9a958a;
 }
@@ -247,13 +251,13 @@ button { font: inherit; cursor: pointer; }
   align-items: center;
   justify-content: center;
   background: radial-gradient(ellipse at 50% 50%, var(--bg-glow) 0%,
-              color-mix(in srgb, var(--phthalo-blue, #001c67) 15%, var(--shadow-abyss, #000)) 78%);
+              color-mix(in srgb, var(--theme-dark, #001c67) 15%, var(--shadow-abyss, #000)) 78%);
 }
 .spec-tile .art.core-art img {
   width: auto;
   height: 64px;       /* explicit: a percentage would fall back to the image's
                          intrinsic 200px during intrinsic sizing in some engines */
-  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--aureus, #edb227) 45%, transparent));
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--gold) 45%, transparent));
 }
 .spec-tile .label {
   display: flex;

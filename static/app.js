@@ -24,6 +24,13 @@ const loaded = { profession: null, spec: null };
 
 const el = (id) => document.getElementById(id);
 
+// the chosen profession recolors the site (theme.css carries one palette
+// per profession, keyed by this attribute); no profession = the default
+function applyTheme(profession) {
+  if (profession) document.documentElement.dataset.profession = profession;
+  else delete document.documentElement.dataset.profession;
+}
+
 // ---------- URL navigation ----------
 // every view has a URL - /, ?profession=X, ?profession=X&spec=Y (or spec=core,
 // plus &mode=boon/power off the default) - so the browser's back/forward
@@ -75,6 +82,7 @@ async function applyLocation() {
   if (!match) {
     state.profession = null;
     state.spec = null;
+    applyTheme(null);
     showOverlay("professions");
     return;
   }
@@ -157,6 +165,7 @@ function renderProfessionGrid() {
 async function selectProfession(profession) {
   state.profession = profession;
   state.spec = null;
+  applyTheme(profession);
 
   const response = await fetch(`/specializations?profession=${encodeURIComponent(profession)}`);
   const specs = await response.json();
@@ -248,6 +257,7 @@ function finishSelection() {
 function reopenSelection() {
   state.profession = null;
   state.spec = null;
+  applyTheme(null);
   showOverlay("professions");
   syncUrl("push");
 }
