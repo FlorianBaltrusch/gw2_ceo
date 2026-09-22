@@ -5,7 +5,7 @@ Created on Thu Nov 14 14:20:38 2024
 """
 # %% Imports
 try:
-    from matplotlib.colors import LinearSegmentedColormap  # noqa: I001  # pyright: ignore[reportMissingImports]
+    from matplotlib.colors import LinearSegmentedColormap  # noqa: I001  # pyright: ignore[reportMissingImports, reportMissingModuleSource]
 except ImportError:  # matplotlib is optional: the color constants work without it
     LinearSegmentedColormap = None
 
