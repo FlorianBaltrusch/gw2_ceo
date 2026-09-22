@@ -1,9 +1,19 @@
 # Placeholder build - traits and gear are subject to change.
+# Written in words instead of a pasted chat link: the server assembles the
+# chat link from these entries (and shows it on the page for copying).
 name = "Open World Tempest"
 category = "openworld"          # openworld | raid | support | wvw
 tags = []
 summary = "Fresh Air scepter/warhorn burst with a staff for events; 4-stat Marauder for open-world padding."
-chatlink = "[&DQYfHSkvMBvHEscSywClEr4BwxJyAHQSJgCZEgAAAAAAAAAAAAAAAAAAAAADWQBWAGcAAA==]"
+profession = "Elementalist"
+traitlines = [
+  { line = "Fire",    traits = ["Burning Precision", "Power Overwhelming", "Persisting Flames"] },
+  { line = "Air",     traits = ["Ferocious Winds", "Stormsoul", "Fresh Air"] },
+  { line = "Tempest", traits = ["Unstable Conduit", "Harmonious Conduit", "Transcendent Tempest"] },
+]
+skills = ["Wash the Pain Away!", "Signet of Fire", "Glyph of Storms", "Glyph of Lesser Elementals", "Glyph of Elementals"]
+aquatic_skills = ["Wash the Pain Away!", "Flash-Freeze!", "Feel the Burn!", "Aftershock!", "Rebound!"]
+weapons = ["Staff", "Scepter", "Warhorn"]
 optimizer = "/ceo?profession=Elementalist&spec=Tempest&mode=crit&traits=320%2C334%2C221%2C223%2C232%2C1503%2C1938%2C5542&env=4p&weapon=1h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0"
 notes = """
 Placeholder text. Overload Air on cooldown, keep Fresh Air resets flowing with the scepter
