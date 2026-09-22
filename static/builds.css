@@ -486,10 +486,11 @@
   background: #1b1f2e;
   box-shadow: 0 0 0 1px rgba(0, 0, 0, .8);
 }
-.skill.utility1 img, .skill.utility2 img, .skill.utility3 img {
+/* skill frames in the theme: heal and utilities in the mid colour, the
+   elite in the bright one */
+.skill.heal img, .skill.utility1 img, .skill.utility2 img, .skill.utility3 img {
   border-color: color-mix(in srgb, var(--accent) 70%, #888);
 }
-.skill.heal img { border-color: color-mix(in srgb, var(--growth, #009400) 75%, white); }
 .skill.elite img { border-color: var(--gold); }
 .skill figcaption { font-size: .7rem; color: var(--text-dim); margin-top: 4px; line-height: 1.25; }
 .skill .empty { opacity: .5; }
