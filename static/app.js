@@ -409,6 +409,9 @@ const VARIANT_KIND = {
   fire: "attunement", water: "attunement", air: "attunement", earth: "attunement",
   hare: "familiar", otter: "familiar", fox: "familiar", toad: "familiar",
 };
+// an Evoker always has exactly one familiar active, so the chips offer all
+// four as a radio choice - also the ones without a modeled bonus
+const FAMILIARS = ["hare", "fox", "otter", "toad"];
 const TWO_HANDED = new Set(["greatsword", "staff", "hammer", "rifle", "longbow",
                             "shortbow", "spear"]);
 const ONE_HANDED = new Set(["dagger", "sword", "axe", "mace", "pistol", "scepter",
@@ -495,6 +498,17 @@ function updateBuildWarnings() {
       const kind = VARIANT_KIND[entry.effects.find(e => e.variant).variant] || "wielding";
       warnings.push(`${entry.name} is ticked but no ${kind} option is chosen — ` +
                     `its conditional part contributes nothing.`);
+    }
+    // a chosen variant the data has no bonus for (e.g. the fox familiar on
+    // Enhanced Potency): legal in game, but the trait adds no stats then
+    const rowVariants = [...new Set(entry.effects.map(e => e.variant).filter(Boolean))];
+    const chosenVariants = state.traitVariants?.get(id) || [];
+    if (rowVariants.length && chosenVariants.length
+        && !rowVariants.some(v => chosenVariants.includes(v))) {
+      const kind = VARIANT_KIND[rowVariants[0]] || "option";
+      warnings.push(`${entry.name}'s bonus applies with the ` +
+                    `${joinNames(rowVariants.map(capitalize))} ${kind} — with ` +
+                    `${chosenVariants.map(capitalize).join(", ")} it contributes nothing.`);
     }
     for (const variant of state.traitVariants?.get(id) || []) {
       if (TWO_HANDED.has(variant) && gear.weapon === "1h") {
@@ -701,20 +715,26 @@ function traitGroup(title, iconSrc, groupEntries) {
     }
 
     // attunement-style traits (Elemental Polyphony): pick up to two distinct
-    // elements; being fully attuned to one grants its bonus only once
-    const offered = [...new Set(entry.effects.map(e => e.variant).filter(Boolean))];
+    // elements; being fully attuned to one grants its bonus only once.
+    // Familiars are a radio choice instead: exactly one of all four is
+    // active, picking another replaces it (never "none").
+    let offered = [...new Set(entry.effects.map(e => e.variant).filter(Boolean))];
     if (offered.length) {
-      const chosen = memory?.variants.has(entry.id)
+      const kind = VARIANT_KIND[offered[0]] || "wielding";
+      const radio = kind === "familiar";
+      if (radio) offered = FAMILIARS;
+      let chosen = memory?.variants.has(entry.id)
         ? [...memory.variants.get(entry.id)]
         : [...new Set(entry.effects
             .filter(e => e.variant && e.variant_default)
             .map(e => e.variant))];
+      if (radio) chosen = chosen.slice(-1);   // exactly one familiar
       state.traitVariants.set(entry.id, chosen);
-      const kind = VARIANT_KIND[offered[0]] || "wielding";
       const options = document.createElement("div");
       options.className = "trait-options";
       const caption = document.createElement("span");
-      caption.textContent = offered.length > 1 ? `${kind}s (up to 2):` : `${kind}:`;
+      caption.textContent = radio ? `${kind}:`
+        : offered.length > 1 ? `${kind}s (up to 2):` : `${kind}:`;
       options.append(caption);
       for (const variant of offered) {
         const chip = document.createElement("button");
@@ -723,7 +743,9 @@ function traitGroup(title, iconSrc, groupEntries) {
         chip.textContent = capitalize(variant);
         chip.addEventListener("click", () => {
           const current = state.traitVariants.get(entry.id) || [];
-          if (current.includes(variant)) {
+          if (radio) {
+            state.traitVariants.set(entry.id, [variant]);
+          } else if (current.includes(variant)) {
             state.traitVariants.set(entry.id, current.filter(v => v !== variant));
           } else {
             state.traitVariants.set(entry.id, [...current, variant].slice(-2));

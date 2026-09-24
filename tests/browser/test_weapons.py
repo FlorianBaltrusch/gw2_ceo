@@ -50,10 +50,26 @@ try:
     text = driver.find_element(By.ID, "trait-groups").text
     check("Enhanced Potency listed", "Enhanced Potency" in text)
     check("familiar caption", "familiar:" in text, text[:400])
-    hare = [c for c in driver.find_elements(By.CSS_SELECTOR, ".variant-chip")
-            if c.text == "Hare"]
-    check("hare chip default active", len(hare) == 1
-          and "active" in str(hare[0].get_attribute("class")))
+    chips = {c.text: c for c in driver.find_elements(
+        By.XPATH, "//label[.//span[contains(text(),'Enhanced Potency')]]"
+        "/following-sibling::div[contains(@class,'trait-options')][1]//button")}
+    check("all four familiars offered", set(chips) == {"Hare", "Fox", "Otter", "Toad"}, str(set(chips)))
+    check("hare chip default active", "active" in str(chips["Hare"].get_attribute("class")))
+    # radio behaviour: picking another familiar replaces the hare
+    driver.find_element(By.XPATH, "//label[.//span[contains(text(),'Enhanced Potency')]]"
+                        "/input").click()  # tick the trait so the warning can appear
+    chips["Toad"].click()
+    check("toad replaces hare", "active" in str(chips["Toad"].get_attribute("class"))
+          and "active" not in str(chips["Hare"].get_attribute("class")))
+    check("no-bonus familiar warns", "contributes nothing"
+          in driver.find_element(By.ID, "build-warnings").text,
+          driver.find_element(By.ID, "build-warnings").text)
+    chips["Toad"].click()
+    check("clicking the active familiar keeps it", "active" in str(chips["Toad"].get_attribute("class")))
+    chips["Hare"].click()
+    check("hare selectable again, warning gone",
+          "active" in str(chips["Hare"].get_attribute("class"))
+          and "contributes nothing" not in driver.find_element(By.ID, "build-warnings").text)
 
     # stowed stacking sigil: visible for Elementalist, three sigils in result
     check("stowed checkbox visible for ele", visible(driver, "stowed-label"))
