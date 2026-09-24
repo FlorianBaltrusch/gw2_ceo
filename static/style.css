@@ -35,7 +35,7 @@
   --bg-glow: color-mix(in srgb, var(--theme-glow, var(--theme-dark, #001c67)) var(--glow-mix, var(--alpha-strong, 70%)), var(--shadow-abyss, #000));
   /* cards and borders: a neutral dark slate with a hint of the theme */
   --bg-card: color-mix(in srgb, var(--theme-dark, #001c67) 35%, #12141c);
-  --border: color-mix(in srgb, var(--theme-mid, #28304a) 22%, #262b3a);
+  --border: color-mix(in srgb, var(--theme-mid, #28304a) var(--alpha-soft, 30%), #262b3a);
   transition: background .3s ease;
   --text: #e8e4da;
   --text-dim: #9a958a;
