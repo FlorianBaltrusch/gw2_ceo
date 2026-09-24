@@ -78,7 +78,7 @@ def theme_css():
     colors = {name: value for name, value in vars(custom_colors).items()
               if isinstance(value, str) and value.startswith("#")}
     lines = [f"  --{name.replace('_', '-')}: {value[:7]};" for name, value in colors.items()]
-    lines += ["  --alpha-strong: 70%;", "  --alpha-soft: 30%;"]
+    lines += ["  --alpha-strong: 70%;", "  --alpha-mid: 50%;", "  --alpha-soft: 30%;"]
     # the three theme roles: dark (backgrounds), mid (buttons, borders),
     # bright (text/headings) - the default until a profession is chosen
     lines += ["  --theme-dark: var(--phthalo-blue);", "  --theme-mid: var(--ruby-red);",

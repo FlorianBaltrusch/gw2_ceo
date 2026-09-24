@@ -257,7 +257,7 @@ button { font: inherit; cursor: pointer; }
   width: auto;
   height: 64px;       /* explicit: a percentage would fall back to the image's
                          intrinsic 200px during intrinsic sizing in some engines */
-  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--gold) 45%, transparent));
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--gold) var(--alpha-mid, 50%), transparent));
 }
 .spec-tile .label {
   display: flex;
@@ -345,7 +345,7 @@ button { font: inherit; cursor: pointer; }
   border-radius: 8px;
   cursor: pointer;
 }
-.trait:hover { background: color-mix(in srgb, var(--border) 45%, transparent); }
+.trait:hover { background: color-mix(in srgb, var(--border) var(--alpha-mid, 50%), transparent); }
 .trait input {
   accent-color: var(--gold);
   width: 16px;
@@ -366,7 +366,7 @@ button { font: inherit; cursor: pointer; }
   font-size: .82rem;
   color: var(--text-dim);
 }
-.trait.disabled { opacity: .45; cursor: not-allowed; }
+.trait.disabled { opacity: var(--alpha-mid, 50%); cursor: not-allowed; }
 .trait-condition {
   display: block;
   font-size: .8rem;
@@ -435,7 +435,7 @@ button { font: inherit; cursor: pointer; }
 .cta {
   width: 100%;
   margin-top: 4px;
-  background: color-mix(in srgb, var(--accent) 75%, black);
+  background: color-mix(in srgb, var(--accent) var(--alpha-strong, 70%), black);
   border: 1px solid var(--accent);
   color: var(--text);
   font: inherit;
@@ -447,7 +447,7 @@ button { font: inherit; cursor: pointer; }
   transition: background .15s ease;
 }
 .cta:hover { background: var(--accent); }
-.cta:disabled { opacity: .75; cursor: wait; }
+.cta:disabled { opacity: var(--alpha-strong, 70%); cursor: wait; }
 .cta.busy::before {           /* loading circle while the optimizer runs */
   content: "";
   display: inline-block;
