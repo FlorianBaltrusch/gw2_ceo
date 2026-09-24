@@ -39,14 +39,14 @@
 .door:hover, .door:focus-visible {
   transform: translateY(-4px);
   border-color: var(--gold);
-  box-shadow: 0 12px 34px color-mix(in srgb, var(--gold) 22%, transparent);
+  box-shadow: 0 12px 34px color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
   outline: none;
 }
 .door-art {
   width: 84px;
   height: 84px;
   color: var(--gold);
-  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--gold) 35%, transparent));
+  filter: drop-shadow(0 0 16px color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent));
 }
 .door-art svg { width: 100%; height: 100%; }
 .door-title {
@@ -118,7 +118,7 @@
   margin-bottom: 18px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--gold) 4%, transparent);
+  background: color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
 }
 .filter-group { display: flex; flex-direction: column; min-width: 0; }
 .filter-group .control-label { margin-bottom: 6px; }
@@ -168,7 +168,7 @@
   white-space: nowrap;
 }
 .dropdown-menu button:hover, .dropdown-menu button:focus-visible {
-  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  background: color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
   outline: none;
 }
 .dropdown-menu button.active { color: var(--gold); }
@@ -214,7 +214,7 @@
 .build-card:hover, .build-card:focus-visible {
   transform: translateY(-3px);
   border-color: var(--gold);
-  box-shadow: 0 10px 30px color-mix(in srgb, var(--gold) 18%, transparent);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
   outline: none;
 }
 .card-row1 { display: flex; align-items: center; gap: 12px; }
@@ -233,8 +233,8 @@
   color: var(--text-dim);
   white-space: nowrap;
 }
-.badge.cat-openworld { border-color: color-mix(in srgb, var(--growth, #009400) var(--alpha-strong, 70%), transparent); color: color-mix(in srgb, var(--growth, #009400) 55%, white); }
-.badge.cat-raid { border-color: color-mix(in srgb, var(--sunfire-lava, #ff9303) var(--alpha-strong, 70%), transparent); color: color-mix(in srgb, var(--sunfire-lava, #ff9303) 55%, white); }
+.badge.cat-openworld { border-color: color-mix(in srgb, var(--growth, #009400) var(--alpha-strong, 70%), transparent); color: color-mix(in srgb, var(--growth, #009400) var(--alpha-mid, 50%), white); }
+.badge.cat-raid { border-color: color-mix(in srgb, var(--sunfire-lava, #ff9303) var(--alpha-strong, 70%), transparent); color: color-mix(in srgb, var(--sunfire-lava, #ff9303) var(--alpha-mid, 50%), white); }
 .badge.cat-support { border-color: color-mix(in srgb, var(--sand-shark, #1a8ac5) var(--alpha-strong, 70%), transparent); color: color-mix(in srgb, var(--sand-shark, #1a8ac5) var(--alpha-mid, 50%), white); }
 .badge.cat-wvw { border-color: color-mix(in srgb, var(--ruby-red, #bd000b) var(--alpha-strong, 70%), transparent); color: color-mix(in srgb, var(--ruby-red, #bd000b) var(--alpha-mid, 50%), white); }
 .badge.tag { border-style: dashed; }
@@ -246,7 +246,7 @@
   justify-content: space-between;
   gap: 6px 16px;
   padding-top: 10px;
-  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--border) var(--alpha-strong, 70%), transparent);
   font-size: .9rem;
   color: var(--text-dim);
 }
@@ -489,7 +489,7 @@
 /* skill frames in the theme: heal and utilities in the mid colour, the
    elite in the bright one */
 .skill.heal img, .skill.utility1 img, .skill.utility2 img, .skill.utility3 img {
-  border-color: color-mix(in srgb, var(--accent) 70%, #888);
+  border-color: color-mix(in srgb, var(--accent) var(--alpha-strong, 70%), #888);
 }
 .skill.elite img { border-color: var(--gold); }
 .skill figcaption { font-size: .7rem; color: var(--text-dim); margin-top: 4px; line-height: 1.25; }
@@ -515,9 +515,9 @@
   align-items: center;
   gap: 12px;
   padding: 6px 10px 6px 6px;
-  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) var(--alpha-strong, 70%), transparent);
   border-radius: 9px;
-  background: color-mix(in srgb, var(--bg-card) 60%, black);
+  background: color-mix(in srgb, var(--bg-card) var(--alpha-strong, 70%), black);
 }
 .gear-icon {
   flex: 0 0 50px;
@@ -552,8 +552,8 @@
 .weapon-set { display: flex; flex-direction: column; gap: 6px; }
 
 .gear-warning {
-  border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
-  background: color-mix(in srgb, var(--gold) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) var(--alpha-strong, 70%), transparent);
+  background: color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
   border-radius: 8px;
   padding: 8px 12px;
   margin: 0 0 12px;
@@ -571,7 +571,7 @@
   gap: 0 14px;
   align-items: baseline;
   padding: 7px 0;
-  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) var(--alpha-strong, 70%), transparent);
 }
 .attribute:last-child { border-bottom: none; }
 .attribute .name { color: var(--text); }
