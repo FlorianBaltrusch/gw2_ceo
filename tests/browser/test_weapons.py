@@ -53,7 +53,8 @@ try:
     chips = {c.text: c for c in driver.find_elements(
         By.XPATH, "//label[.//span[contains(text(),'Enhanced Potency')]]"
         "/following-sibling::div[contains(@class,'trait-options')][1]//button")}
-    check("all four familiars offered", set(chips) == {"Hare", "Fox", "Otter", "Toad"}, str(set(chips)))
+    check("familiars in element order fire/water/air/earth",
+          list(chips) == ["Fox", "Otter", "Hare", "Toad"], str(list(chips)))
     check("hare chip default active", "active" in str(chips["Hare"].get_attribute("class")))
     # radio behaviour: picking another familiar replaces the hare
     driver.find_element(By.XPATH, "//label[.//span[contains(text(),'Enhanced Potency')]]"

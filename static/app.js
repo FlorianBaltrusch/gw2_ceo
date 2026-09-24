@@ -410,8 +410,10 @@ const VARIANT_KIND = {
   hare: "familiar", otter: "familiar", fox: "familiar", toad: "familiar",
 };
 // an Evoker always has exactly one familiar active, so the chips offer all
-// four as a radio choice - also the ones without a modeled bonus
-const FAMILIARS = ["hare", "fox", "otter", "toad"];
+// four as a radio choice - also the ones without a modeled bonus. Order is
+// the elements' (fire/water/air/earth): fox, otter, hare, toad (wiki:
+// Familiar - Ignite/Splash/Zap/Calcify are the familiars' skills)
+const FAMILIARS = ["fox", "otter", "hare", "toad"];
 const TWO_HANDED = new Set(["greatsword", "staff", "hammer", "rifle", "longbow",
                             "shortbow", "spear"]);
 const ONE_HANDED = new Set(["dagger", "sword", "axe", "mace", "pistol", "scepter",
