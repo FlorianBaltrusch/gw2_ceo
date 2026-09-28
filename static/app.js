@@ -337,9 +337,10 @@ async function loadBuilder() {
 
 function renderTraitGroups() {
   if (!state.traitRows) return;
-  // only Elementalist and Engineer keep stacks in a stowed weapon set
-  el("stowed-label").classList.toggle(
-    "hidden", !["Elementalist", "Engineer"].includes(state.profession));
+  // a stowed stacking sigil keeps its stacks for every profession (wiki,
+  // Sigil: the bonus is lost on downstate, instance/zone change or unequip
+  // - a land weapon swap is none of these), so the option is always shown
+  el("stowed-label").classList.remove("hidden");
   state.selectedTraits = new Set();
   state.conditionHints = [];
   state.traitStacks = new Map();    // stack-group id -> assumed stacks

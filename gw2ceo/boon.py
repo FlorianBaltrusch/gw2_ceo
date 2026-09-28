@@ -284,7 +284,8 @@ def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
     else:
         picks = [pair for pair in combinations(members, 2)
                  if sum(sigil[0] in STACKING_SIGILS for sigil in pair) <= 1]
-    # a stacking sigil parked in the stowed weapon set (Elementalist/Engineer
+    # a stacking sigil parked in the stowed weapon set (its stacks survive weapon
+    # swaps - wiki, Sigil: lost only on downstate, instance/zone change, unequip;
     # keep its stacks without in-combat swaps) joins as an extra sigil; the
     # normal candidates stay so the stable backup can drop the stacks
     if build.stowed_stacking and build.stacking_sigils:

@@ -118,7 +118,7 @@ try:
     # hidden for professions with a weapon swap
     driver.get(BASE + "/ceo?profession=Guardian&spec=Firebrand&mode=crit")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
-    check("stowed checkbox hidden for guardian", not visible(driver, "stowed-label"))
+    check("stowed checkbox shown for guardian too", visible(driver, "stowed-label"))
 finally:
     driver.quit()
 
