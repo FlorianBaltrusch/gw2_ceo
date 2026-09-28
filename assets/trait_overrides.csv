@@ -88,7 +88,7 @@ id,kind,profession,specialization,elite,slot,tier,name,effect,source,value,note,
 1272,trait,Thief,Critical Strikes,False,Major,2.0,Practiced Tolerance,ferocity,precision,0.1,permanent conversion,False,Gain ferocity based on your precision.,,,,,,,,
 1215,trait,Thief,Critical Strikes,False,Major,3.0,Hidden Killer,crit_chance,,100.0,while stealthed (+4s after reveal) - for stealth-attack builds,False,Gain bonus critical-hit chance while stealthed.,,,,,,,,
 1704,trait,Thief,Deadly Arts,False,Major,2.0,Revealed Training,power,,80.0,unconditional,False,Gain power then gain extra power while you are revealed.,,,,,,,,
-1704,trait,Thief,Deadly Arts,False,Major,2.0,Revealed Training,power,,120.0,additionally while under Revealed,False,Gain power then gain extra power while you are revealed.,,,,,,,,
+1704,trait,Thief,Deadly Arts,False,Major,2.0,Revealed Training,power,,120.0,additionally while under Revealed,False,Gain power then gain extra power while you are revealed.,,,,,,revealed,,1.0
 13046,skill,Thief,,False,Utility,,Assassin's Signet,power,,180.0,signet passive,False,Signet Passive: Grants increased power.,,,,,,,,
 13062,skill,Thief,,False,Utility,,Signet of Agility,precision,,180.0,signet passive,False,Signet Passive: Grants increased precision.,,,,,,,,
 221,trait,Elementalist,Air,False,Minor,1.0,Zephyr's Speed,crit_chance,,5.0,unconditional,False,Your chance to critically strike is increased.,,,,,,,,

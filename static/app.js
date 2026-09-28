@@ -408,12 +408,21 @@ function renderTraitGroups() {
 const VARIANT_KIND = {
   fire: "attunement", water: "attunement", air: "attunement", earth: "attunement",
   hare: "familiar", otter: "familiar", fox: "familiar", toad: "familiar",
+  revealed: "revealed",
 };
-// an Evoker always has exactly one familiar active, so the chips offer all
-// four as a radio choice - also the ones without a modeled bonus. Order is
-// the elements' (fire/water/air/earth): fox, otter, hare, toad (wiki:
-// Familiar - Ignite/Splash/Zap/Calcify are the familiars' skills)
-const FAMILIARS = ["fox", "otter", "hare", "toad"];
+// radio kinds: exactly one option is active, picking another replaces it.
+// Familiars: an Evoker always has one active, so all four are offered (also
+// the ones without a modeled bonus) in the elements' order fire/water/air/
+// earth = fox, otter, hare, toad (wiki: Familiar - Ignite/Splash/Zap/Calcify
+// are the familiars' skills). Revealed: the state is either on or off; the
+// "not revealed" option matches no data row and simply drops the bonus.
+const RADIO_OPTIONS = {
+  familiar: ["fox", "otter", "hare", "toad"],
+  revealed: ["revealed", "not revealed"],
+};
+const RADIO_CAPTIONS = { familiar: "familiar:", revealed: "state:" };
+// options that mean "the conditional part is off" on purpose - no warning
+const EXPLICIT_OFF = new Set(["not revealed"]);
 const TWO_HANDED = new Set(["greatsword", "staff", "hammer", "rifle", "longbow",
                             "shortbow", "spear"]);
 const ONE_HANDED = new Set(["dagger", "sword", "axe", "mace", "pistol", "scepter",
@@ -506,7 +515,8 @@ function updateBuildWarnings() {
     const rowVariants = [...new Set(entry.effects.map(e => e.variant).filter(Boolean))];
     const chosenVariants = state.traitVariants?.get(id) || [];
     if (rowVariants.length && chosenVariants.length
-        && !rowVariants.some(v => chosenVariants.includes(v))) {
+        && !rowVariants.some(v => chosenVariants.includes(v))
+        && !chosenVariants.every(v => EXPLICIT_OFF.has(v))) {
       const kind = VARIANT_KIND[rowVariants[0]] || "option";
       warnings.push(`${entry.name}'s bonus applies with the ` +
                     `${joinNames(rowVariants.map(capitalize))} ${kind} — with ` +
@@ -723,8 +733,8 @@ function traitGroup(title, iconSrc, groupEntries) {
     let offered = [...new Set(entry.effects.map(e => e.variant).filter(Boolean))];
     if (offered.length) {
       const kind = VARIANT_KIND[offered[0]] || "wielding";
-      const radio = kind === "familiar";
-      if (radio) offered = FAMILIARS;
+      const radio = kind in RADIO_OPTIONS;
+      if (radio) offered = RADIO_OPTIONS[kind];
       let chosen = memory?.variants.has(entry.id)
         ? [...memory.variants.get(entry.id)]
         : [...new Set(entry.effects
@@ -735,7 +745,7 @@ function traitGroup(title, iconSrc, groupEntries) {
       const options = document.createElement("div");
       options.className = "trait-options";
       const caption = document.createElement("span");
-      caption.textContent = radio ? `${kind}:`
+      caption.textContent = radio ? RADIO_CAPTIONS[kind]
         : offered.length > 1 ? `${kind}s (up to 2):` : `${kind}:`;
       options.append(caption);
       for (const variant of offered) {

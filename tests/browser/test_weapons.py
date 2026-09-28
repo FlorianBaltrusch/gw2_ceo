@@ -72,6 +72,25 @@ try:
           "active" in str(chips["Hare"].get_attribute("class"))
           and "contributes nothing" not in driver.find_element(By.ID, "build-warnings").text)
 
+    # Thief: Revealed Training's revealed state is a yes/no radio
+    driver.get(BASE + "/ceo?profession=Thief&spec=Deadeye&mode=crit")
+    wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
+    row = "//label[.//span[contains(text(),'Revealed Training')]]"
+    state = {c.text: c for c in driver.find_elements(
+        By.XPATH, row + "/following-sibling::div[contains(@class,'trait-options')][1]//button")}
+    check("revealed state chips", list(state) == ["Revealed", "Not revealed"], str(list(state)))
+    check("revealed is the default", "active" in str(state["Revealed"].get_attribute("class")))
+    driver.find_element(By.XPATH, row + "/input").click()
+    state["Not revealed"].click()
+    check("not revealed replaces revealed",
+          "active" in str(state["Not revealed"].get_attribute("class"))
+          and "active" not in str(state["Revealed"].get_attribute("class")))
+    check("no warning for an explicit 'not revealed'",
+          "contributes nothing" not in driver.find_element(By.ID, "build-warnings").text,
+          driver.find_element(By.ID, "build-warnings").text)
+
+    driver.get(BASE + "/ceo?profession=Elementalist&spec=Evoker&mode=crit")
+    wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     # stowed stacking sigil: visible for Elementalist, three sigils in result
     check("stowed checkbox visible for ele", visible(driver, "stowed-label"))
     stowed = driver.find_element(By.ID, "opt-stowed")
