@@ -89,6 +89,20 @@ try:
           "contributes nothing" not in driver.find_element(By.ID, "build-warnings").text,
           driver.find_element(By.ID, "build-warnings").text)
 
+    def chips_of(trait):
+        return {c.text: c for c in driver.find_elements(
+            By.XPATH, f"//label[.//span[contains(text(),'{trait}')]]"
+            "/following-sibling::div[contains(@class,'trait-options')][1]//button")}
+    keen = chips_of("Keen Observer")
+    check("Keen Observer health chips", list(keen) == ["Above 50% health", "Below 50% health"], str(list(keen)))
+    check("above 50% health is the default", "active" in str(keen["Above 50% health"].get_attribute("class")))
+    fangs = chips_of("Twin Fangs")
+    check("Twin Fangs target chips", list(fangs) == ["Flanking or defiant", "From the front"], str(list(fangs)))
+    fangs["From the front"].click()
+    check("from the front replaces flanking",
+          "active" in str(fangs["From the front"].get_attribute("class"))
+          and "active" not in str(fangs["Flanking or defiant"].get_attribute("class")))
+
     driver.get(BASE + "/ceo?profession=Elementalist&spec=Evoker&mode=crit")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     # stowed stacking sigil: visible for Elementalist, three sigils in result

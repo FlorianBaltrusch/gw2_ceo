@@ -409,6 +409,8 @@ const VARIANT_KIND = {
   fire: "attunement", water: "attunement", air: "attunement", earth: "attunement",
   hare: "familiar", otter: "familiar", fox: "familiar", toad: "familiar",
   revealed: "revealed",
+  "above 50% health": "health",
+  "flanking or defiant": "flanking",
 };
 // radio kinds: exactly one option is active, picking another replaces it.
 // Familiars: an Evoker always has one active, so all four are offered (also
@@ -419,10 +421,12 @@ const VARIANT_KIND = {
 const RADIO_OPTIONS = {
   familiar: ["fox", "otter", "hare", "toad"],
   revealed: ["revealed", "not revealed"],
+  health: ["above 50% health", "below 50% health"],
+  flanking: ["flanking or defiant", "from the front"],
 };
-const RADIO_CAPTIONS = { familiar: "familiar:", revealed: "state:" };
+const RADIO_CAPTIONS = { familiar: "familiar:", revealed: "state:", health: "health:", flanking: "target:" };
 // options that mean "the conditional part is off" on purpose - no warning
-const EXPLICIT_OFF = new Set(["not revealed"]);
+const EXPLICIT_OFF = new Set(["not revealed", "below 50% health", "from the front"]);
 const TWO_HANDED = new Set(["greatsword", "staff", "hammer", "rifle", "longbow",
                             "shortbow", "spear"]);
 const ONE_HANDED = new Set(["dagger", "sword", "axe", "mace", "pistol", "scepter",
