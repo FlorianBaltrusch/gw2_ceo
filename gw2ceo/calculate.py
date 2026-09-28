@@ -48,11 +48,11 @@ def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
     else:
         picks = [pair for pair in combinations(members, 2)
                  if sum(sigil[0] in STACKING_SIGILS for sigil in pair) <= 1]
-    # a stacking sigil parked in the stowed weapon set (its stacks survive weapon
-    # swaps - wiki, Sigil: lost only on downstate, instance/zone change, unequip;
-    # keep its stacks without in-combat swaps) joins as an extra sigil next
-    # to non-stacking active ones; the normal candidates stay in the pool so
-    # the stable backup can drop the stacks entirely
+    # a stacking sigil parked in the stowed weapon set joins as an extra sigil
+    # next to non-stacking active ones: its stacks survive weapon swaps (wiki,
+    # Sigil: lost only on downstate, instance/zone change or unequip). The
+    # normal candidates stay in the pool so the stable backup can drop the
+    # stacks entirely
     if build.stowed_stacking and build.stacking_sigils:
         stowed = [m for m in members if m[0] in STACKING_SIGILS]
         active = [m for m in members if m[0] not in STACKING_SIGILS]
