@@ -135,6 +135,10 @@ button { font: inherit; cursor: pointer; }
   filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .55));
   transition: transform .2s ease, filter .25s ease;
 }
+/* the Thief's cape runs solid to its right edge and the Guardian is the
+   narrowest cut-out: no overlap on that one seam */
+.prof-char[data-profession="Thief"] { margin-right: .5%; }
+.prof-char[data-profession="Guardian"] { margin-left: 0; }
 .prof-char img {
   display: block;
   height: clamp(220px, 50vh, 520px);

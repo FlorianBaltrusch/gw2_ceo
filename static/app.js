@@ -140,6 +140,7 @@ function renderProfessionGrid() {
     const tile = document.createElement("button");
     tile.className = "prof-char";
     tile.type = "button";
+    tile.dataset.profession = prof.name;   // per-character styling hooks
 
     const img = document.createElement("img");
     img.src = professionImage(prof.name);
