@@ -24,6 +24,9 @@ try:
     driver.get(BASE + "/ceo")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#prof-grid .prof-char")) == 9)
     check("landing URL clean", "?" not in driver.current_url)
+    lineup = [e.get_attribute("textContent") for e in   # the names are hidden until hover
+              driver.find_elements(By.CSS_SELECTOR, "#prof-grid .prof-char .name")]
+    check("picker lineup in light/medium/heavy order", lineup == ["Elementalist", "Mesmer", "Necromancer", "Engineer", "Ranger", "Thief", "Guardian", "Revenant", "Warrior"], str(lineup))
     driver.find_element(By.XPATH, "//button[contains(@class,'prof-char')][.//span[text()='Guardian']]").click()
     check("profession in URL", wait_url("?profession=Guardian"))
     wait.until(lambda d: any(e.text == "Firebrand" for e in d.find_elements(By.CSS_SELECTOR, "#spec-grid .name")))

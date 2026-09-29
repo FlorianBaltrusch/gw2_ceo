@@ -55,6 +55,8 @@ try:
     wait.until(lambda d: not d.find_element(By.ID, "profession-menu").get_attribute("class").count("hidden"))
     options = driver.find_elements(By.CSS_SELECTOR, "#profession-menu button")
     check("dropdown lists all nine professions plus 'all'", len(options) == 10, str(len(options)))
+    names = [o.text.split("\n")[0] for o in options[1:]]
+    check("dropdown in light/medium/heavy order", names == ["Elementalist", "Mesmer", "Necromancer", "Engineer", "Ranger", "Thief", "Guardian", "Revenant", "Warrior"], str(names))
     by_name = {o.text.split("\n")[0]: o for o in options}
     check("elementalist disabled under raid", not by_name["Elementalist"].is_enabled())
     check("mesmer shows its count", by_name["Mesmer"].text.endswith("1"), by_name["Mesmer"].text)

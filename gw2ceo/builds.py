@@ -495,7 +495,7 @@ def load_build(path: str) -> dict:
 
 def load_all() -> list[dict]:
     """Every build in builds/, in a stable display order: by profession (the
-    in-game order), then elite spec, then category, then name."""
+    site's light-to-heavy order), then elite spec, then category, then name."""
     if not os.path.isdir(BUILDS_DIR):
         return []
     builds = [load_build(os.path.join(BUILDS_DIR, name))
@@ -505,7 +505,7 @@ def load_all() -> list[dict]:
     if duplicates:
         raise ValueError(f"duplicate build slug(s): {sorted(duplicates)}")
     order = list(CATEGORIES)
-    builds.sort(key=lambda build: (PROFESSION_CODES.index(build["profession"]), build["spec"],
+    builds.sort(key=lambda build: (gd.PROFESSION_ORDER.index(build["profession"]), build["spec"],
                                    order.index(build["category"]), build["name"]))
     return builds
 

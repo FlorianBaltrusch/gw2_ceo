@@ -1,17 +1,13 @@
 // Step 1: profession selection, Step 2: elite specialization selection.
 // The rest of the flow (traits, gear, result) plugs in after finishSelection().
 
-const PROFESSIONS = [
-  { name: "Guardian",     img: "01_guardian.PNG" },
-  { name: "Revenant",     img: "02_revenant.PNG" },
-  { name: "Warrior",      img: "03_warrior.PNG" },
-  { name: "Engineer",     img: "04_engineer.PNG" },
-  { name: "Ranger",       img: "05_ranger.PNG" },
-  { name: "Thief",        img: "06_thief.PNG" },
-  { name: "Elementalist", img: "07_elementalist.PNG" },
-  { name: "Mesmer",       img: "08_mesmer.PNG" },
-  { name: "Necromancer",  img: "09_necromancer.PNG" },
-];
+// the lineup follows the site's profession order (static/professions.js)
+const PROFESSION_IMAGES = {
+  Guardian: "01_guardian.PNG", Revenant: "02_revenant.PNG", Warrior: "03_warrior.PNG",
+  Engineer: "04_engineer.PNG", Ranger: "05_ranger.PNG", Thief: "06_thief.PNG",
+  Elementalist: "07_elementalist.PNG", Mesmer: "08_mesmer.PNG", Necromancer: "09_necromancer.PNG",
+};
+const PROFESSIONS = PROFESSION_ORDER.map(name => ({ name, img: PROFESSION_IMAGES[name] }));
 
 const professionImage = (profession) =>
   `/profession-images/freigestellt/${PROFESSIONS.find(p => p.name === profession).img}`;

@@ -46,15 +46,15 @@ shadow_abyss = "#000000ff"
 #  profession is chosen; before that the default phthalo/ruby/aureus theme.
 profession_palettes = {
     #                 dark (color 1)   mid (color 2)    bright (color 3)
-    "Guardian": ("#00030c", "#0c203d", "#1a8ac5"),  # Shadow Blue, Resolution, Sand Shark
-    "Revenant": ("#110000", "#330202", "#c40000"),  # Shadow Red, Hydra, Magma
-    "Warrior": ("#080900", "#580000ff", "#ff9303"),  # Shadow Yellow, Rosewood, Sunfire Lava
-    "Engineer": ("#210000", "#9c5915", "#ffec4c"),  # Midnight Bronze, Molten, Incandescent
-    "Ranger": ("#002911", "#004a00", "#8b2e12"),  # Enameled Longevity, Canopy, Flame
-    "Thief": ("#000000", "#bd000b", "#ffffff"),  # Shadow Abyss, Ruby Red, Permafrost
     "Elementalist": ("#0f0000", "#810000", "#edb227"),  # Shadow Orange, Crimson Lion, Aureus
     "Mesmer": ("#080009", "#680968", "#c0a8d3"),  # Shadow Purple, Torment, Glint's Rebellion
     "Necromancer": ("#001000", "#085c08", "#009400"),  # Shadow Green, Verdant Jade, Growth
+    "Engineer": ("#210000", "#9c5915", "#ffec4c"),  # Midnight Bronze, Molten, Incandescent
+    "Ranger": ("#002911", "#004a00", "#8b2e12"),  # Enameled Longevity, Canopy, Flame
+    "Thief": ("#000000", "#bd000b", "#ffffff"),  # Shadow Abyss, Ruby Red, Permafrost
+    "Guardian": ("#00030c", "#0c203d", "#1a8ac5"),  # Shadow Blue, Resolution, Sand Shark
+    "Revenant": ("#110000", "#330202", "#c40000"),  # Shadow Red, Hydra, Magma
+    "Warrior": ("#080900", "#580000ff", "#ff9303"),  # Shadow Yellow, Rosewood, Sunfire Lava
 }
 
 # %% Define color lists

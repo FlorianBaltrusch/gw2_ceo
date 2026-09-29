@@ -106,7 +106,8 @@ def profession_image(folder, filename):
 
 @app.route("/professions")
 def professions():
-    return jsonify(sorted(gd.traits["profession"].unique()))
+    known = set(gd.traits["profession"].unique())
+    return jsonify([name for name in gd.PROFESSION_ORDER if name in known])
 
 
 @app.route("/specializations")

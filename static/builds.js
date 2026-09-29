@@ -15,9 +15,8 @@ const CATEGORIES = [
   ["", "All"], ["openworld", "Open world"], ["raid", "Raid"],
   ["support", "Support"], ["wvw", "WvW"],
 ];
-// in-game order: heavy, medium, light armor
-const PROFESSIONS = ["Guardian", "Revenant", "Warrior", "Engineer", "Ranger", "Thief",
-                     "Elementalist", "Mesmer", "Necromancer"];
+// the site's profession order (static/professions.js): light, medium, heavy
+const PROFESSIONS = PROFESSION_ORDER;
 
 const filters = { category: "", profession: "" };
 let summaries = null;        // the list JSON, fetched once

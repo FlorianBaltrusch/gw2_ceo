@@ -1,6 +1,14 @@
 import numpy as np
 import pandas as pd
 
+# the site's one profession order: light, medium, heavy armor, alphabetical
+# within each class (static/professions.js carries the same list for the pages)
+PROFESSION_ORDER = [
+    "Elementalist", "Mesmer", "Necromancer",   # light
+    "Engineer", "Ranger", "Thief",             # medium
+    "Guardian", "Revenant", "Warrior",         # heavy
+]
+
 traits = pd.read_csv("assets/traits.csv")
 specializations = pd.read_csv("assets/specializations.csv")
 try:
