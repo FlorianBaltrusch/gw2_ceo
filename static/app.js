@@ -844,6 +844,7 @@ const setWeapon = setupSegmented("weapon-choice", value => {
 
 const TOGGLES = {  // URL key -> checkbox id
   fury: "opt-fury", food: "opt-food", ascended_food: "opt-ascended-food", pie: "opt-pie",
+  wvw: "opt-wvw",
   utility: "opt-utility", writs: "opt-writs", stacking: "opt-stacking", herald: "opt-herald",
   single_sigil: "opt-single-sigil", relic_reserved: "opt-reserve-relic", stowed: "opt-stowed",
   tank: "opt-tank",
@@ -951,6 +952,7 @@ function setMode(mode) {
   el("row-env").classList.toggle("hidden", boon);       // boon mode is 3-stat only
   el("fury-label").classList.toggle("hidden", boon);    // fury only affects crit
   el("pie-label").classList.toggle("hidden", boon);
+  el("wvw-label").classList.toggle("hidden", boon);   // the Brawler rune has no boon duration
   el("ascended-food-label").classList.toggle("hidden", !boon);
   el("writs-label").classList.toggle("hidden", boon);   // no concentration writ exists
   el("herald-label").classList.toggle("hidden", !boon);
@@ -1092,6 +1094,7 @@ renderSlotGrid();
 const RUNE_NAMES = {
   scholar: "Scholar", dragonh: "Dragonhunter", gole: "Golemancer", deadeye: "Deadeye",
   eagle: "Eagle", infil: "Infiltration", ranger: "Ranger",
+  brawler: "Brawler (+175 power, +225 toughness — WvW)",
 };
 const FOOD_NAMES = {
   butternut: "Bowl of Butternut Squash Soup",
@@ -1161,6 +1164,7 @@ async function optimize() {
   params.set("writs", el("opt-writs").checked);
   params.set("single_sigil", el("opt-single-sigil").checked);
   params.set("pie", el("opt-pie").checked);
+  params.set("wvw", el("opt-wvw").checked);
   params.set("herald", el("opt-herald").checked);
   params.set("relic_reserved", el("opt-reserve-relic").checked);
   params.set("stowed", el("opt-stowed").checked);

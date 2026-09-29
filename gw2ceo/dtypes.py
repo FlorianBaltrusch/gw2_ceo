@@ -69,6 +69,11 @@ class BuildConstraints:
     # set's non-stacking pair - for every profession
     stowed_stacking: bool = False
 
+    # WvW: the rune is fixed to Superior Rune of the Brawler (+175 power,
+    # +225 toughness over six pieces - toughness is worth more there than any
+    # rune contest); crit and power modes only
+    wvw: bool = False
+
     # boon mode, internal: the zero-added-toughness variant bans every
     # toughness source (Freshwater Pearl, Leadership, toughness food) - shown
     # as an extra tab whenever the unrestricted best build carries toughness

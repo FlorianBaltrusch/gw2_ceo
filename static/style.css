@@ -135,10 +135,12 @@ button { font: inherit; cursor: pointer; }
   filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .55));
   transition: transform .2s ease, filter .25s ease;
 }
-/* the Thief's cape runs solid to its right edge and the Guardian is the
-   narrowest cut-out: no overlap on that one seam */
+/* the Thief's cape runs solid to its right edge, the Guardian is the
+   narrowest cut-out and the Revenant's banner starts at its left edge: no
+   overlap on the two seams around the Guardian */
 .prof-char[data-profession="Thief"] { margin-right: .5%; }
-.prof-char[data-profession="Guardian"] { margin-left: 0; }
+.prof-char[data-profession="Guardian"] { margin-left: 0; margin-right: .5%; }
+.prof-char[data-profession="Revenant"] { margin-left: 0; }
 .prof-char img {
   display: block;
   height: clamp(220px, 50vh, 520px);

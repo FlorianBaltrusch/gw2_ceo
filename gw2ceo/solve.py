@@ -82,6 +82,7 @@ def solve(args) -> dict:
         writs=args.get("writs", "true") == "true",
         single_sigil=args.get("single_sigil", "false") == "true",
         omnomberry_pie=args.get("pie", "false") == "true",
+        wvw=args.get("wvw", "false") == "true",
         herald_relic=args.get("herald", "true") == "true",
         relic_reserved=args.get("relic_reserved", "false") == "true",
         ascended_food=args.get("ascended_food", "true") == "true",

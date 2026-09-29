@@ -38,6 +38,21 @@ try:
     check("power result shows crit% caption", "% critical chance" in text.lower())
     check("power result has crit chance fact", "wherever effective power peaks" in text)
     check("power result no cap warning", "out of reach" not in text and "overcapping" not in text)
+
+    # WvW pins the Brawler rune in both crit-stat modes
+    check("wvw checkbox shown in power mode", visible(driver, "wvw-label"))
+    driver.execute_script("arguments[0].click()", driver.find_element(By.ID, "opt-wvw"))
+    driver.find_element(By.ID, "optimize").click()
+    wait.until(lambda d: "brawler" in d.find_element(By.ID, "result").text.lower())
+    check("wvw: brawler rune in the power result", "Brawler" in driver.find_element(By.ID, "result").text)
+    driver.find_element(By.CSS_SELECTOR, "#mode-choice button[data-value='crit']").click()
+    driver.find_element(By.ID, "optimize").click()
+    wait.until(lambda d: "brawler" in d.find_element(By.ID, "result").text.lower())
+    check("wvw: brawler rune in the crit result", "Brawler" in driver.find_element(By.ID, "result").text)
+    driver.find_element(By.CSS_SELECTOR, "#mode-choice button[data-value='boon']").click()
+    check("wvw checkbox hidden in boon mode", not visible(driver, "wvw-label"))
+    driver.find_element(By.CSS_SELECTOR, "#mode-choice button[data-value='power']").click()
+    driver.execute_script("arguments[0].click()", driver.find_element(By.ID, "opt-wvw"))
     check("power equipment renders", "Shoulders/Gloves/Boots" in text)
 finally:
     driver.quit()

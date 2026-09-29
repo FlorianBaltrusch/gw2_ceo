@@ -108,6 +108,14 @@ def _relic_candidates(build: BuildConstraints) -> pd.DataFrame:
     return pd.DataFrame(data=relics)
 
 
+def _rune_pool(build: BuildConstraints) -> pd.DataFrame:
+    """WvW pins the Brawler rune (wiki: +175 power, +225 toughness over six
+    pieces) - no rune contest; otherwise every rune but Brawler competes."""
+    if build.wvw:
+        return gd.runes.loc[["brawler"]]
+    return gd.runes.drop(index="brawler", errors="ignore")
+
+
 def _mixed_runes() -> pd.DataFrame | None:
     """All 5+1/4+2/3+3 two-rune mixes, built from the per-piece bonuses in
     assets/rune_tiers.csv. Used only as a rescue when no full rune set can
@@ -128,7 +136,7 @@ def _mixed_runes() -> pd.DataFrame | None:
                 rows[f"{first}({count})+{second}({6 - count})"] = mix
     mixed = pd.DataFrame(rows).T
     mixed.index.name = "rune"
-    return pd.concat([gd.runes, mixed])
+    return pd.concat([gd.runes.drop(index="brawler", errors="ignore"), mixed])
 
 
 def _candidate_stats(profession: Profession, build: BuildConstraints,
@@ -316,11 +324,12 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
 
 
 def calc_ep(profession: Profession, build: BuildConstraints) -> dict:
-    stats = _solve(profession, build, gd.runes)
+    stats = _solve(profession, build, _rune_pool(build))
 
     # rescue: when no full rune set can hit the cap exactly, mixed rune sets
-    # provide finer precision steps (only then - mixes are never preferred)
-    if not bool(stats.iloc[0]["exact"]):
+    # provide finer precision steps (only then - mixes are never preferred;
+    # not in WvW, where the rune is pinned)
+    if not build.wvw and not bool(stats.iloc[0]["exact"]):
         extended_runes = _mixed_runes()
         if extended_runes is not None:
             rescued = _solve(profession, build, extended_runes)
@@ -352,7 +361,7 @@ def calc_power(profession: Profession, build: BuildConstraints) -> dict:
 
     For every candidate row the gear's reachable precision points (with their
     best complementary stats) are evaluated in full, vectorized in chunks."""
-    stats = _candidate_stats(profession, build, gd.runes)
+    stats = _candidate_stats(profession, build, _rune_pool(build))
     gear = GearSelect(build, valkyrie=True)
     gear_precision, gear_values, _ = gear.point_table()
     gear_power, gear_ferocity, gear_vitality = gear_values.T

@@ -23,7 +23,7 @@ RUNES = {
     "scholar": "Superior Rune of the Scholar", "dragonh": "Superior Rune of the Dragonhunter",
     "gole": "Superior Rune of the Golemancer", "deadeye": "Superior Rune of the Deadeye",
     "eagle": "Superior Rune of the Eagle", "infil": "Superior Rune of Infiltration",
-    "ranger": "Superior Rune of the Ranger",
+    "ranger": "Superior Rune of the Ranger", "brawler": "Superior Rune of the Brawler",
     "water": "Superior Rune of the Water", "monk": "Superior Rune of the Monk",
     "altruism": "Superior Rune of Altruism", "leadership": "Superior Rune of Leadership",
     "radiance": "Superior Rune of Radiance", "sanctuary": "Superior Rune of Sanctuary",
@@ -105,7 +105,7 @@ CONCENTRATION_PER_BOON_PCT = 15
 
 TOGGLE_DEFAULTS = {"fury": "1", "food": "1", "utility": "1", "stacking": "1", "writs": "1",
                    "single_sigil": "0", "pie": "0", "herald": "1", "relic_reserved": "0",
-                   "stowed": "0", "ascended_food": "1", "tank": "0"}
+                   "stowed": "0", "ascended_food": "1", "tank": "0", "wvw": "0"}
 
 
 def weapon_keys(handedness: str) -> list[str]:
