@@ -114,15 +114,15 @@ try:
     cw = "//label[.//span[contains(text(),'Crescent Wind')]]"
     cw_box = driver.find_element(By.XPATH, cw + "/input")
     check("Crescent Wind unticked by default", not cw_box.is_selected())
-    check("hammer chip on Crescent Wind", "Hammer" in [c.text for c in driver.find_elements(
-        By.XPATH, cw + "/following-sibling::div[contains(@class,'trait-options')][1]//button")])
+    check("no wielding chip on a weapon skill", not driver.find_elements(
+        By.XPATH, cw + "/following-sibling::div[contains(@class,'trait-options')][1]//button"))
     driver.execute_script("arguments[0].click()", cw_box)
     driver.find_element(By.CSS_SELECTOR, "#weapon-choice button[data-value='1h']").click()
-    warn = driver.find_element(By.ID, "build-warnings").text
-    check("Crescent Wind warns with two one-handed weapons", "needs a hammer" in warn, warn)
+    hint = driver.find_element(By.XPATH, cw + "//span[contains(@class,'trait-condition')]")
+    check("Crescent Wind marked ineffective with two one-handed weapons",
+          "needs a two-handed weapon" in hint.text and "hidden" not in hint.get_attribute("class"), hint.text)
     driver.find_element(By.CSS_SELECTOR, "#weapon-choice button[data-value='2h']").click()
-    check("warning gone with a two-handed weapon",
-          "needs a hammer" not in driver.find_element(By.ID, "build-warnings").text)
+    check("hint gone with a two-handed weapon", "hidden" in hint.get_attribute("class"))
     # the WvW toggle shows the split value and keeps the ticks
     row_text = lambda: driver.find_element(By.XPATH, cw).text
     check("PvE value shown", "+15% critical chance" in row_text(), row_text())
