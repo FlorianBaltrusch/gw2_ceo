@@ -105,6 +105,31 @@ try:
 
     driver.get(BASE + "/ceo?profession=Elementalist&spec=Evoker&mode=crit")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
+    # Crescent Wind (hammer air 3): a weapon skill with a hammer wielding chip
+    text = driver.find_element(By.ID, "trait-groups").text
+    check("Crescent Wind listed for the Elementalist", "Crescent Wind" in text)
+    cw = "//label[.//span[contains(text(),'Crescent Wind')]]"
+    cw_box = driver.find_element(By.XPATH, cw + "/input")
+    check("Crescent Wind unticked by default", not cw_box.is_selected())
+    check("hammer chip on Crescent Wind", "Hammer" in [c.text for c in driver.find_elements(
+        By.XPATH, cw + "/following-sibling::div[contains(@class,'trait-options')][1]//button")])
+    driver.execute_script("arguments[0].click()", cw_box)
+    driver.find_element(By.CSS_SELECTOR, "#weapon-choice button[data-value='1h']").click()
+    warn = driver.find_element(By.ID, "build-warnings").text
+    check("Crescent Wind warns with two one-handed weapons", "needs a hammer" in warn, warn)
+    driver.find_element(By.CSS_SELECTOR, "#weapon-choice button[data-value='2h']").click()
+    check("warning gone with a two-handed weapon",
+          "needs a hammer" not in driver.find_element(By.ID, "build-warnings").text)
+    # the WvW toggle shows the split value and keeps the ticks
+    row_text = lambda: driver.find_element(By.XPATH, cw).text
+    check("PvE value shown", "+15% critical chance" in row_text(), row_text())
+    driver.execute_script("arguments[0].click()", driver.find_element(By.ID, "opt-wvw"))
+    wait.until(lambda d: "+12% critical chance" in d.find_element(By.XPATH, cw).text)
+    check("WvW value shown with the toggle", "+12% critical chance" in row_text(), row_text())
+    check("tick survives the re-render", driver.find_element(By.XPATH, cw + "/input").is_selected())
+    driver.execute_script("arguments[0].click()", driver.find_element(By.ID, "opt-wvw"))
+    wait.until(lambda d: "+15% critical chance" in d.find_element(By.XPATH, cw).text)
+
     # stowed stacking sigil: visible for Elementalist, three sigils in result
     check("stowed checkbox visible for ele", visible(driver, "stowed-label"))
     stowed = driver.find_element(By.ID, "opt-stowed")

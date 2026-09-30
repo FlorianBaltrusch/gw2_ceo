@@ -295,6 +295,8 @@ const MODE_EFFECTS = {
 const ATTRIBUTE_LABELS = { healing: "healing power" };
 
 function effectText(row) {
+  // the WvW toggle shows (and the solver uses) the WvW value of split facts
+  if (el("opt-wvw")?.checked && row.value_wvw != null) row = { ...row, value: row.value_wvw };
   const meaningful = row.note && !REDUNDANT_NOTES.has(row.note.toLowerCase());
   const condition = meaningful ? ` — ${row.note}` : "";
   if (row.source) {  // attribute conversion, e.g. "+6.5% of power as healing power"
@@ -1086,6 +1088,12 @@ el("opt-might").addEventListener("input", () => {
   updateConditionHints();
 });
 el("opt-fury").addEventListener("change", updateConditionHints);
+// WvW swaps the split traits' values: re-render the list, keeping the ticks
+el("opt-wvw").addEventListener("change", () => {
+  if (!state.selectedTraits) return;
+  saveTraitMemory();
+  renderTraitGroups();
+});
 
 renderSlotGrid();
 

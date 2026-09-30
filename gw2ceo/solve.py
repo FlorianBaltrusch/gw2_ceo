@@ -49,7 +49,8 @@ def solve(args) -> dict:
         variants[int(trait_id)] = [name for name in names.split(",") if name]
 
     profession = Profession(trait_ids, profession=args.get("profession"),
-                            conditions=conditions, stacks=stacks, variants=variants)
+                            conditions=conditions, stacks=stacks, variants=variants,
+                            wvw=args.get("wvw", "false") == "true")
 
     armor = args.getlist("armor[]")
     armor = [piece.replace("1", "").replace("2", "") for piece in armor]
