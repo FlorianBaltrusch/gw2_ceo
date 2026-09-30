@@ -12,7 +12,7 @@ function applyTheme(profession) {
 }
 
 const CATEGORIES = [
-  ["", "All"], ["openworld", "Open world"], ["raid", "Raid"],
+  ["", "All"], ["openworld", "Open world"], ["raid", "Raids / Strikes / Fractals / Dungeons"],
   ["support", "Support"], ["wvw", "WvW"],
 ];
 // the site's profession order (static/professions.js): light, medium, heavy

@@ -37,7 +37,7 @@ BUILDS_DIR = "builds"
 # a build belongs to exactly one category; "event" and the like are tags
 CATEGORIES = {
     "openworld": "Open world",
-    "raid": "Raid",
+    "raid": "Raids / Strikes / Fractals / Dungeons",   # the key stays "raid" in the build files
     "support": "Support",
     "wvw": "WvW",
 }
