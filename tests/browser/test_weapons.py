@@ -108,6 +108,9 @@ try:
     # Crescent Wind (hammer air 3): a weapon skill with a hammer wielding chip
     text = driver.find_element(By.ID, "trait-groups").text
     check("Crescent Wind listed for the Elementalist", "Crescent Wind" in text)
+    headers = [h.text for h in driver.find_elements(By.CSS_SELECTOR, ".trait-group-header .name")]
+    check("skill groups named Utility skills and Weapon skills",
+          "Utility skills" in headers and headers[-1] == "Weapon skills", str(headers))
     cw = "//label[.//span[contains(text(),'Crescent Wind')]]"
     cw_box = driver.find_element(By.XPATH, cw + "/input")
     check("Crescent Wind unticked by default", not cw_box.is_selected())

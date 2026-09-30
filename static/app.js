@@ -391,12 +391,17 @@ function renderTraitGroups() {
       container.append(traitGroup(section, specByName.get(section)?.icon, sectionEntries));
     }
   }
+  // slot skills (heal, utilities, elite) and weapon skills in separate groups
   const SKILL_SLOT_ORDER = { Heal: 0, Utility: 1, Elite: 2 };
-  const skills = entries.filter(e => e.kind === "skill")
-    .sort((a, b) => (SKILL_SLOT_ORDER[a.slot] ?? 9) - (SKILL_SLOT_ORDER[b.slot] ?? 9)
-                    || a.name.localeCompare(b.name));
+  const bySkillSlot = (a, b) => (SKILL_SLOT_ORDER[a.slot] ?? 9) - (SKILL_SLOT_ORDER[b.slot] ?? 9)
+                                || a.name.localeCompare(b.name);
+  const skills = entries.filter(e => e.kind === "skill" && e.slot !== "Weapon").sort(bySkillSlot);
+  const weaponSkills = entries.filter(e => e.kind === "skill" && e.slot === "Weapon").sort(bySkillSlot);
   if (skills.length) {
-    container.append(traitGroup("Skills", `/icons/tango_${state.profession}.png`, skills));
+    container.append(traitGroup("Utility skills", `/icons/tango_${state.profession}.png`, skills));
+  }
+  if (weaponSkills.length) {
+    container.append(traitGroup("Weapon skills", `/icons/tango_${state.profession}.png`, weaponSkills));
   }
   state.pendingIds = null;
   updateBuildWarnings();
