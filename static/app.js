@@ -967,7 +967,7 @@ function setMode(mode) {
   el("utility-note").textContent = boon ? "(Magnanimous / Lucent / Toxic / Bountiful)" : "";
   el("stacking-note").textContent = boon
     ? "(Bounty/Life/Benevolence — kill stacks, lost on downstate)"
-    : "(Perception/Bloodlust — lost on downstate)";
+    : "(Perception/Bloodlust/Cruelty — lost on downstate)";
   el("single-sigil-note").textContent = boon
     ? "(the other slot is yours, e.g. a proc sigil — only one slot is optimized)"
     : "(the other slot is yours, e.g. Energy — only one slot is optimized)";
@@ -1120,6 +1120,7 @@ const SIGIL_NAMES = {
   accuracy: "Accuracy (+7% crit)",
   perception: "Perception (+250 precision at 25 stacks)",
   bloodlust: "Bloodlust (+250 power at 25 stacks)",
+  cruelty: "Cruelty (+250 ferocity at 25 stacks)",
   impact: "Impact (+3%) — or Night, +10% at night",
   force: "Force (+5% damage)",
 };
@@ -1127,6 +1128,7 @@ const SIGIL_SHORT = {
   accuracy: "Accuracy",
   perception: "Perception",
   bloodlust: "Bloodlust",
+  cruelty: "Cruelty",
   impact: "Impact (or Night)",
   force: "Force",
 };
@@ -1255,7 +1257,7 @@ function renderResult(data, env, singleSigil) {
   if (backup) {
     // why the backup exists, derived from what the best build relies on
     const reasons = [];
-    if (data.sigil.split("+").some(s => ["perception", "bloodlust"].includes(s))) {
+    if (data.sigil.split("+").some(s => ["perception", "bloodlust", "cruelty"].includes(s))) {
       reasons.push("stacking sigil stacks vanish on downstate");
     }
     if (data.utility === "writ_accuracy") reasons.push("the accuracy writ needs >90% health");

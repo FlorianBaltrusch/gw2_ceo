@@ -12,8 +12,8 @@ TARGET = 2995  # precision-equivalent for 100% critical chance at level 80
 
 # tie preferences at equal effective power (lower is preferred):
 # a damage sigil is a free bonus at night, stacking sigils are fragile
-SIGIL_PRIO = {"impact": 0, "force": 0, "accuracy": 1, "perception": 2, "bloodlust": 2}
-STACKING_SIGILS = ("perception", "bloodlust")
+SIGIL_PRIO = {"impact": 0, "force": 0, "accuracy": 1, "perception": 2, "bloodlust": 2, "cruelty": 2}
+STACKING_SIGILS = ("perception", "bloodlust", "cruelty")
 # sharpening stones last longer than writs; the accuracy writ additionally
 # puts the crit cap at risk below 90% health
 UTILITY_PRIO = {"none": 0, "stones": 0, "writ_strength": 1, "writ_accuracy": 2}
@@ -21,18 +21,21 @@ FOOD_PRIO = {"truffle": 1, "curry": 2, "butternut": 2}
 
 
 def _sigil_members(build: BuildConstraints) -> list[tuple]:
-    """(name, chance, precision, power, damage multiplier) per sigil.
-    Stacking sigils are modeled at their 25-stack maximum."""
+    """(name, chance, precision, power, damage multiplier, ferocity) per
+    sigil. Stacking sigils are modeled at their 25-stack maximum (wiki:
+    Perception +10 precision, Bloodlust +10 power, Cruelty +10 ferocity per
+    kill charge, 25 stacks, ending on downstate)."""
     buffs = gd.general_buffs
     members = [
-        ("force", 0.0, 0.0, 0.0, float(buffs.sigil_force)),
-        ("impact", 0.0, 0.0, 0.0, float(buffs.sigil_impact)),
-        ("accuracy", float(buffs.sigil_accuracy), 0.0, 0.0, 0.0),
+        ("force", 0.0, 0.0, 0.0, float(buffs.sigil_force), 0.0),
+        ("impact", 0.0, 0.0, 0.0, float(buffs.sigil_impact), 0.0),
+        ("accuracy", float(buffs.sigil_accuracy), 0.0, 0.0, 0.0, 0.0),
     ]
     if build.stacking_sigils:
         members += [
-            ("perception", 0.0, float(buffs.sigil_perception), 0.0, 0.0),
-            ("bloodlust", 0.0, 0.0, float(buffs.sigil_bloodlust), 0.0),
+            ("perception", 0.0, float(buffs.sigil_perception), 0.0, 0.0, 0.0),
+            ("bloodlust", 0.0, 0.0, float(buffs.sigil_bloodlust), 0.0, 0.0),
+            ("cruelty", 0.0, 0.0, 0.0, 0.0, float(buffs.sigil_cruelty)),
         ]
     return members
 
@@ -69,6 +72,7 @@ def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
             "chance": sum(sigil[1] for sigil in pick),
             "sigil_precision": sum(sigil[2] for sigil in pick),
             "sigil_power": sum(sigil[3] for sigil in pick),
+            "sigil_ferocity": sum(sigil[5] for sigil in pick),
             "sigil_damage": damage,
             "sigil_stacking": any(sigil[0] in STACKING_SIGILS for sigil in pick),
             "sigil_prio": sum(SIGIL_PRIO[sigil[0]] for sigil in pick),
@@ -174,7 +178,7 @@ def _candidate_stats(profession: Profession, build: BuildConstraints,
     options = options.rename(columns={"vitality": "vitality_rune"})
 
     stats = options[["prec_infusions", "sigil", "sigil_precision", "sigil_power",
-                     "sigil_damage", "sigil_stacking", "sigil_prio",
+                     "sigil_ferocity", "sigil_damage", "sigil_stacking", "sigil_prio",
                      "utility", "util_precision", "util_power", "relic", "relic_chance",
                      "food", "rune", "power", "precision", "chance", "ferocity",
                      "vitality_rune"]].copy()
@@ -192,7 +196,7 @@ def _candidate_stats(profession: Profession, build: BuildConstraints,
                        + profession.additional_power()
                        + profession.power_per_might() * build.might
                        + stats["sigil_power"] + stats["util_power"])
-    stats["ferocity"] += profession.additional_ferocity()
+    stats["ferocity"] += profession.additional_ferocity() + stats["sigil_ferocity"]
     stats["vitality"] = (gd.general_buffs.base_vitality + gd.general_buffs.jade_bot
                          + profession.additional_vitality() + stats["vitality_rune"])
 

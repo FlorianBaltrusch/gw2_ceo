@@ -35,13 +35,13 @@ RUNES = {
 SIGILS = {
     "force": "Superior Sigil of Force", "impact": "Superior Sigil of Impact",
     "accuracy": "Superior Sigil of Accuracy", "perception": "Superior Sigil of Perception",
-    "bloodlust": "Superior Sigil of Bloodlust",
+    "bloodlust": "Superior Sigil of Bloodlust", "cruelty": "Superior Sigil of Cruelty",
     "concentration": "Superior Sigil of Concentration", "bounty": "Superior Sigil of Bounty",
     "life": "Superior Sigil of Life", "benevolence": "Superior Sigil of Benevolence",
     "transference": "Superior Sigil of Transference",
     "free": "utility sigil of your choice",
 }
-STACKING_SIGILS = {"perception", "bloodlust", "bounty", "life", "benevolence"}
+STACKING_SIGILS = {"perception", "bloodlust", "cruelty", "bounty", "life", "benevolence"}
 FOODS = {
     "butternut": "Bowl of Butternut Squash Soup", "truffle": "Plate of Truffle Steak",
     "curry": "Bowl of Curry Butternut Squash Soup", "omnomberry": "Omnomberry Pie",
