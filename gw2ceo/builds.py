@@ -483,6 +483,9 @@ def load_build(path: str) -> dict:
         "optimizer": raw.get("optimizer"),
         "profession": template["profession"],
         "spec": elite["name"] if elite else f"Core {template['profession']}",
+        # card title lines: elite spec over profession, or profession over "Core"
+        "title": elite["name"] if elite else template["profession"],
+        "subtitle": template["profession"] if elite else "Core",
         "spec_icon": elite["icon"] if elite else f"/icons/tango_{template['profession']}.png",
         "banner": (elite or template["lines"][-1])["background"] if template["lines"] else None,
         "profession_icon": f"/icons/tango_{template['profession']}.png",
@@ -517,6 +520,7 @@ def summary(build: dict) -> dict:
     """The card content for the list page."""
     return {key: build[key] for key in (
         "slug", "name", "category", "category_label", "category_hint", "tags", "summary", "profession",
+        "title", "subtitle",
         "spec", "spec_icon", "banner", "profession_icon", "weapon_summary",
     )} | {
         "traitlines": [{"name": line["name"], "icon": line["icon"]} for line in build["lines"]],

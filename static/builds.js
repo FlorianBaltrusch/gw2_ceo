@@ -217,10 +217,10 @@ function renderCards() {
     title.className = "card-title";
     const spec = document.createElement("span");
     spec.className = "card-spec";
-    spec.textContent = build.spec;
+    spec.textContent = build.title;
     const prof = document.createElement("span");
     prof.className = "card-prof";
-    prof.textContent = build.profession;
+    prof.textContent = build.subtitle;
     title.append(spec, prof);
     const badges = document.createElement("span");
     badges.className = "card-badges";
