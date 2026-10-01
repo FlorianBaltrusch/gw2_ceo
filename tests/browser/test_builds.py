@@ -35,12 +35,16 @@ try:
     total = count(".build-card")
     check("all build files listed", total == 23, str(total))
     card = driver.find_element(By.CSS_SELECTOR, ".build-card")
-    check("card row one: spec + profession",
-          card.find_element(By.CSS_SELECTOR, ".card-spec").text == "Evoker"
+    check("card row one: spec + profession (Tempest first: HoT before the newer specs)",
+          card.find_element(By.CSS_SELECTOR, ".card-spec").text == "Tempest"
           and card.find_element(By.CSS_SELECTOR, ".card-prof").text.lower() == "elementalist")
     check("card row two: weapons + trait lines",
           "Scepter / Dagger" in card.find_element(By.CSS_SELECTOR, ".card-weapons").text
-          and "Water · Air · Evoker" in card.find_element(By.CSS_SELECTOR, ".card-lines").text)
+          and "Water · Air · Tempest" in card.find_element(By.CSS_SELECTOR, ".card-lines").text)
+    specs = [c.find_element(By.CSS_SELECTOR, ".card-spec").text for c in driver.find_elements(By.CSS_SELECTOR, ".build-card")]
+    check("expansion order inside a profession", specs.index("Tempest") < specs.index("Weaver") < specs.index("Evoker")
+          and specs.index("Necromancer") < specs.index("Reaper") < specs.index("Scourge")
+          and specs.index("Guardian") < specs.index("Dragonhunter") < specs.index("Willbender"), str(specs))
 
     # category filter
     groups = driver.find_elements(By.CSS_SELECTOR, ".filter-group .control-label")

@@ -483,6 +483,10 @@ def load_build(path: str) -> dict:
         "optimizer": raw.get("optimizer"),
         "profession": template["profession"],
         "spec": elite["name"] if elite else f"Core {template['profession']}",
+        # the API's specialization ids follow the expansions' release order
+        # (core lines 1-53 excluded: HoT 5-52, PoF 55-63, EoD 64-72, VoE 73+);
+        # core builds sort first with 0
+        "spec_id": elite["id"] if elite else 0,
         # card title lines: elite spec over profession, or profession over "Core"
         "title": elite["name"] if elite else template["profession"],
         "subtitle": template["profession"] if elite else "Core",
@@ -501,7 +505,9 @@ def load_build(path: str) -> dict:
 
 def load_all() -> list[dict]:
     """Every build in builds/, in a stable display order: by profession (the
-    site's light-to-heavy order), then elite spec, then category, then name."""
+    site's light-to-heavy order), then core before the elite specs in their
+    expansions' order (Heart of Thorns, Path of Fire, End of Dragons, Visions
+    of Eternity - the API's spec ids follow it), then category, then name."""
     if not os.path.isdir(BUILDS_DIR):
         return []
     builds = [load_build(os.path.join(BUILDS_DIR, name))
@@ -511,7 +517,7 @@ def load_all() -> list[dict]:
     if duplicates:
         raise ValueError(f"duplicate build slug(s): {sorted(duplicates)}")
     order = list(CATEGORIES)
-    builds.sort(key=lambda build: (gd.PROFESSION_ORDER.index(build["profession"]), build["spec"],
+    builds.sort(key=lambda build: (gd.PROFESSION_ORDER.index(build["profession"]), build["spec_id"],
                                    order.index(build["category"]), build["name"]))
     return builds
 
