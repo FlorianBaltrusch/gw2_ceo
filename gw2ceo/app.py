@@ -4,7 +4,7 @@ import pandas as pd
 from flask import Flask, Response, abort, jsonify, redirect, request, send_from_directory
 
 import gw2ceo.general_data as gd
-from gw2ceo import buildlink, builds, custom_colors
+from gw2ceo import buildlink, builds, custom_colors, theme
 from gw2ceo.icons import ensure_icon
 from gw2ceo.solve import solve
 
@@ -89,11 +89,15 @@ def theme_css():
     # comes from the mid colour at the soft alpha instead
     lines += ["  --theme-glow: var(--phthalo-blue);", "  --glow-mix: var(--alpha-strong);"]
     css = ":root {\n" + "\n".join(lines) + "\n}\n"
-    for profession, (dark, mid, bright) in custom_colors.profession_palettes.items():
-        css += (f':root[data-profession="{profession}"] {{\n'
-                f"  --theme-dark: {dark[:7]};\n  --theme-mid: {mid[:7]};\n"
-                f"  --theme-bright: {bright[:7]};\n"
-                f"  --theme-glow: {mid[:7]};\n  --glow-mix: var(--alpha-soft);\n}}\n")
+    # the hand-picked dyes, lifted in lightness only where a role would be
+    # unreadable (gw2ceo/theme.py); the comment documents every lift
+    for profession, palette in custom_colors.profession_palettes.items():
+        (dark, mid, bright), notes = theme.readable_palette(*palette)
+        comment = f"  /* {'; '.join(notes)} */\n" if notes else ""
+        css += (f':root[data-profession="{profession}"] {{\n{comment}'
+                f"  --theme-dark: {dark};\n  --theme-mid: {mid};\n"
+                f"  --theme-bright: {bright};\n"
+                f"  --theme-glow: {mid};\n  --glow-mix: var(--alpha-soft);\n}}\n")
     return Response(css, mimetype="text/css")
 
 
