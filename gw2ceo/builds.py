@@ -43,6 +43,8 @@ CATEGORIES = {
 }
 # the long meaning of a short label, shown as a tooltip
 CATEGORY_HINTS = {"raid": "Raids, strikes, fractals and dungeons"}
+# display order of the categories inside one specialization
+CATEGORY_ORDER = ["raid", "openworld", "support", "wvw"]
 
 # weapon type ids of the chat link's weapon section (wiki: Chat_link_format)
 WEAPON_TYPES = {
@@ -507,7 +509,8 @@ def load_all() -> list[dict]:
     """Every build in builds/, in a stable display order: by profession (the
     site's light-to-heavy order), then core before the elite specs in their
     expansions' order (Heart of Thorns, Path of Fire, End of Dragons, Visions
-    of Eternity - the API's spec ids follow it), then category, then name."""
+    of Eternity - the API's spec ids follow it), then category (instanced,
+    open world, support, WvW), then name."""
     if not os.path.isdir(BUILDS_DIR):
         return []
     builds = [load_build(os.path.join(BUILDS_DIR, name))
@@ -516,9 +519,8 @@ def load_all() -> list[dict]:
     duplicates = {slug for slug in slugs if slugs.count(slug) > 1}
     if duplicates:
         raise ValueError(f"duplicate build slug(s): {sorted(duplicates)}")
-    order = list(CATEGORIES)
     builds.sort(key=lambda build: (gd.PROFESSION_ORDER.index(build["profession"]), build["spec_id"],
-                                   order.index(build["category"]), build["name"]))
+                                   CATEGORY_ORDER.index(build["category"]), build["name"]))
     return builds
 
 
