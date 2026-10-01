@@ -31,7 +31,7 @@ That is a complete build file:
 ```toml
 name = "Open World Tempest"
 category = "openworld"          # exactly one of: openworld | raid | support | wvw
-                                # ("raid" is shown as Raids / Strikes / Fractals / Dungeons)
+                                # ("raid" is shown as Instanced PvE, "wvw" as World vs. World)
 tags = ["event"]                # optional extra labels shown next to the category
 summary = "One or two sentences shown on the build's page header."
 chatlink = "[&DQYfHSkvMBvHEscSywClEr4BwxJyAHQSJgCZEgAAAAAAAAAAAAAAAAAAAAADWQBWAGcAAA==]"

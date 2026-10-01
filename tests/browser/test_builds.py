@@ -48,7 +48,7 @@ try:
     driver.find_element(By.CSS_SELECTOR, "#category-filter button[data-value='raid']").click()
     wait.until(lambda d: count(".build-card") == 5)
     check("raid filter keeps the five raid builds", count(".build-card") == 5
-          and all("raids" in b.text.lower() for b in driver.find_elements(By.CSS_SELECTOR, ".build-card .badge")))
+          and all("instanced" in b.text.lower() for b in driver.find_elements(By.CSS_SELECTOR, ".build-card .badge")))
     check("filter in URL", "cat=raid" in driver.current_url, driver.current_url)
 
     # profession dropdown: counts follow the category

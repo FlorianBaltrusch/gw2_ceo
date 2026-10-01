@@ -37,10 +37,12 @@ BUILDS_DIR = "builds"
 # a build belongs to exactly one category; "event" and the like are tags
 CATEGORIES = {
     "openworld": "Open world",
-    "raid": "Raids / Strikes / Fractals / Dungeons",   # the key stays "raid" in the build files
+    "raid": "Instanced PvE",   # the key stays "raid" in the build files
     "support": "Support",
-    "wvw": "WvW",
+    "wvw": "World vs. World",
 }
+# the long meaning of a short label, shown as a tooltip
+CATEGORY_HINTS = {"raid": "Raids, strikes, fractals and dungeons"}
 
 # weapon type ids of the chat link's weapon section (wiki: Chat_link_format)
 WEAPON_TYPES = {
@@ -473,6 +475,7 @@ def load_build(path: str) -> dict:
         "name": raw["name"],
         "category": raw["category"],
         "category_label": CATEGORIES[raw["category"]],
+        "category_hint": CATEGORY_HINTS.get(raw["category"], ""),
         "tags": list(raw.get("tags", [])),
         "summary": raw.get("summary", ""),
         "notes": raw.get("notes", ""),
@@ -513,7 +516,7 @@ def load_all() -> list[dict]:
 def summary(build: dict) -> dict:
     """The card content for the list page."""
     return {key: build[key] for key in (
-        "slug", "name", "category", "category_label", "tags", "summary", "profession",
+        "slug", "name", "category", "category_label", "category_hint", "tags", "summary", "profession",
         "spec", "spec_icon", "banner", "profession_icon", "weapon_summary",
     )} | {
         "traitlines": [{"name": line["name"], "icon": line["icon"]} for line in build["lines"]],

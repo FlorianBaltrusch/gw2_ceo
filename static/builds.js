@@ -12,9 +12,10 @@ function applyTheme(profession) {
 }
 
 const CATEGORIES = [
-  ["", "All"], ["openworld", "Open world"], ["raid", "Raids / Strikes / Fractals / Dungeons"],
-  ["support", "Support"], ["wvw", "WvW"],
+  ["", "All"], ["openworld", "Open world"], ["raid", "Instanced PvE"],
+  ["support", "Support"], ["wvw", "World vs. World"],
 ];
+const CATEGORY_HINTS = { raid: "Raids, strikes, fractals and dungeons" };
 // the site's profession order (static/professions.js): light, medium, heavy
 const PROFESSIONS = PROFESSION_ORDER;
 
@@ -84,6 +85,7 @@ function renderCategoryFilter() {
     button.type = "button";
     button.dataset.value = key;
     button.textContent = label;
+    if (CATEGORY_HINTS[key]) button.title = CATEGORY_HINTS[key];
     button.classList.toggle("active", filters.category === key);
     button.addEventListener("click", () => {
       filters.category = key;
@@ -177,10 +179,11 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeMenu();
 });
 
-function badge(text, className) {
+function badge(text, className, hint) {
   const span = document.createElement("span");
   span.className = `badge ${className}`;
   span.textContent = text;
+  if (hint) span.title = hint;
   return span;
 }
 
@@ -221,7 +224,7 @@ function renderCards() {
     title.append(spec, prof);
     const badges = document.createElement("span");
     badges.className = "card-badges";
-    badges.append(badge(build.category_label, `cat-${build.category}`));
+    badges.append(badge(build.category_label, `cat-${build.category}`, build.category_hint));
     for (const tag of build.tags) badges.append(badge(tag, "tag"));
     row1.append(icon, title, badges);
 
@@ -324,7 +327,7 @@ function header(build) {
   const meta = document.createElement("div");
   meta.className = "build-meta";
   meta.append(document.createTextNode(`${build.profession} · ${build.spec}`));
-  meta.append(badge(build.category_label, `cat-${build.category}`));
+  meta.append(badge(build.category_label, `cat-${build.category}`, build.category_hint));
   for (const tag of build.tags) meta.append(badge(tag, "tag"));
   titles.append(title, meta);
   row.append(icon, titles);
