@@ -1,0 +1,26 @@
+# Open World (Event/Boon) Power Galeshot - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Open World (Event/Boon) Power Galeshot"
+category = "openworld"
+tags = ["event"]
+summary = "Longbow Galeshot for events with self-provided boons; the second set is whatever you like."
+profession = "Ranger"
+traitlines = [
+  { line = "Skirmishing", traits = ["Primal Reflexes", "Fang and Claw", "Vicious Quarry"] },
+  { line = "Marksmanship", traits = ["Hunter's Gaze", "Farsighted", "Lead the Wind"] },
+  { line = "Galeshot", traits = ["Wuthering Wind", "Perilous Skies", "Gale Force"] },
+]
+skills = ["Soothing Breeze", "Signet of the Wild", "Piercing Gales", "Mistral", "Perfect Storm"]
+weapons = ["Longbow", "Greatsword"]
+optimizer = "/ceo?profession=Ranger&spec=Galeshot&mode=crit&traits=1068%2C1888%2C12491&env=4p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Weapons: Longbow plus whatever you like (Greatsword, Axe/Axe, Spear ...).
+
+Trait alternatives: Strider's Strength instead of Fang and Claw; Clarion Bond instead of Hunter's Gaze for swiftness; Wolfsong and Predator's Onslaught if you are melee; Joy of Movement instead of Wuthering Wind if movement-impairing conditions annoy you; Flock Together and Cloudburst to share quickness with allies. The document's master pick 'Pelt' is not a Galeshot trait - Perilous Skies is assumed, please confirm.
+
+Utility alternatives: We Heal As One! instead of Soothing Breeze; Quickening Zephyr, Storm Spirit or Sic 'Em! instead of Mistral; Strength of the Pack! instead of Perfect Storm.
+
+Pets: Carrion Devourer, Fanged Iboga, Lynx, Black Bear, Brown Bear, Red Moa, Pink Moa, Raptor, Phoenix, Jacaranda, Siege Turtle, Tiger, River Drake, Rock Gazelle, Hawk, Electric Wyvern.
+
+Relic candidates: Midnight King, Claw, Zakiros, Fireworks, Eagle, Thief, Ogre (Sigil of Rage also sounds good).
+"""

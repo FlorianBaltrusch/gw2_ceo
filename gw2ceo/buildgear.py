@@ -130,13 +130,13 @@ def ranking_from_slider(profession: str, position: int) -> tuple[str, float | No
 def solver_args(link: str) -> tuple[MultiDict, set[str], str, str]:
     """Translate an optimizer link's query into /calculate parameters.
     Returns (args, ascended slot keys, gear environment, handedness)."""
-    query = parse_qs(urlsplit(link).query)
+    query = parse_qs(urlsplit(link).query, keep_blank_values=True)
 
     def get(key, default=None):
         return query.get(key, [default])[0]
 
     profession = get("profession")
-    if not profession or not get("traits"):
+    if not profession or "traits" not in query:   # an empty trait list is a valid build
         raise ValueError("the optimizer link carries no profession/traits "
                          "(copy it from the result card's 'Copy optimizer link')")
     mode = get("mode", "crit")
@@ -152,7 +152,7 @@ def solver_args(link: str) -> tuple[MultiDict, set[str], str, str]:
     args = MultiDict()
     args["mode"] = mode
     args["profession"] = profession
-    for trait_id in get("traits").split(","):
+    for trait_id in (get("traits") or "").split(","):
         if trait_id:
             args.add("traits[]", trait_id)
     for item in (get("stacks") or "").split(","):
@@ -194,14 +194,19 @@ def infer_weapon_sets(profession: str, types: list[str]) -> list[list[str]]:
     link lists them; a lone dual-wieldable type pairs with itself."""
     flags = {name: set(data.get("flags", []))
              for name, data in get_api_data(f"professions/{profession}")["weapons"].items()}
-    remaining = [name for name in types if "Aquatic" not in flags.get(name, set())]
+    # spears are land weapons too since 2024 although the API still flags
+    # them aquatic; tridents and spearguns are water-only
+    remaining = [name for name in types
+                 if name == "Spear" or "Aquatic" not in flags.get(name, set())]
     sets = []
+    used_mains = []
     while remaining:
         current = remaining.pop(0)
         current_flags = flags.get(current, {"Mainhand"})
         if "TwoHand" in current_flags:
             sets.append([current])
         elif "Mainhand" in current_flags:
+            used_mains.append(current)
             partner = next((other for other in remaining
                             if "Offhand" in flags.get(other, set())
                             and "TwoHand" not in flags.get(other, set())), None)
@@ -212,12 +217,14 @@ def infer_weapon_sets(profession: str, types: list[str]) -> list[list[str]]:
                 sets.append([current, current])  # dual wield
             else:
                 sets.append([current])
-        else:  # off-hand only: find its main hand
+        else:  # off-hand only: a remaining main hand, else the main hand already used
             partner = next((other for other in remaining
                             if "Mainhand" in flags.get(other, set())), None)
             if partner:
                 remaining.remove(partner)
                 sets.append([partner, current])
+            elif used_mains:
+                sets.append([used_mains[0], current])   # e.g. scepter/dagger + scepter/warhorn
             else:
                 sets.append([current])
     return sets

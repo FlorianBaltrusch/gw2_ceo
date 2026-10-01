@@ -1,0 +1,22 @@
+# Support (Heal/Boon) Tempest - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Support (Heal/Boon) Tempest"
+category = "support"
+tags = []
+summary = "Heal and boon Tempest on dagger/warhorn with a staff second set: auras, Powerful Aura and Elemental Bastion."
+profession = "Elementalist"
+traitlines = [
+  { line = "Earth", traits = ["Elemental Shielding", "Rock Solid", "Diamond Skin"] },
+  { line = "Water", traits = ["Soothing Ice", "Cleansing Wave", "Powerful Aura"] },
+  { line = "Tempest", traits = ["Unstable Conduit", "Invigorating Torrents", "Elemental Bastion"] },
+]
+skills = ["Wash the Pain Away!", "Aftershock!", "Eye of the Storm!", "Feel the Burn!", "Glyph of Elementals"]
+weapons = ["Dagger", "Warhorn", "Staff"]
+optimizer = "/ceo?profession=Elementalist&spec=Tempest&mode=boon&traits=1938&env=3p&weapon=1h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0&kpos=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Arcane can replace Earth: Arcane Restoration, Arcane Resurrection, Evasive Arcana.
+
+Elite alternative: Rebound! instead of Glyph of Elementals.
+
+Relic candidates: Karakosa, Castora.
+"""

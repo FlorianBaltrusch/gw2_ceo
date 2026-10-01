@@ -29,25 +29,26 @@ try:
     wait.until(lambda d: visible(d, "main"))
     check("root deep link redirects to /ceo", "/ceo?" in driver.current_url, driver.current_url)
 
-    # the list
+    # the list: Florian's builds, light-to-heavy professions, Elementalist first
     driver.get(BASE + "/builds")
-    wait.until(lambda d: count(".build-card") == 2)
-    check("two placeholder builds listed", count(".build-card") == 2)
+    wait.until(lambda d: count(".build-card") >= 20)
+    total = count(".build-card")
+    check("all build files listed", total == 23, str(total))
     card = driver.find_element(By.CSS_SELECTOR, ".build-card")
     check("card row one: spec + profession",
-          card.find_element(By.CSS_SELECTOR, ".card-spec").text == "Tempest"
+          card.find_element(By.CSS_SELECTOR, ".card-spec").text == "Evoker"
           and card.find_element(By.CSS_SELECTOR, ".card-prof").text.lower() == "elementalist")
     check("card row two: weapons + trait lines",
-          "Scepter / Warhorn" in card.find_element(By.CSS_SELECTOR, ".card-weapons").text
-          and "Fire · Air · Tempest" in card.find_element(By.CSS_SELECTOR, ".card-lines").text)
+          "Scepter / Dagger" in card.find_element(By.CSS_SELECTOR, ".card-weapons").text
+          and "Water · Air · Evoker" in card.find_element(By.CSS_SELECTOR, ".card-lines").text)
 
     # category filter
     groups = driver.find_elements(By.CSS_SELECTOR, ".filter-group .control-label")
     check("profession filter comes first", groups[0].text.lower() == "profession", str([g.text for g in groups]))
     driver.find_element(By.CSS_SELECTOR, "#category-filter button[data-value='raid']").click()
-    wait.until(lambda d: count(".build-card") == 1)
-    check("raid filter keeps the chronomancer",
-          driver.find_element(By.CSS_SELECTOR, ".card-spec").text == "Chronomancer")
+    wait.until(lambda d: count(".build-card") == 5)
+    check("raid filter keeps the five raid builds", count(".build-card") == 5
+          and all("raids" in b.text.lower() for b in driver.find_elements(By.CSS_SELECTOR, ".build-card .badge")))
     check("filter in URL", "cat=raid" in driver.current_url, driver.current_url)
 
     # profession dropdown: counts follow the category
@@ -58,19 +59,19 @@ try:
     names = [o.text.split("\n")[0] for o in options[1:]]
     check("dropdown in light/medium/heavy order", names == ["Elementalist", "Mesmer", "Necromancer", "Engineer", "Ranger", "Thief", "Guardian", "Revenant", "Warrior"], str(names))
     by_name = {o.text.split("\n")[0]: o for o in options}
-    check("elementalist disabled under raid", not by_name["Elementalist"].is_enabled())
-    check("mesmer shows its count", by_name["Mesmer"].text.endswith("1"), by_name["Mesmer"].text)
+    check("necromancer disabled under raid", not by_name["Necromancer"].is_enabled())
+    check("mesmer shows its raid count", by_name["Mesmer"].text.endswith("2"), by_name["Mesmer"].text)
     by_name["Mesmer"].click()
-    wait.until(lambda d: count(".build-card") == 1)
+    wait.until(lambda d: count(".build-card") == 2)
     check("profession in URL", "prof=Mesmer" in driver.current_url, driver.current_url)
     driver.find_element(By.CSS_SELECTOR, "#category-filter button[data-value='']").click()
-    wait.until(lambda d: count(".build-card") == 1)
-    check("all categories + mesmer still one card", count(".build-card") == 1)
+    wait.until(lambda d: count(".build-card") == 6)
+    check("all categories + mesmer: six mesmer builds", count(".build-card") == 6)
 
     # the build page
-    driver.find_element(By.CSS_SELECTOR, ".build-card").click()
+    driver.find_element(By.CSS_SELECTOR, "a.build-card[href$='/builds/raid-power-chronomancer']").click()
     wait.until(lambda d: count(".traitline") == 3)
-    check("detail URL", driver.current_url.endswith("/builds/raid-chronomancer"), driver.current_url)
+    check("detail URL", driver.current_url.endswith("/builds/raid-power-chronomancer"), driver.current_url)
     check("three trait lines", count(".traitline") == 3)
     check("nine minors, 27 majors", count(".minor") == 9 and count(".major") == 27,
           f"{count('.minor')} / {count('.major')}")
@@ -79,9 +80,10 @@ try:
     check("one art hexagon per panel", count(".traitline-hex") == 3)
     picks = [p.text for p in driver.find_elements(By.CSS_SELECTOR, ".traitline-picks")]
     check("chosen traits named", "Chronophantasma" in picks[2], picks[2])
-    check("ten skills, land and underwater", count(".skill img") == 10, str(count(".skill img")))
+    check("ten skill slots, land and underwater", count(".skill") == 10 and count(".skill img") >= 5,
+          f"{count('.skill')} / {count('.skill img')}")
     names = [f.text for f in driver.find_elements(By.CSS_SELECTOR, ".skill figcaption")]
-    check("underwater row differs where the build does", "Mirror Images" in names, str(names))
+    check("land skills from the file", "Well of Calamity" in names and "Gravity Well" in names, str(names))
     check("gear: 6 armor + 6 trinkets + 3 weapons", count(".gear-slot") == 15, str(count(".gear-slot")))
     check("gear shows the rune per armor piece",
           "Superior Rune of" in driver.find_element(By.CSS_SELECTOR, ".gear-column .gear-slot .gear-sub").text)
@@ -91,8 +93,6 @@ try:
     effects = [e.text for e in driver.find_elements(By.CSS_SELECTOR, ".attribute .effect")]
     check("crit chance and health derived", any("Critical chance" in e and "100.00%" in e for e in effects)
           and any("Health" in e for e in effects), str(effects))
-    check("skin from the build file shows on the head slot",
-          "Placeholder skin name" in driver.find_element(By.CSS_SELECTOR, ".gear-column .gear-slot").text)
     check("no gear warning", count(".gear-warning") == 0)
     labels = [d.text for d in driver.find_elements(By.CSS_SELECTOR, ".consumables dt")]
     check("consumables listed", {"Rune", "Relic", "Food", "Utility", "Infusions"} <= set(labels), str(labels))
@@ -102,7 +102,7 @@ try:
 
     # back keeps the filters
     driver.find_element(By.CSS_SELECTOR, ".back-link").click()
-    wait.until(lambda d: count(".build-card") == 1)
+    wait.until(lambda d: count(".build-card") == 6)
     check("back to filtered list", "prof=Mesmer" in driver.current_url, driver.current_url)
 
     # unknown build
@@ -119,8 +119,8 @@ try:
     check("optimizer link ticks the build's traits", checked == expected, f"{checked} vs {expected}")
     check("optimizer link sets 3-stat gear",
           driver.find_element(By.CSS_SELECTOR, "#env-choice button.active").get_attribute("data-value") == "3p")
-    check("optimizer link sets two one-handed weapons",
-          driver.find_element(By.CSS_SELECTOR, "#weapon-choice button.active").get_attribute("data-value") == "1h")
+    check("optimizer link sets the two-handed weapon (greatsword first)",
+          driver.find_element(By.CSS_SELECTOR, "#weapon-choice button.active").get_attribute("data-value") == "2h")
     check("optimizer link unticks stacking sigils",
           not driver.find_element(By.ID, "opt-stacking").is_selected())
     check("all pieces ascended", count("#slot-grid .slot-chip.asc") == count("#slot-grid .slot-chip"))

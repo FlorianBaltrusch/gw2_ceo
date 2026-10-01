@@ -1,0 +1,24 @@
+# Raid Power Deadeye - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Raid Power Deadeye"
+category = "raid"
+tags = []
+summary = "Rifle Deadeye for instanced content with Maleficent Seven and a dagger/dagger set."
+profession = "Thief"
+traitlines = [
+  { line = "Deadly Arts", traits = ["Dagger Training", "Revealed Training", "Executioner"] },
+  { line = "Critical Strikes", traits = ["Twin Fangs", "Practiced Tolerance", "No Quarter"] },
+  { line = "Deadeye", traits = ["Malicious Intent", "Premeditation", "Maleficent Seven"] },
+]
+skills = ["Hide in Shadows", "Assassin's Signet", "Shadow Flare", "Mercy", "Shadow Meld"]
+weapons = ["Rifle", "Dagger"]
+optimizer = "/ceo?profession=Thief&spec=Deadeye&mode=crit&traits=1245%2C1704%2C1281%2C1268%2C1272%2C1904%2C2160%2C13046&env=3p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Trait alternative: One in the Chamber instead of Malicious Intent if you want to stay longer on the rifle.
+
+Utility alternatives: Malicious Restoration instead of Hide in Shadows when using the Deadeye relic; Shadow Gust or Shadowstep instead of Shadow Flare.
+
+Relic candidates: Deadeye, Thief, Zakiros.
+
+Deadly Arts and Critical Strikes are the go-to damage lines. Trickery is an open-world option that gives you more initiative and boons for your allies.
+"""

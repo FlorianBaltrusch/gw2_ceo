@@ -1,0 +1,24 @@
+# Support (Heal/Boon) Chronomancer - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Support (Heal/Boon) Chronomancer"
+category = "support"
+tags = []
+summary = "Heal and boon Chronomancer on rifle; the second set is free, for example spear or scepter/shield."
+profession = "Mesmer"
+traitlines = [
+  { line = "Chaos", traits = ["Illusionary Defense", "Chaotic Transference", "Bountiful Disillusionment"] },
+  { line = "Inspiration", traits = ["Restorative Mantras", "Ego Restoration", "Restorative Illusions"] },
+  { line = "Chronomancer", traits = ["All's Well That Ends Well", "Illusionary Reversion", "Seize the Moment"] },
+]
+skills = ["Mantra of Recovery", "Mantra of Pain", "Well of Action", "Well of Precognition", "Time Warp"]
+weapons = ["Rifle", "Scepter", "Shield"]
+optimizer = "/ceo?profession=Mesmer&spec=Chronomancer&mode=boon&traits=1865%2C1915%2C1927&env=3p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0&kpos=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Weapons: you only need the Rifle; take anything you like as the second set, e.g. Spear or Scepter/Shield.
+
+Grandmaster: Seize the Moment for quickness, Stretched Time to grant alacrity.
+
+Skill alternatives: Well of Eternity instead of Mantra of Recovery for burst healing; Mass Invisibility instead of Time Warp; Blink, Feedback, Portal Entre or Mantra of Concentration are further options.
+
+Relic candidates: Flock, Monk, Febe.
+"""

@@ -1,0 +1,26 @@
+# Support (Heal/Boon) Scourge - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Support (Heal/Boon) Scourge"
+category = "support"
+tags = []
+summary = "Heal and boon Scourge on dagger/torch with a staff second set; barrier, revives and might."
+profession = "Necromancer"
+traitlines = [
+  { line = "Soul Reaping", traits = ["Soul Marks", "Fear of Death", "Eternal Life"] },
+  { line = "Blood Magic", traits = ["Overflowing Thirst", "Life from Death", "Transfusion"] },
+  { line = "Scourge", traits = ["Abrasive Grit", "Herald of Sorrow", "Desert Empowerment"] },
+]
+skills = ["Well of Blood", "Desiccate", "Serpent Siphon", "Trail of Anguish", "Summon Flesh Golem"]
+weapons = ["Dagger", "Torch", "Staff"]
+optimizer = "/ceo?profession=Necromancer&spec=Scourge&mode=boon&traits=1931%2C789%2C2121&env=3p&weapon=1h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0&kpos=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Weapons: take Warhorn instead of Torch for swiftness instead of might generation.
+
+Trait alternatives: Vital Persistence instead of Fear of Death for personal survivability; Ritual of Life instead of Overflowing Thirst; Vampiric Presence instead of Life from Death to trade healing for damage.
+
+Utility alternatives: Signet of Undeath, Spectral Grasp or Blood Is Power instead of Trail of Anguish.
+
+Sigils: Transference, Concentration, Water.
+
+Relic candidates: Midnight King, Flock, Lyhr, Febe, Altruism.
+"""

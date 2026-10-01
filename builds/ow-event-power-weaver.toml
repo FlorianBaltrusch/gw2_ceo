@@ -1,0 +1,24 @@
+# Open World (Event/Tagging) Power Weaver - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Open World (Event/Tagging) Power Weaver"
+category = "openworld"
+tags = ["event"]
+summary = "Staff Weaver for events and tagging; a second staff can carry a stacking sigil, or take a spear."
+profession = "Elementalist"
+traitlines = [
+  { line = "Fire", traits = ["Burning Precision", "Smothering Auras", "Persisting Flames"] },
+  { line = "Air", traits = ["Ferocious Winds", "Raging Storm", "Bolt to the Heart"] },
+  { line = "Weaver", traits = ["Superior Elements", "Swift Revenge", "Elements of Rage"] },
+]
+skills = ["Glyph of Elemental Harmony", "Signet of Fire", "Glyph of Storms", "Conjure Frost Bow", "Glyph of Elementals"]
+weapons = ["Staff", "Spear"]
+optimizer = "/ceo?profession=Elementalist&spec=Weaver&mode=crit&traits=320%2C221%2C223%2C232%2C214%2C2077%2C2081%2C2177%2C5542%2C5567&env=4p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Weapons: Staff plus a second Staff (for a stacking sigil if you want) or a Spear.
+
+Trait alternatives: Power Overwhelming instead of Smothering Auras if you can get above ten might (a sigil may help); Flow State instead of Elements of Rage.
+
+Elite alternative: Weave Self instead of Glyph of Elementals.
+
+Relic candidates: Thief, Fireworks, Zakiros.
+"""
