@@ -1,0 +1,26 @@
+# Open World Power Dragonhunter - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Open World Power Dragonhunter"
+category = "openworld"
+tags = []
+summary = "Open-world Power Dragonhunter on longbow and greatsword with traps."
+profession = "Guardian"
+traitlines = [
+  { line = "Zeal", traits = ["Fiery Wrath", "Zealous Blade", "Furious Focus"] },
+  { line = "Radiance", traits = ["Healer's Resolution", "Retribution", "Righteous Instincts"] },
+  { line = "Dragonhunter", traits = ["Hunter's Premonition", "Zealot's Aggression", "Big Game Hunter"] },
+]
+skills = ["Litany of Wrath", "Bane Signet", "Sword of Justice", "Procession of Blades", "Feel My Wrath!"]
+weapons = ["Longbow", "Greatsword"]
+optimizer = "/ceo?profession=Guardian&spec=Dragonhunter&mode=crit&traits=653%2C568%2C1683%2C1896%2C9093&env=4p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Trait alternatives: Soaring Devastation instead of Hunter's Premonition (either is fine); Bulwark instead of Zealot's Aggression for defense.
+
+Utility alternatives: Purification instead of Litany of Wrath; Save Yourselves! instead of Sword of Justice; Dragon's Maw instead of Feel My Wrath!.
+
+Sigils: Rage and Air may be interesting.
+
+Relic candidates: Dragonhunter, Defender (?), Brawler.
+
+Good weapon options: Greatsword, Spear, Longbow, Sword/Focus, Sword/Sword for samurai role play, Scepter/Focus for range, Staff for tagging and maybe even Hammer for style.
+"""

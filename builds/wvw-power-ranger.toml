@@ -1,0 +1,28 @@
+# WvW Core Power Ranger - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "WvW Core Power Ranger"
+category = "wvw"
+tags = []
+summary = "Core power Ranger for WvW roaming: longbow and greatsword with a tanky pet."
+profession = "Ranger"
+traitlines = [
+  { line = "Marksmanship", traits = ["Clarion Bond", "Farsighted", "Remorseless"] },
+  { line = "Beastmastery", traits = ["Resounding Timbre", "Bestial Rage", "Zephyr's Speed"] },
+  { line = "Wilderness Survival", traits = ["Child of Earth", "Survival Instincts", "Wilderness Knowledge"] },
+]
+skills = ["Troll Unguent", "Protect Me!", "Quickening Zephyr", "Lightning Reflexes", "Strength of the Pack!"]
+weapons = ["Longbow", "Greatsword"]
+optimizer = "/ceo?profession=Ranger&spec=core&mode=crit&traits=&env=3p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=0&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=1"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Trait alternatives: Lead the Wind instead of Remorseless; Empathic Bond instead of Survival Instincts.
+
+Utility alternatives: Signet of the Hunt, Signet of Stone, or Storm Spirit when playing Remorseless, instead of Protect Me!; Entangle instead of Strength of the Pack!.
+
+Pets: Sky-Chak, Siege Turtle, Smokescale, Rock Gazelle, Tiger, Wolf and Owl for free-to-play, Jaguar, Krytan Drakehound.
+
+Sigils: Longbow Air/Clarity, Air/Force or Air/Blood; Greatsword Cleansing/Energy.
+
+You may use the +150 toughness enhancement instead of sharpening stones, and a toughness rune like Brawler.
+
+Relic candidates: Mist Stranger, Thief, Speed, Water, Wayfinder.
+"""

@@ -17,9 +17,16 @@ class Profession:
     def __init__(self, trait_ids: list[int], profession: str | None = None,
                  conditions: set[str] | None = None,
                  stacks: dict[int, int] | None = None,
-                 variants: dict[int, list[str]] | None = None):
+                 variants: dict[int, list[str]] | None = None,
+                 wvw: bool = False):
         table: pd.DataFrame = gd.traits
         rows = table.loc[table["id"].isin(trait_ids)].copy()
+
+        # PvE/WvW-split facts carry their WvW value in value_wvw; the WvW
+        # toggle swaps it in (rows without a split keep their value)
+        if wvw and "value_wvw" in rows.columns:
+            split = rows["value_wvw"].notna()
+            rows.loc[split, "value"] = rows.loc[split, "value_wvw"]
 
         missing = set(trait_ids) - set(rows["id"])
         if missing:

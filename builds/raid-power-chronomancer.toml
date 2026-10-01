@@ -1,0 +1,22 @@
+# Raid Power Chronomancer - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Raid Power Chronomancer"
+category = "raid"
+tags = []
+summary = "Power Chronomancer for instanced content: greatsword and dagger/sword, Danger Time and Chronophantasma."
+profession = "Mesmer"
+traitlines = [
+  { line = "Domination", traits = ["Bountiful Blades", "Egotism", "Vicious Expression"] },
+  { line = "Dueling", traits = ["Phantasmal Fury", "Fencer's Finesse", "Superiority Complex"] },
+  { line = "Chronomancer", traits = ["Delayed Reactions", "Danger Time", "Chronophantasma"] },
+]
+skills = ["Signet of the Ether", "Phantasmal Disenchanter", "Well of Calamity", "Mantra of Pain", "Gravity Well"]
+weapons = ["Greatsword", "Dagger", "Sword"]
+optimizer = "/ceo?profession=Mesmer&spec=Chronomancer&mode=crit&traits=708%2C692%2C1927%2C2009&env=3p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Relic candidates: Claw, Thief.
+
+Damage weapons: usually two of Dagger/Sword, Spear and Greatsword. Sword/Focus is good for pulling enemies and for reflects, but deals less damage.
+
+Trait lines in general: Domination, Dueling and the elite specialization are the default damage lines. In open world, Illusions is a strong alternative because it provides boons you might not have; take it instead of Domination, but only without a greatsword - with a greatsword keep Domination for Bountiful Blades, and Dueling stays because of its many damage buffs. With a greatsword always choose Bountiful Blades over Empowered Illusions. For sustain, Inspiration (Sympathetic Visage, Ego Restoration, Restorative Illusions) replaces Dueling with a greatsword and Domination otherwise; Illusions plus Inspiration is possible but costs a lot of damage. Inspiration's adept slot is flexible: Medic's Feedback to revive allies, Restorative Mantras to heal allies with mantras, Sympathetic Visage so phantasms take conditions from you (the most solo-friendly option).
+"""

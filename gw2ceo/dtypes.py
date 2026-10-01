@@ -63,10 +63,16 @@ class BuildConstraints:
     # and toughness ranks right after the healing objective
     tank: bool = False
 
-    # Elementalist/Engineer cannot weapon-swap in combat, so a stacking sigil
-    # parked in the stowed weapon set keeps its stacks: a third sigil joins
-    # the optimization next to a non-stacking active pair
+    # a stacking sigil parked in the stowed weapon set keeps its stacks through
+    # weapon swaps (wiki, Sigil: lost only on downstate, instance/zone change or
+    # unequip), so a third sigil joins the optimization next to the active
+    # set's non-stacking pair - for every profession
     stowed_stacking: bool = False
+
+    # WvW: the rune is fixed to Superior Rune of the Brawler (+175 power,
+    # +225 toughness over six pieces - toughness is worth more there than any
+    # rune contest); crit and power modes only
+    wvw: bool = False
 
     # boon mode, internal: the zero-added-toughness variant bans every
     # toughness source (Freshwater Pearl, Leadership, toughness food) - shown

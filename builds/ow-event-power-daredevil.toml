@@ -1,0 +1,28 @@
+# Open World (Event/Tagging) Power Daredevil - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Open World (Event/Tagging) Power Daredevil"
+category = "openworld"
+tags = ["event"]
+summary = "Daredevil for events and tagging on shortbow and staff; Trickery and Deadly Arts complement the Daredevil line."
+profession = "Thief"
+traitlines = [
+  { line = "Trickery", traits = ["Burst of Agility", "Bountiful Theft", "Quick Pockets"] },
+  { line = "Deadly Arts", traits = ["Dagger Training", "Revealed Training", "Executioner"] },
+  { line = "Daredevil", traits = ["Brawler's Tenacity", "Havoc Specialist", "Lotus Training"] },
+]
+skills = ["Channeled Vigor", "Signet of Agility", "Haste", "Shadowstep", "Dagger Storm"]
+weapons = ["Shortbow", "Staff"]
+optimizer = "/ceo?profession=Thief&spec=Daredevil&mode=crit&traits=1245%2C1704%2C13062&env=4p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Trait lines: Trickery gives boons and initiative, Deadly Arts damage, Acrobatics (Pumping Up, Swindler's Equilibrium, Upper Hand) better dodges and Critical Strikes (Twin Fangs, Practiced Tolerance, No Quarter - or Invigorating Precision for sustain) damage; choose two of the four next to Daredevil. Trickery and Deadly Arts are shown.
+
+Trait alternatives: Mug instead of Dagger Training for sustain; Marauder's Resilience instead of Brawler's Tenacity if you go melee; Staff Master instead of Havoc Specialist when using the staff; Bounding Dodger instead of Lotus Training for damage.
+
+Utility alternatives: Assassin's Signet instead of Haste; Fist Flurry for melee or Impairing Daggers for ranged damage; Thieves Guild instead of Dagger Storm for more damage on a longer cooldown.
+
+Sigils: Fire and Stamina on the Shortbow, Strength on the Staff; Sigil of Blood is also interesting for life steal.
+
+Relic candidates: Thief, Zakiros.
+
+Deadly Arts and Critical Strikes are the go-to damage lines. Trickery is an open-world option that gives you more initiative and boons for your allies.
+"""

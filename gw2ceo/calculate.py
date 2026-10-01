@@ -12,8 +12,8 @@ TARGET = 2995  # precision-equivalent for 100% critical chance at level 80
 
 # tie preferences at equal effective power (lower is preferred):
 # a damage sigil is a free bonus at night, stacking sigils are fragile
-SIGIL_PRIO = {"impact": 0, "force": 0, "accuracy": 1, "perception": 2, "bloodlust": 2}
-STACKING_SIGILS = ("perception", "bloodlust")
+SIGIL_PRIO = {"impact": 0, "force": 0, "accuracy": 1, "perception": 2, "bloodlust": 2, "cruelty": 2}
+STACKING_SIGILS = ("perception", "bloodlust", "cruelty")
 # sharpening stones last longer than writs; the accuracy writ additionally
 # puts the crit cap at risk below 90% health
 UTILITY_PRIO = {"none": 0, "stones": 0, "writ_strength": 1, "writ_accuracy": 2}
@@ -21,18 +21,21 @@ FOOD_PRIO = {"truffle": 1, "curry": 2, "butternut": 2}
 
 
 def _sigil_members(build: BuildConstraints) -> list[tuple]:
-    """(name, chance, precision, power, damage multiplier) per sigil.
-    Stacking sigils are modeled at their 25-stack maximum."""
+    """(name, chance, precision, power, damage multiplier, ferocity) per
+    sigil. Stacking sigils are modeled at their 25-stack maximum (wiki:
+    Perception +10 precision, Bloodlust +10 power, Cruelty +10 ferocity per
+    kill charge, 25 stacks, ending on downstate)."""
     buffs = gd.general_buffs
     members = [
-        ("force", 0.0, 0.0, 0.0, float(buffs.sigil_force)),
-        ("impact", 0.0, 0.0, 0.0, float(buffs.sigil_impact)),
-        ("accuracy", float(buffs.sigil_accuracy), 0.0, 0.0, 0.0),
+        ("force", 0.0, 0.0, 0.0, float(buffs.sigil_force), 0.0),
+        ("impact", 0.0, 0.0, 0.0, float(buffs.sigil_impact), 0.0),
+        ("accuracy", float(buffs.sigil_accuracy), 0.0, 0.0, 0.0, 0.0),
     ]
     if build.stacking_sigils:
         members += [
-            ("perception", 0.0, float(buffs.sigil_perception), 0.0, 0.0),
-            ("bloodlust", 0.0, 0.0, float(buffs.sigil_bloodlust), 0.0),
+            ("perception", 0.0, float(buffs.sigil_perception), 0.0, 0.0, 0.0),
+            ("bloodlust", 0.0, 0.0, float(buffs.sigil_bloodlust), 0.0, 0.0),
+            ("cruelty", 0.0, 0.0, 0.0, 0.0, float(buffs.sigil_cruelty)),
         ]
     return members
 
@@ -48,10 +51,11 @@ def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
     else:
         picks = [pair for pair in combinations(members, 2)
                  if sum(sigil[0] in STACKING_SIGILS for sigil in pair) <= 1]
-    # a stacking sigil parked in the stowed weapon set (Elementalist/Engineer
-    # keep its stacks without in-combat swaps) joins as an extra sigil next
-    # to non-stacking active ones; the normal candidates stay in the pool so
-    # the stable backup can drop the stacks entirely
+    # a stacking sigil parked in the stowed weapon set joins as an extra sigil
+    # next to non-stacking active ones: its stacks survive weapon swaps (wiki,
+    # Sigil: lost only on downstate, instance/zone change or unequip). The
+    # normal candidates stay in the pool so the stable backup can drop the
+    # stacks entirely
     if build.stowed_stacking and build.stacking_sigils:
         stowed = [m for m in members if m[0] in STACKING_SIGILS]
         active = [m for m in members if m[0] not in STACKING_SIGILS]
@@ -68,6 +72,7 @@ def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
             "chance": sum(sigil[1] for sigil in pick),
             "sigil_precision": sum(sigil[2] for sigil in pick),
             "sigil_power": sum(sigil[3] for sigil in pick),
+            "sigil_ferocity": sum(sigil[5] for sigil in pick),
             "sigil_damage": damage,
             "sigil_stacking": any(sigil[0] in STACKING_SIGILS for sigil in pick),
             "sigil_prio": sum(SIGIL_PRIO[sigil[0]] for sigil in pick),
@@ -107,6 +112,14 @@ def _relic_candidates(build: BuildConstraints) -> pd.DataFrame:
     return pd.DataFrame(data=relics)
 
 
+def _rune_pool(build: BuildConstraints) -> pd.DataFrame:
+    """WvW pins the Brawler rune (wiki: +175 power, +225 toughness over six
+    pieces) - no rune contest; otherwise every rune but Brawler competes."""
+    if build.wvw:
+        return gd.runes.loc[["brawler"]]
+    return gd.runes.drop(index="brawler", errors="ignore")
+
+
 def _mixed_runes() -> pd.DataFrame | None:
     """All 5+1/4+2/3+3 two-rune mixes, built from the per-piece bonuses in
     assets/rune_tiers.csv. Used only as a rescue when no full rune set can
@@ -127,7 +140,7 @@ def _mixed_runes() -> pd.DataFrame | None:
                 rows[f"{first}({count})+{second}({6 - count})"] = mix
     mixed = pd.DataFrame(rows).T
     mixed.index.name = "rune"
-    return pd.concat([gd.runes, mixed])
+    return pd.concat([gd.runes.drop(index="brawler", errors="ignore"), mixed])
 
 
 def _candidate_stats(profession: Profession, build: BuildConstraints,
@@ -165,7 +178,7 @@ def _candidate_stats(profession: Profession, build: BuildConstraints,
     options = options.rename(columns={"vitality": "vitality_rune"})
 
     stats = options[["prec_infusions", "sigil", "sigil_precision", "sigil_power",
-                     "sigil_damage", "sigil_stacking", "sigil_prio",
+                     "sigil_ferocity", "sigil_damage", "sigil_stacking", "sigil_prio",
                      "utility", "util_precision", "util_power", "relic", "relic_chance",
                      "food", "rune", "power", "precision", "chance", "ferocity",
                      "vitality_rune"]].copy()
@@ -183,7 +196,7 @@ def _candidate_stats(profession: Profession, build: BuildConstraints,
                        + profession.additional_power()
                        + profession.power_per_might() * build.might
                        + stats["sigil_power"] + stats["util_power"])
-    stats["ferocity"] += profession.additional_ferocity()
+    stats["ferocity"] += profession.additional_ferocity() + stats["sigil_ferocity"]
     stats["vitality"] = (gd.general_buffs.base_vitality + gd.general_buffs.jade_bot
                          + profession.additional_vitality() + stats["vitality_rune"])
 
@@ -315,11 +328,12 @@ def _solve(profession: Profession, build: BuildConstraints, runes: pd.DataFrame)
 
 
 def calc_ep(profession: Profession, build: BuildConstraints) -> dict:
-    stats = _solve(profession, build, gd.runes)
+    stats = _solve(profession, build, _rune_pool(build))
 
     # rescue: when no full rune set can hit the cap exactly, mixed rune sets
-    # provide finer precision steps (only then - mixes are never preferred)
-    if not bool(stats.iloc[0]["exact"]):
+    # provide finer precision steps (only then - mixes are never preferred;
+    # not in WvW, where the rune is pinned)
+    if not build.wvw and not bool(stats.iloc[0]["exact"]):
         extended_runes = _mixed_runes()
         if extended_runes is not None:
             rescued = _solve(profession, build, extended_runes)
@@ -351,7 +365,7 @@ def calc_power(profession: Profession, build: BuildConstraints) -> dict:
 
     For every candidate row the gear's reachable precision points (with their
     best complementary stats) are evaluated in full, vectorized in chunks."""
-    stats = _candidate_stats(profession, build, gd.runes)
+    stats = _candidate_stats(profession, build, _rune_pool(build))
     gear = GearSelect(build, valkyrie=True)
     gear_precision, gear_values, _ = gear.point_table()
     gear_power, gear_ferocity, gear_vitality = gear_values.T

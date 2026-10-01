@@ -10,7 +10,7 @@ wait = WebDriverWait(driver, 20)
 result = lambda: driver.find_element(By.ID, "result").text
 
 try:
-    driver.get(BASE + "/?profession=Guardian&spec=Firebrand&mode=boon")
+    driver.get(BASE + "/ceo?profession=Guardian&spec=Firebrand&mode=boon")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     check("ascended-food checkbox visible", "hidden" not in str(driver.find_element(
         By.ID, "ascended-food-label").get_attribute("class")))
@@ -31,7 +31,7 @@ try:
     check("tank result uses Giver's", "Giver's" in text, text[-600:])
     check("tank grid shows toughness", "TOUGHNESS" in text.upper())
 
-    driver.get(BASE + "/?profession=Elementalist&spec=Tempest&mode=crit")
+    driver.get(BASE + "/ceo?profession=Elementalist&spec=Tempest&mode=crit")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     fire_chips = [c for c in driver.find_elements(By.CSS_SELECTOR, ".variant-chip")
                   if c.text == "Fire"]

@@ -1,0 +1,24 @@
+# Core (Event/Tagging) Power Guardian - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Core (Event/Tagging) Power Guardian"
+category = "openworld"
+tags = ["event"]
+summary = "Core Guardian for events and tagging: scepter/focus with a staff for tagging."
+profession = "Guardian"
+traitlines = [
+  { line = "Honor", traits = ["Protector's Restoration", "Empowering Might", "Writ of Persistence"] },
+  { line = "Virtues", traits = ["Unscathed Contender", "Inspiring Virtue", "Indomitable Courage"] },
+  { line = "Zeal", traits = ["Zealous Scepter", "Zealous Blade", "Furious Focus"] },
+]
+skills = ["Litany of Wrath", "Bane Signet", "Stand Your Ground!", "Advance!", "Feel My Wrath!"]
+weapons = ["Scepter", "Focus", "Staff"]
+optimizer = "/ceo?profession=Guardian&spec=core&mode=crit&traits=653%2C9093&env=4p&weapon=1h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Trait alternatives: Absolute Resolve instead of Inspiring Virtue for sustain; Permeating Wrath instead of Indomitable Courage.
+
+Utility alternatives: Save Yourselves! or Sword of Justice instead of Stand Your Ground!.
+
+Relic candidates: Brawler, Thief.
+
+Good weapon options: Greatsword, Spear, Longbow, Sword/Focus, Sword/Sword for samurai role play, Scepter/Focus for range, Staff for tagging and maybe even Hammer for style.
+"""

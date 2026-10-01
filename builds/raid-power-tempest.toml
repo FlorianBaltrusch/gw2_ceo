@@ -1,0 +1,20 @@
+# Raid Power Tempest - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Raid Power Tempest"
+category = "raid"
+tags = []
+summary = "Power Tempest for instanced content: Fresh Air overloads on dagger/dagger with a spear second set."
+profession = "Elementalist"
+traitlines = [
+  { line = "Fire", traits = ["Burning Precision", "Power Overwhelming", "Persisting Flames"] },
+  { line = "Air", traits = ["Ferocious Winds", "Stormsoul", "Fresh Air"] },
+  { line = "Tempest", traits = ["Unstable Conduit", "Tempestuous Aria", "Transcendent Tempest"] },
+]
+skills = ["Wash the Pain Away!", "Signet of Fire", "Glyph of Storms", "Feel the Burn!", "Glyph of Elementals"]
+weapons = ["Dagger", "Spear"]
+optimizer = "/ceo?profession=Elementalist&spec=Tempest&mode=crit&traits=320%2C334%2C221%2C223%2C232%2C1503%2C1938%2C5542&env=3p&weapon=1h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Weapon options: Dagger/Dagger, Spear, Hammer, Sword/Dagger or Scepter/Dagger - the sets shown are one choice.
+
+Relic candidates: Fireworks.
+"""

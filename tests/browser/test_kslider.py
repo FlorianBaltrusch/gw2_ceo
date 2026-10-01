@@ -19,7 +19,7 @@ def set_slider(value):
 
 
 try:
-    driver.get(BASE + "/?profession=Ranger&spec=Druid")
+    driver.get(BASE + "/ceo?profession=Ranger&spec=Druid")
     wait.until(lambda d: visible(d, "main"))
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     check("crit: slider row hidden", not visible(driver, "row-ranking"))

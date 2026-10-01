@@ -18,7 +18,10 @@
         <div class="topbar-subtitle">Critical Effect Optimizer</div>
       </div>
     </div>
-    <button id="change-selection" class="ghost-button">Change</button>
+    <div class="topbar-actions">
+      <a class="ghost-button" href="/builds">Builds</a>
+      <button id="change-selection" class="ghost-button">Change</button>
+    </div>
   </header>
 
   <main id="main" class="main hidden">
@@ -85,13 +88,16 @@
           <label class="check" id="pie-label"><input type="checkbox" id="opt-pie">
             Omnomberry Pie instead <span class="check-note">(open world: +70 precision
             + lifesteal on crit — replaces the food options)</span></label>
+          <label class="check" id="wvw-label"><input type="checkbox" id="opt-wvw">
+            WvW <span class="check-note">(Rune of the Brawler on every piece — +175 power,
+            +225 toughness — and the WvW values of split traits)</span></label>
           <label class="check"><input type="checkbox" id="opt-utility" checked>
             <span id="utility-name">Sharpening stones</span>
             <span class="check-note" id="utility-note"></span></label>
           <label class="check" id="writs-label"><input type="checkbox" id="opt-writs" checked>
             Writs <span class="check-note">(+200 above 90% health)</span></label>
           <label class="check"><input type="checkbox" id="opt-stacking" checked>
-            Stacking sigils <span class="check-note" id="stacking-note">(Perception/Bloodlust —
+            Stacking sigils <span class="check-note" id="stacking-note">(Perception/Bloodlust/Cruelty —
             lost on downstate)</span></label>
           <label class="check hidden" id="herald-label"><input type="checkbox" id="opt-herald" checked>
             Relic of the Herald <span class="check-note">(+250 concentration on boon application —
@@ -107,8 +113,8 @@
             Reserve the relic slot <span class="check-note">(for a proc relic like Karakosa —
             no stat relic competes)</span></label>
           <label class="check hidden" id="stowed-label"><input type="checkbox" id="opt-stowed">
-            Stacking sigil in the stowed weapon set <span class="check-note">(no in-combat swap
-            on this profession, so its stacks persist — a third sigil joins next to a
+            Stacking sigil in the stowed weapon set <span class="check-note">(its stacks survive
+            weapon swaps until you are downed — a third sigil joins next to the active set's
             non-stacking pair)</span></label>
         </div>
 
@@ -156,6 +162,7 @@
   <!-- the selection popup -->
   <div id="overlay" class="overlay">
     <section id="profession-picker" class="picker">
+      <a class="ghost-button back" href="/">&larr; Home</a>
       <h1 class="brand"><span class="versal">C</span>ritical <span class="versal">E</span>ffect <span class="versal">O</span>ptimizer</h1>
       <p class="tagline">Reach exactly 100% critical chance. Waste nothing.</p>
       <h2 class="question">Choose your profession</h2>
@@ -175,6 +182,7 @@
     </section>
   </div>
 
+  <script src="/static/professions.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

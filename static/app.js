@@ -1,17 +1,13 @@
 // Step 1: profession selection, Step 2: elite specialization selection.
 // The rest of the flow (traits, gear, result) plugs in after finishSelection().
 
-const PROFESSIONS = [
-  { name: "Guardian",     img: "01_guardian.PNG" },
-  { name: "Revenant",     img: "02_revenant.PNG" },
-  { name: "Warrior",      img: "03_warrior.PNG" },
-  { name: "Engineer",     img: "04_engineer.PNG" },
-  { name: "Ranger",       img: "05_ranger.PNG" },
-  { name: "Thief",        img: "06_thief.PNG" },
-  { name: "Elementalist", img: "07_elementalist.PNG" },
-  { name: "Mesmer",       img: "08_mesmer.PNG" },
-  { name: "Necromancer",  img: "09_necromancer.PNG" },
-];
+// the lineup follows the site's profession order (static/professions.js)
+const PROFESSION_IMAGES = {
+  Guardian: "01_guardian.PNG", Revenant: "02_revenant.PNG", Warrior: "03_warrior.PNG",
+  Engineer: "04_engineer.PNG", Ranger: "05_ranger.PNG", Thief: "06_thief.PNG",
+  Elementalist: "07_elementalist.PNG", Mesmer: "08_mesmer.PNG", Necromancer: "09_necromancer.PNG",
+};
+const PROFESSIONS = PROFESSION_ORDER.map(name => ({ name, img: PROFESSION_IMAGES[name] }));
 
 const professionImage = (profession) =>
   `/profession-images/freigestellt/${PROFESSIONS.find(p => p.name === profession).img}`;
@@ -23,6 +19,13 @@ const state = { profession: null, spec: null, mode: "crit" };
 const loaded = { profession: null, spec: null };
 
 const el = (id) => document.getElementById(id);
+
+// the chosen profession recolors the site (theme.css carries one palette
+// per profession, keyed by this attribute); no profession = the default
+function applyTheme(profession) {
+  if (profession) document.documentElement.dataset.profession = profession;
+  else delete document.documentElement.dataset.profession;
+}
 
 // ---------- URL navigation ----------
 // every view has a URL - /, ?profession=X, ?profession=X&spec=Y (or spec=core,
@@ -75,6 +78,7 @@ async function applyLocation() {
   if (!match) {
     state.profession = null;
     state.spec = null;
+    applyTheme(null);
     showOverlay("professions");
     return;
   }
@@ -103,14 +107,26 @@ async function applyLocation() {
   }
 
   if (mode !== state.mode) setMode(mode);  // before the builder renders
+  const fromLink = query.has("traits");
+  if (fromLink) restoreOptimizerLink(query, mode);
   const specs = await selectProfession(match.name);
+  let ready = null;
   if (wantCore) {
-    selectSpec({ name: `Core ${match.name}`, icon: `/icons/tango_${match.name}.png`, coreArt: true });
-    return;
+    ready = selectSpec({ name: `Core ${match.name}`, icon: `/icons/tango_${match.name}.png`, coreArt: true });
+  } else {
+    const spec = specs.find(s => s.elite && s.name.toLowerCase() === specParam.toLowerCase());
+    if (spec) ready = selectSpec(spec);
+    // unknown spec name: stay on the spec picker selectProfession opened
   }
-  const spec = specs.find(s => s.elite && s.name.toLowerCase() === specParam.toLowerCase());
-  if (spec) selectSpec(spec);
-  // unknown spec name: stay on the spec picker selectProfession opened
+  if (fromLink && ready) {
+    await ready;
+    if (mode === "boon" && query.has("kpos")) {
+      await loadHealSkills();  // the slider's K scale comes from the class's skills
+      el("k-slider").value = Math.max(0, Math.min(100, Number(query.get("kpos")) || 0));
+      el("k-slider").dispatchEvent(new Event("input"));
+    }
+    optimize();
+  }
 }
 
 window.addEventListener("popstate", () => { applyLocation(); });
@@ -124,6 +140,7 @@ function renderProfessionGrid() {
     const tile = document.createElement("button");
     tile.className = "prof-char";
     tile.type = "button";
+    tile.dataset.profession = prof.name;   // per-character styling hooks
 
     const img = document.createElement("img");
     img.src = professionImage(prof.name);
@@ -145,6 +162,7 @@ function renderProfessionGrid() {
 async function selectProfession(profession) {
   state.profession = profession;
   state.spec = null;
+  applyTheme(profession);
 
   const response = await fetch(`/specializations?profession=${encodeURIComponent(profession)}`);
   const specs = await response.json();
@@ -208,7 +226,7 @@ function selectSpec(spec) {
   loaded.profession = state.profession;
   loaded.spec = spec;
   finishSelection();
-  loadBuilder();
+  return loadBuilder();  // resolves once the trait panel is rendered
 }
 
 // ---------- hand over to the main app ----------
@@ -236,6 +254,7 @@ function finishSelection() {
 function reopenSelection() {
   state.profession = null;
   state.spec = null;
+  applyTheme(null);
   showOverlay("professions");
   syncUrl("push");
 }
@@ -276,6 +295,8 @@ const MODE_EFFECTS = {
 const ATTRIBUTE_LABELS = { healing: "healing power" };
 
 function effectText(row) {
+  // the WvW toggle shows (and the solver uses) the WvW value of split facts
+  if (el("opt-wvw")?.checked && row.value_wvw != null) row = { ...row, value: row.value_wvw };
   const meaningful = row.note && !REDUNDANT_NOTES.has(row.note.toLowerCase());
   const condition = meaningful ? ` — ${row.note}` : "";
   if (row.source) {  // attribute conversion, e.g. "+6.5% of power as healing power"
@@ -300,7 +321,9 @@ function effectText(row) {
 async function loadBuilder() {
   el("result").classList.add("hidden");
   el("calc-error").classList.add("hidden");
-  state.traitMemory = {};  // a new profession/spec starts fresh
+  // a new profession/spec starts fresh - unless a permalink brought a selection
+  state.traitMemory = state.pendingMemory || {};
+  state.pendingMemory = null;
 
   const [traits, specs] = await Promise.all([
     fetch(`/traits?profession=${encodeURIComponent(state.profession)}`).then(r => r.json()),
@@ -313,9 +336,10 @@ async function loadBuilder() {
 
 function renderTraitGroups() {
   if (!state.traitRows) return;
-  // only Elementalist and Engineer keep stacks in a stowed weapon set
-  el("stowed-label").classList.toggle(
-    "hidden", !["Elementalist", "Engineer"].includes(state.profession));
+  // a stowed stacking sigil keeps its stacks for every profession (wiki,
+  // Sigil: the bonus is lost on downstate, instance/zone change or unequip
+  // - a land weapon swap is none of these), so the option is always shown
+  el("stowed-label").classList.remove("hidden");
   state.selectedTraits = new Set();
   state.conditionHints = [];
   state.traitStacks = new Map();    // stack-group id -> assumed stacks
@@ -367,12 +391,17 @@ function renderTraitGroups() {
       container.append(traitGroup(section, specByName.get(section)?.icon, sectionEntries));
     }
   }
+  // slot skills (heal, utilities, elite) and weapon skills in separate groups
   const SKILL_SLOT_ORDER = { Heal: 0, Utility: 1, Elite: 2 };
-  const skills = entries.filter(e => e.kind === "skill")
-    .sort((a, b) => (SKILL_SLOT_ORDER[a.slot] ?? 9) - (SKILL_SLOT_ORDER[b.slot] ?? 9)
-                    || a.name.localeCompare(b.name));
+  const bySkillSlot = (a, b) => (SKILL_SLOT_ORDER[a.slot] ?? 9) - (SKILL_SLOT_ORDER[b.slot] ?? 9)
+                                || a.name.localeCompare(b.name);
+  const skills = entries.filter(e => e.kind === "skill" && e.slot !== "Weapon").sort(bySkillSlot);
+  const weaponSkills = entries.filter(e => e.kind === "skill" && e.slot === "Weapon").sort(bySkillSlot);
   if (skills.length) {
-    container.append(traitGroup("Skills", `/icons/tango_${state.profession}.png`, skills));
+    container.append(traitGroup("Utility skills", `/icons/tango_${state.profession}.png`, skills));
+  }
+  if (weaponSkills.length) {
+    container.append(traitGroup("Weapon skills", `/icons/tango_${state.profession}.png`, weaponSkills));
   }
   state.pendingIds = null;
   updateBuildWarnings();
@@ -384,7 +413,25 @@ function renderTraitGroups() {
 const VARIANT_KIND = {
   fire: "attunement", water: "attunement", air: "attunement", earth: "attunement",
   hare: "familiar", otter: "familiar", fox: "familiar", toad: "familiar",
+  revealed: "revealed",
+  "above 50% health": "health",
+  "flanking or defiant": "flanking",
 };
+// radio kinds: exactly one option is active, picking another replaces it.
+// Familiars: an Evoker always has one active, so all four are offered (also
+// the ones without a modeled bonus) in the elements' order fire/water/air/
+// earth = fox, otter, hare, toad (wiki: Familiar - Ignite/Splash/Zap/Calcify
+// are the familiars' skills). Revealed: the state is either on or off; the
+// "not revealed" option matches no data row and simply drops the bonus.
+const RADIO_OPTIONS = {
+  familiar: ["fox", "otter", "hare", "toad"],
+  revealed: ["revealed", "not revealed"],
+  health: ["above 50% health", "below 50% health"],
+  flanking: ["flanking or defiant", "from the front"],
+};
+const RADIO_CAPTIONS = { familiar: "familiar:", revealed: "state:", health: "health:", flanking: "target:" };
+// options that mean "the conditional part is off" on purpose - no warning
+const EXPLICIT_OFF = new Set(["not revealed", "below 50% health", "from the front"]);
 const TWO_HANDED = new Set(["greatsword", "staff", "hammer", "rifle", "longbow",
                             "shortbow", "spear"]);
 const ONE_HANDED = new Set(["dagger", "sword", "axe", "mace", "pistol", "scepter",
@@ -427,6 +474,7 @@ const joinNames = (names) =>
     : names[0];
 
 function updateBuildWarnings() {
+  if (!state.selectedTraits) return;  // gear controls can change before the builder renders
   const warnings = [];
   const majorsPerTier = new Map();
   const lines = new Set();
@@ -470,6 +518,18 @@ function updateBuildWarnings() {
       const kind = VARIANT_KIND[entry.effects.find(e => e.variant).variant] || "wielding";
       warnings.push(`${entry.name} is ticked but no ${kind} option is chosen — ` +
                     `its conditional part contributes nothing.`);
+    }
+    // a chosen variant the data has no bonus for (e.g. the fox familiar on
+    // Enhanced Potency): legal in game, but the trait adds no stats then
+    const rowVariants = [...new Set(entry.effects.map(e => e.variant).filter(Boolean))];
+    const chosenVariants = state.traitVariants?.get(id) || [];
+    if (rowVariants.length && chosenVariants.length
+        && !rowVariants.some(v => chosenVariants.includes(v))
+        && !chosenVariants.every(v => EXPLICIT_OFF.has(v))) {
+      const kind = VARIANT_KIND[rowVariants[0]] || "option";
+      warnings.push(`${entry.name}'s bonus applies with the ` +
+                    `${joinNames(rowVariants.map(capitalize))} ${kind} — with ` +
+                    `${chosenVariants.map(capitalize).join(", ")} it contributes nothing.`);
     }
     for (const variant of state.traitVariants?.get(id) || []) {
       if (TWO_HANDED.has(variant) && gear.weapon === "1h") {
@@ -676,20 +736,26 @@ function traitGroup(title, iconSrc, groupEntries) {
     }
 
     // attunement-style traits (Elemental Polyphony): pick up to two distinct
-    // elements; being fully attuned to one grants its bonus only once
-    const offered = [...new Set(entry.effects.map(e => e.variant).filter(Boolean))];
+    // elements; being fully attuned to one grants its bonus only once.
+    // Familiars are a radio choice instead: exactly one of all four is
+    // active, picking another replaces it (never "none").
+    let offered = [...new Set(entry.effects.map(e => e.variant).filter(Boolean))];
     if (offered.length) {
-      const chosen = memory?.variants.has(entry.id)
+      const kind = VARIANT_KIND[offered[0]] || "wielding";
+      const radio = kind in RADIO_OPTIONS;
+      if (radio) offered = RADIO_OPTIONS[kind];
+      let chosen = memory?.variants.has(entry.id)
         ? [...memory.variants.get(entry.id)]
         : [...new Set(entry.effects
             .filter(e => e.variant && e.variant_default)
             .map(e => e.variant))];
+      if (radio) chosen = chosen.slice(-1);   // exactly one familiar
       state.traitVariants.set(entry.id, chosen);
-      const kind = VARIANT_KIND[offered[0]] || "wielding";
       const options = document.createElement("div");
       options.className = "trait-options";
       const caption = document.createElement("span");
-      caption.textContent = offered.length > 1 ? `${kind}s (up to 2):` : `${kind}:`;
+      caption.textContent = radio ? RADIO_CAPTIONS[kind]
+        : offered.length > 1 ? `${kind}s (up to 2):` : `${kind}:`;
       options.append(caption);
       for (const variant of offered) {
         const chip = document.createElement("button");
@@ -698,7 +764,9 @@ function traitGroup(title, iconSrc, groupEntries) {
         chip.textContent = capitalize(variant);
         chip.addEventListener("click", () => {
           const current = state.traitVariants.get(entry.id) || [];
-          if (current.includes(variant)) {
+          if (radio) {
+            state.traitVariants.set(entry.id, [variant]);
+          } else if (current.includes(variant)) {
             state.traitVariants.set(entry.id, current.filter(v => v !== variant));
           } else {
             state.traitVariants.set(entry.id, [...current, variant].slice(-2));
@@ -754,23 +822,116 @@ function renderSlotGrid() {
 
 function setupSegmented(id, onChange) {
   const seg = el(id);
+  const select = (value) => {
+    seg.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.value === value));
+    onChange(value);
+  };
   seg.addEventListener("click", (event) => {
     const button = event.target.closest("button");
-    if (!button) return;
-    seg.querySelectorAll("button").forEach(b => b.classList.remove("active"));
-    button.classList.add("active");
-    onChange(button.dataset.value);
+    if (button) select(button.dataset.value);
   });
+  return select;  // for setting the control from a permalink
 }
 
-setupSegmented("env-choice", value => { gear.env = value; });
-setupSegmented("weapon-choice", value => {
+const setEnv = setupSegmented("env-choice", value => { gear.env = value; });
+const setWeapon = setupSegmented("weapon-choice", value => {
   gear.weapon = value;
   ["twohanded", "onehanded1", "onehanded2"].forEach(key => gear.ascended.delete(key));
   renderSlotGrid();
   updateConditionHints();   // weapon-gated traits (Right-Hand Strength)
   updateBuildWarnings();    // wielding chips vs the chosen weapon type
 });
+
+// ---------- optimizer link (the whole builder state in one URL) ----------
+// The navigation URLs above only name profession, spec and mode. The
+// optimizer link adds everything else - ticked traits, stack/attunement
+// assumptions, gear toggles - so a build can be reopened exactly as it was;
+// loading one restores the panel and runs the optimizer. The builds pages
+// store such links to open a curated build in the optimizer.
+
+const TOGGLES = {  // URL key -> checkbox id
+  fury: "opt-fury", food: "opt-food", ascended_food: "opt-ascended-food", pie: "opt-pie",
+  wvw: "opt-wvw",
+  utility: "opt-utility", writs: "opt-writs", stacking: "opt-stacking", herald: "opt-herald",
+  single_sigil: "opt-single-sigil", relic_reserved: "opt-reserve-relic", stowed: "opt-stowed",
+  tank: "opt-tank",
+};
+
+function optimizerLink() {
+  const params = new URLSearchParams();
+  params.set("profession", state.profession);
+  params.set("spec", state.spec.coreArt ? "core" : state.spec.name);
+  params.set("mode", state.mode);
+  params.set("traits", [...state.selectedTraits].join(","));
+  const stacks = [...(state.traitStacks || [])].map(([group, count]) => `${group}:${count}`);
+  if (stacks.length) params.set("stacks", stacks.join(","));
+  const variants = [...(state.traitVariants || [])]
+    .filter(([, list]) => list.length)
+    .map(([id, list]) => `${id}:${list.join(".")}`);
+  if (variants.length) params.set("variants", variants.join(","));
+  params.set("env", gear.env);
+  params.set("weapon", gear.weapon);
+  params.set("asc", [...gear.ascended].join(","));
+  for (const [key, id] of Object.entries(TOGGLES)) params.set(key, el(id).checked ? "1" : "0");
+  params.set("might", el("opt-might").value);
+  if (state.mode === "boon") params.set("kpos", el("k-slider").value);
+  return `${location.origin}${location.pathname}?${params}`;
+}
+
+// apply the gear side of an optimizer link (before the builder renders) and
+// queue the trait side for the builder
+function restoreOptimizerLink(query, mode) {
+  const list = (key) => (query.get(key) || "").split(",").filter(Boolean);
+  const pairs = (key) => list(key).map(item => item.split(":"));
+
+  if (["3p", "4p"].includes(query.get("env"))) setEnv(query.get("env"));
+  if (["1h", "2h"].includes(query.get("weapon"))) setWeapon(query.get("weapon"));
+  if (query.has("asc")) {
+    const all = [...weaponSlots(), ...ARMOR_TRINKET_SLOTS].map(([key]) => key);
+    const wanted = query.get("asc") === "all" ? all : list("asc").filter(key => all.includes(key));
+    gear.ascended = new Set(wanted);
+    renderSlotGrid();
+  }
+  for (const [key, id] of Object.entries(TOGGLES)) {
+    if (!query.has(key)) continue;
+    const box = el(id);
+    const checked = query.get(key) === "1";
+    if (box.checked !== checked) {
+      box.checked = checked;
+      box.dispatchEvent(new Event("change"));
+    }
+  }
+  if (query.has("might")) {
+    el("opt-might").value = Math.max(0, Math.min(25, Number(query.get("might")) || 0));
+    el("opt-might").dispatchEvent(new Event("input"));
+  }
+
+  state.pendingMemory = {
+    [TRAIT_FAMILY[mode]]: {
+      selected: new Set(list("traits").map(Number).filter(Number.isFinite)),
+      stacks: new Map(pairs("stacks").map(([group, count]) => [Number(group), Number(count)])),
+      variants: new Map(pairs("variants")
+        .map(([id, chosen]) => [Number(id), (chosen || "").split(".").filter(Boolean)])),
+    },
+  };
+}
+
+function optimizerLinkButton() {
+  const copyButton = document.createElement("button");
+  copyButton.type = "button";
+  copyButton.className = "ghost-button copy-link";
+  copyButton.textContent = "Copy optimizer link";
+  copyButton.addEventListener("click", async () => {
+    const link = optimizerLink();
+    try {
+      await navigator.clipboard.writeText(link);
+      copyButton.textContent = "Copied — this link reopens the builder exactly like this and optimizes";
+    } catch {
+      copyButton.textContent = link;
+    }
+  });
+  return copyButton;
+}
 
 // ---------- optimizer mode (crit vs boon duration) ----------
 
@@ -798,6 +959,7 @@ function setMode(mode) {
   el("row-env").classList.toggle("hidden", boon);       // boon mode is 3-stat only
   el("fury-label").classList.toggle("hidden", boon);    // fury only affects crit
   el("pie-label").classList.toggle("hidden", boon);
+  el("wvw-label").classList.toggle("hidden", boon);   // the Brawler rune has no boon duration
   el("ascended-food-label").classList.toggle("hidden", !boon);
   el("writs-label").classList.toggle("hidden", boon);   // no concentration writ exists
   el("herald-label").classList.toggle("hidden", !boon);
@@ -805,7 +967,7 @@ function setMode(mode) {
   el("utility-note").textContent = boon ? "(Magnanimous / Lucent / Toxic / Bountiful)" : "";
   el("stacking-note").textContent = boon
     ? "(Bounty/Life/Benevolence — kill stacks, lost on downstate)"
-    : "(Perception/Bloodlust — lost on downstate)";
+    : "(Perception/Bloodlust/Cruelty — lost on downstate)";
   el("single-sigil-note").textContent = boon
     ? "(the other slot is yours, e.g. a proc sigil — only one slot is optimized)"
     : "(the other slot is yours, e.g. Energy — only one slot is optimized)";
@@ -931,6 +1093,12 @@ el("opt-might").addEventListener("input", () => {
   updateConditionHints();
 });
 el("opt-fury").addEventListener("change", updateConditionHints);
+// WvW swaps the split traits' values: re-render the list, keeping the ticks
+el("opt-wvw").addEventListener("change", () => {
+  if (!state.selectedTraits) return;
+  saveTraitMemory();
+  renderTraitGroups();
+});
 
 renderSlotGrid();
 
@@ -939,6 +1107,7 @@ renderSlotGrid();
 const RUNE_NAMES = {
   scholar: "Scholar", dragonh: "Dragonhunter", gole: "Golemancer", deadeye: "Deadeye",
   eagle: "Eagle", infil: "Infiltration", ranger: "Ranger",
+  brawler: "Brawler (+175 power, +225 toughness — WvW)",
 };
 const FOOD_NAMES = {
   butternut: "Bowl of Butternut Squash Soup",
@@ -951,6 +1120,7 @@ const SIGIL_NAMES = {
   accuracy: "Accuracy (+7% crit)",
   perception: "Perception (+250 precision at 25 stacks)",
   bloodlust: "Bloodlust (+250 power at 25 stacks)",
+  cruelty: "Cruelty (+250 ferocity at 25 stacks)",
   impact: "Impact (+3%) — or Night, +10% at night",
   force: "Force (+5% damage)",
 };
@@ -958,6 +1128,7 @@ const SIGIL_SHORT = {
   accuracy: "Accuracy",
   perception: "Perception",
   bloodlust: "Bloodlust",
+  cruelty: "Cruelty",
   impact: "Impact (or Night)",
   force: "Force",
 };
@@ -1008,6 +1179,7 @@ async function optimize() {
   params.set("writs", el("opt-writs").checked);
   params.set("single_sigil", el("opt-single-sigil").checked);
   params.set("pie", el("opt-pie").checked);
+  params.set("wvw", el("opt-wvw").checked);
   params.set("herald", el("opt-herald").checked);
   params.set("relic_reserved", el("opt-reserve-relic").checked);
   params.set("stowed", el("opt-stowed").checked);
@@ -1085,7 +1257,7 @@ function renderResult(data, env, singleSigil) {
   if (backup) {
     // why the backup exists, derived from what the best build relies on
     const reasons = [];
-    if (data.sigil.split("+").some(s => ["perception", "bloodlust"].includes(s))) {
+    if (data.sigil.split("+").some(s => ["perception", "bloodlust", "cruelty"].includes(s))) {
       reasons.push("stacking sigil stacks vanish on downstate");
     }
     if (data.utility === "writ_accuracy") reasons.push("the accuracy writ needs >90% health");
@@ -1115,7 +1287,7 @@ function renderResult(data, env, singleSigil) {
     renderSolutionBody(body, data, env, singleSigil, null);
   }
 
-  resultBox.append(chatlinkButton());
+  resultBox.append(chatlinkButton(), optimizerLinkButton());
   resultBox.classList.remove("hidden");
 }
 
@@ -1369,7 +1541,7 @@ function renderBoonResult(data) {
     renderBoonBody(inner, best, singleSigil, null);
   }
 
-  resultBox.append(chatlinkButton());
+  resultBox.append(chatlinkButton(), optimizerLinkButton());
   resultBox.classList.remove("hidden");
 }
 

@@ -3,7 +3,8 @@
 assets/icons/ is gitignored, so a fresh clone has none of the images. Any
 missing file is downloaded on first request, resolving its source from the
 committed CSVs (trait icons, specialization icons/banners), the GW2 API
-(profession icons) or the wiki (tango icons). generate_traits.py pre-warms
+(profession icons, any trait/skill by id for the builds pages) or the wiki
+(tango icons). generate_traits.py pre-warms
 the same cache in bulk.
 """
 
@@ -24,19 +25,50 @@ WIKI_API = "https://wiki.guildwars2.com/api.php"
 _known_missing: set[str] = set()
 
 
-def trim_banner_border(path, threshold=18, content_fraction=0.01):
+# Four banners (the Mesmer core lines) were exported with a piece of the
+# in-game panel frame still in them: a purple band along the top and a
+# diagonal frame on the right, Inspiration even bleeds into the next
+# picture. The brightness trim cannot see that, so these get a fixed crop
+# box first (left, top, right, bottom in the original 1024x256 pixels;
+# checked by eye against the images, 2026-09-21).
+BANNER_CROPS = {
+    1: (0, 26, 665, 256),    # Dueling
+    45: (0, 28, 730, 256),   # Chaos
+    23: (0, 28, 648, 256),   # Inspiration
+    24: (0, 0, 830, 256),    # Illusions
+}
+
+
+def crop_banner_bleed(path):
+    """Apply the fixed crop of BANNER_CROPS to spec_bg_<id>.png files that
+    still carry the panel frame (idempotent: a cropped file is smaller
+    than its box and is left alone)."""
+    match = re.fullmatch(r"spec_bg_(\d+)\.png", os.path.basename(path))
+    if not match or int(match.group(1)) not in BANNER_CROPS:
+        return
+    left, top, right, bottom = BANNER_CROPS[int(match.group(1))]
+    image = Image.open(path)
+    if image.width > right or (top and image.height == bottom):
+        image.crop((left, top, min(right, image.width), min(bottom, image.height))).save(path)
+
+
+def trim_banner_border(path, threshold=18, content_fraction=0.01, min_mean=12):
     """The spec banners bleed into the in-game UI panel and pad the painted
     area with fully transparent or near-black margins; crop to the painted
     area (idempotent). A row/column only counts as content if more than 1%
-    of its pixels are bright and visible, so a few stray specks in a black
-    region do not stop the trim - while dark artwork in the middle of a
-    banner stays safe because only the border is removed."""
+    of its pixels are bright and visible AND its mean brightness is not
+    near black, so a few stray specks in a black region do not stop the
+    trim - while dark artwork in the middle of a banner stays safe because
+    only the border is removed."""
+    crop_banner_bleed(path)
     image = Image.open(path).convert("RGBA")
     pixels = np.asarray(image)
-    content = (pixels[..., :3].max(axis=2) > threshold) & (pixels[..., 3] > 8)
+    visible = pixels[..., 3] > 8
+    brightness = pixels[..., :3].max(axis=2) * visible
+    content = (brightness > threshold) & visible
 
-    row_has_content = content.mean(axis=1) > content_fraction
-    col_has_content = content.mean(axis=0) > content_fraction
+    row_has_content = (content.mean(axis=1) > content_fraction) & (brightness.mean(axis=1) > min_mean)
+    col_has_content = (content.mean(axis=0) > content_fraction) & (brightness.mean(axis=0) > min_mean)
     if not row_has_content.any() or not col_has_content.any():
         return
     top, bottom = np.flatnonzero(row_has_content)[[0, -1]]
@@ -72,6 +104,14 @@ def _resolve(filename: str):
     if match := re.fullmatch(r"spec_(\d+)\.png", filename):
         rows = specs.loc[specs["id"] == int(match.group(1)), "icon"]
         return (rows.iloc[0], False) if len(rows) else (None, False)
+
+    # any trait or skill by API id (the builds page shows whole trait lines
+    # and skill bars, not just the stat-relevant rows of traits.csv)
+    if match := re.fullmatch(r"trait_(\d+)\.png", filename):
+        return (get_api_data(f"traits/{match.group(1)}").get("icon"), False)
+
+    if match := re.fullmatch(r"skill_(\d+)\.png", filename):
+        return (get_api_data(f"skills/{match.group(1)}").get("icon"), False)
 
     if match := re.fullmatch(r"prof_([A-Za-z]+)\.png", filename):
         return (get_api_data(f"professions/{match.group(1)}").get("icon_big"), False)

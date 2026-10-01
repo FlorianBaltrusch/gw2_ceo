@@ -1,0 +1,24 @@
+# Open World Power Reaper - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Open World Power Reaper"
+category = "openworld"
+tags = []
+summary = "Open-world Power Reaper: greatsword shroud with a dagger/sword second set."
+profession = "Necromancer"
+traitlines = [
+  { line = "Soul Reaping", traits = ["Unyielding Blast", "Soul Barbs", "Death Perception"] },
+  { line = "Spite", traits = ["Spiteful Talisman", "Spiteful Fortitude", "Close to Death"] },
+  { line = "Reaper", traits = ["Chilling Nova", "Soul Eater", "Reaper's Onslaught"] },
+]
+skills = ["Your Soul Is Mine!", "Well of Darkness", "Well of Suffering", "You Are All Weaklings!", "Chilled to the Bone!"]
+weapons = ["Greatsword", "Dagger", "Sword"]
+optimizer = "/ceo?profession=Necromancer&spec=Reaper&mode=crit&traits=893%2C915%2C829%2C2021&env=4p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Second set options: Dagger/Sword, Spear or Sword/Sword.
+
+Trait alternatives: Speed of Shadows instead of Unyielding Blast for mobility; Vital Persistence instead of Soul Barbs for survivability at a significant damage loss; Dread instead of Death Perception when solo, for fury and quickness; Bitter Chill instead of Spiteful Talisman (good with Chilling Nova); Chill of Death instead of Spiteful Fortitude against enemies with many boons; Augury of Death instead of Chilling Nova.
+
+Utility alternatives: Suffer!, Spectral Armor or Signet of Spite instead of You Are All Weaklings!.
+
+Relic candidates: Pirate Queen, Zakiros, Fireworks.
+"""

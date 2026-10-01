@@ -16,7 +16,10 @@ Rows with review=True need a manual pass against the wiki:
 
 Manual decisions live in assets/trait_overrides.csv (same columns, minus
 icon). Any id present there replaces ALL generated rows for that id; an
-override row with effect="drop" removes the id entirely. This keeps the
+override row with effect="drop" removes the id entirely. Overrides may add
+ids the API loops never produce (weapon skills such as Crescent Wind) and
+carry value_wvw, the WvW value of a PvE/WvW-split fact (empty = no split;
+the solver uses it when the WvW toggle is on). This keeps the
 review work stable across regenerations. Icons (official render-service
 URLs) are attached by id after the override merge, so overrides never need
 to carry them.
@@ -323,6 +326,11 @@ def main():
         report_override_gaps(upstream, overrides)
 
     df = df.sort_values(by=["profession", "elite", "specialization", "name", "effect"])
+    # hand-added ids the loops above never saw (weapon skills like Crescent
+    # Wind) get their icon straight from the API
+    for missing_id in set(df["id"]) - set(icons):
+        kind = df.loc[df["id"] == missing_id, "kind"].iloc[0]
+        icons[missing_id] = get_api_data(f"{'skills' if kind == 'skill' else 'traits'}/{missing_id}").get("icon", "")
     df["icon"] = df["id"].map(icons).fillna("")  # type: ignore
 
     # slot and tier come from the API even for hand-written override rows -

@@ -1,0 +1,58 @@
+# Core WvW Condi Necromancer - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Core WvW Condi Necromancer"
+category = "wvw"
+tags = []
+summary = "Core condition Necromancer for WvW in full Trailblazer's: staff plus a pistol/sword set, corrupts and fear."
+profession = "Necromancer"
+traitlines = [
+  { line = "Blood Magic", traits = ["Blood Renewal", "Vampiric Presence", "Transfusion"] },
+  { line = "Curses", traits = ["Plague Sending", "Path of Corruption", "Terror"] },
+  { line = "Soul Reaping", traits = ["Speed of Shadows", "Fear of Death", "Dhuumfire"] },
+]
+skills = ["Consume Conditions", "Plague Signet", "Spectral Ring", "Corrosive Poison Cloud", "Plaguelands"]
+weapons = ["Staff", "Pistol", "Sword"]
+notes = """
+Second set options: Pistol/Sword, Sword/Sword, Pistol/Torch or Scepter/Warhorn.
+
+Trait alternatives: Soul Marks instead of Speed of Shadows; Eternal Life instead of Dhuumfire if you cannot make use of shroud 1. Death Magic (Shrouded Removal, Deadly Strength, Corrupter's Fervor) can replace Blood Magic.
+
+Utility alternatives: Well of Corruption, Spectral Walk or Spectral Armor instead of Corrosive Poison Cloud.
+
+This is a condition build, so the gear is written out instead of coming from the optimizer: full Trailblazer's, Rune of the Trapper (or Rune of the Necromancer for more condition damage but no expertise), condition damage infusions, Plate of Beef Rendang (+100 condition damage, +70 expertise), and the +150 toughness enhancement (Potion of Karka Toughness) or a Magnanimous Tuning Crystal.
+
+Relic candidates: Agony, Nightmare, Speed, Demon Queen.
+"""
+
+[gear]
+rune = "Superior Rune of the Trapper"
+food = "Plate of Beef Rendang"
+utility = "Potion of Karka Toughness (+150 toughness) or Magnanimous Tuning Crystal"
+infusions = "Condition damage infusions"
+jade_core = "Tier 10"
+
+[gear.armor]
+head = "Trailblazer's"
+shoulders = "Trailblazer's"
+chest = "Trailblazer's"
+gloves = "Trailblazer's"
+legs = "Trailblazer's"
+boots = "Trailblazer's"
+
+[gear.trinkets]
+back = "Trailblazer's"
+accessory1 = "Trailblazer's"
+accessory2 = "Trailblazer's"
+amulet = "Trailblazer's"
+ring1 = "Trailblazer's"
+ring2 = "Trailblazer's"
+
+# Staff: Energy/Cleansing or Geomancy/Doom; other set: Doom/Celerity or Generosity/Energy.
+[gear.weapons]
+set1 = [
+  { type = "Staff", prefix = "Trailblazer's", sigils = ["Superior Sigil of Energy", "Superior Sigil of Cleansing"] },
+]
+set2 = [
+  { type = "Pistol", prefix = "Trailblazer's", sigil = "Superior Sigil of Doom" },
+  { type = "Sword", prefix = "Trailblazer's", sigil = "Superior Sigil of Celerity" },
+]

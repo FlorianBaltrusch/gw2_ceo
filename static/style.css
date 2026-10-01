@@ -27,12 +27,16 @@
 
 :root {
   /* palette comes from gw2ceo/custom_colors.py, served as /theme.css */
-  --gold: var(--aureus, #c8aa6e);
-  --accent: var(--ruby-red, #c02f2f);
-  --bg: color-mix(in srgb, var(--phthalo-blue, #001c67) var(--alpha-soft, 30%), var(--shadow-abyss, #000));
-  --bg-glow: color-mix(in srgb, var(--phthalo-blue, #001c67) var(--alpha-strong, 70%), var(--shadow-abyss, #000));
-  --bg-card: #101623;
-  --border: #28304a;
+  /* the three theme roles (theme.css): default phthalo blue / ruby red /
+     aureus, one palette per profession once one is chosen */
+  --gold: var(--theme-bright, var(--aureus, #c8aa6e));
+  --accent: var(--theme-mid, var(--ruby-red, #c02f2f));
+  --bg: color-mix(in srgb, var(--theme-dark, #001c67) var(--alpha-soft, 30%), var(--shadow-abyss, #000));
+  --bg-glow: color-mix(in srgb, var(--theme-glow, var(--theme-dark, #001c67)) var(--glow-mix, var(--alpha-strong, 70%)), var(--shadow-abyss, #000));
+  /* cards and borders: a neutral dark slate with a hint of the theme */
+  --bg-card: color-mix(in srgb, var(--theme-dark, #001c67) 35%, #12141c);
+  --border: color-mix(in srgb, var(--theme-mid, #28304a) var(--alpha-soft, 30%), #262b3a);
+  transition: background .3s ease;
   --text: #e8e4da;
   --text-dim: #9a958a;
 }
@@ -131,6 +135,12 @@ button { font: inherit; cursor: pointer; }
   filter: drop-shadow(0 14px 22px rgba(0, 0, 0, .55));
   transition: transform .2s ease, filter .25s ease;
 }
+/* the Thief's cape runs solid to its right edge, the Guardian is the
+   narrowest cut-out and the Revenant's banner starts at its left edge: no
+   overlap on the two seams around the Guardian */
+.prof-char[data-profession="Thief"] { margin-right: .5%; }
+.prof-char[data-profession="Guardian"] { margin-left: 0; margin-right: .5%; }
+.prof-char[data-profession="Revenant"] { margin-left: 0; }
 .prof-char img {
   display: block;
   height: clamp(220px, 50vh, 520px);
@@ -183,7 +193,7 @@ button { font: inherit; cursor: pointer; }
 }
 .chatlink-row input {
   width: min(420px, 70vw);
-  background: color-mix(in srgb, var(--bg-card) 70%, transparent);
+  background: color-mix(in srgb, var(--bg-card) var(--alpha-strong, 70%), transparent);
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text);
@@ -197,8 +207,9 @@ button { font: inherit; cursor: pointer; }
 
 /* ---------- specialization grid ---------- */
 
-.back { position: absolute; left: 0; top: 0; }
+.back { position: absolute; left: 0; top: 0; text-decoration: none; }
 #spec-picker { position: relative; padding-top: 56px; }
+#profession-picker { position: relative; padding-top: 44px; }
 
 .spec-grid {
   display: grid;
@@ -246,13 +257,13 @@ button { font: inherit; cursor: pointer; }
   align-items: center;
   justify-content: center;
   background: radial-gradient(ellipse at 50% 50%, var(--bg-glow) 0%,
-              color-mix(in srgb, var(--phthalo-blue, #001c67) 15%, var(--shadow-abyss, #000)) 78%);
+              color-mix(in srgb, var(--theme-dark, #001c67) 15%, var(--shadow-abyss, #000)) 78%);
 }
 .spec-tile .art.core-art img {
   width: auto;
   height: 64px;       /* explicit: a percentage would fall back to the image's
                          intrinsic 200px during intrinsic sizing in some engines */
-  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--aureus, #edb227) 45%, transparent));
+  filter: drop-shadow(0 0 14px color-mix(in srgb, var(--gold) var(--alpha-mid, 50%), transparent));
 }
 .spec-tile .label {
   display: flex;
@@ -283,6 +294,8 @@ button { font: inherit; cursor: pointer; }
   padding: 10px 14px;
 }
 .selection { display: flex; align-items: center; gap: 12px; }
+.topbar-actions { display: flex; gap: 8px; }
+.topbar-actions a { text-decoration: none; }
 .topbar-icon { width: 44px; height: 44px; }
 .topbar-title { color: var(--gold); letter-spacing: .04em; }
 .topbar-subtitle { color: var(--text-dim); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
@@ -338,7 +351,7 @@ button { font: inherit; cursor: pointer; }
   border-radius: 8px;
   cursor: pointer;
 }
-.trait:hover { background: color-mix(in srgb, var(--border) 45%, transparent); }
+.trait:hover { background: color-mix(in srgb, var(--border) var(--alpha-mid, 50%), transparent); }
 .trait input {
   accent-color: var(--gold);
   width: 16px;
@@ -359,7 +372,7 @@ button { font: inherit; cursor: pointer; }
   font-size: .82rem;
   color: var(--text-dim);
 }
-.trait.disabled { opacity: .45; cursor: not-allowed; }
+.trait.disabled { opacity: var(--alpha-mid, 50%); cursor: not-allowed; }
 .trait-condition {
   display: block;
   font-size: .8rem;
@@ -387,7 +400,7 @@ button { font: inherit; cursor: pointer; }
   font: inherit;
 }
 .segmented button.active {
-  background: color-mix(in srgb, var(--gold) 18%, transparent);
+  background: color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
   color: var(--gold);
 }
 
@@ -416,7 +429,7 @@ button { font: inherit; cursor: pointer; }
 .slot-chip.asc {
   border-color: var(--gold);
   color: var(--gold);
-  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  background: color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
 }
 
 .check { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
@@ -428,7 +441,7 @@ button { font: inherit; cursor: pointer; }
 .cta {
   width: 100%;
   margin-top: 4px;
-  background: color-mix(in srgb, var(--accent) 75%, black);
+  background: color-mix(in srgb, var(--accent) var(--alpha-strong, 70%), black);
   border: 1px solid var(--accent);
   color: var(--text);
   font: inherit;
@@ -440,7 +453,7 @@ button { font: inherit; cursor: pointer; }
   transition: background .15s ease;
 }
 .cta:hover { background: var(--accent); }
-.cta:disabled { opacity: .75; cursor: wait; }
+.cta:disabled { opacity: var(--alpha-strong, 70%); cursor: wait; }
 .cta.busy::before {           /* loading circle while the optimizer runs */
   content: "";
   display: inline-block;
@@ -461,8 +474,8 @@ button { font: inherit; cursor: pointer; }
 .slot-hint { margin: 8px 0 0; }
 
 .build-warnings {
-  border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
-  background: color-mix(in srgb, var(--gold) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--gold) var(--alpha-strong, 70%), transparent);
+  background: color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
   border-radius: 8px;
   padding: 4px 12px;
   margin-bottom: 12px;
@@ -497,7 +510,7 @@ button { font: inherit; cursor: pointer; }
 .result-tabs button.active {
   border-color: var(--gold);
   color: var(--gold);
-  background: color-mix(in srgb, var(--gold) 10%, transparent);
+  background: color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
 }
 .result .ep {
   text-align: center;
@@ -560,7 +573,7 @@ button { font: inherit; cursor: pointer; }
   padding: 10px 14px;
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: color-mix(in srgb, var(--gold) 4%, transparent);
+  background: color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
 }
 .mode-bar .control-label { margin-bottom: 0; }
 .mode-bar .segmented { flex: 1; max-width: 420px; }
@@ -663,5 +676,5 @@ button { font: inherit; cursor: pointer; }
 .variant-chip.active {
   border-color: var(--gold);
   color: var(--gold);
-  background: color-mix(in srgb, var(--gold) 10%, transparent);
+  background: color-mix(in srgb, var(--gold) var(--alpha-faint, 10%), transparent);
 }
