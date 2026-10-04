@@ -30,6 +30,13 @@ for any deviation, even a fraction of a point. Attribute conversions (oils,
 traits) are modeled continuously while the game floors them to whole points,
 so a sub-point warning can be conservative; the warning keeps that honest
 instead of hiding it.
+
+One exception to "never undershoot" guards the sigil slots: when the sources
+outside the gear - traits, rune, food, infusions - plus a duration sigil
+(Concentration, or Bounty's concentration) already exceed the cap even with
+the lowest-concentration gear, the sigil's percentage is at least partly
+wasted. Such a candidate is dropped: the slot is better spent on a proc
+sigil (Water), and the Transference sigil stays the only stat sigil.
 """
 
 from dataclasses import dataclass, replace
@@ -47,6 +54,8 @@ from gw2ceo.profession import BASE_TOUGHNESS, Profession
 SIGIL_PRIO = {"transference": 0, "concentration": 0, "free": 1,
               "bounty": 2, "life": 2, "benevolence": 2}
 STACKING_SIGILS = ("bounty", "life", "benevolence")
+# sigils that only add boon duration: wasted when the gear cannot absorb them
+DURATION_SIGILS = ("concentration", "bounty")
 # Castora's bonus needs the healed ally below 50% health, Monk and Herald
 # need boons pulsing - a reserved or free-choice slot has no condition
 RELIC_PRIO = {"utility": 0, "reserved": 0, "monk": 1, "castora": 1, "herald": 1}
@@ -301,6 +310,7 @@ def _sigil_candidates(build: BuildConstraints) -> pd.DataFrame:
         "sigil_outgoing": sum(sigil[3] for sigil in pick),
         "sigil_bd_equiv": sum(sigil[4] for sigil in pick),
         "sigil_stacking": any(sigil[0] in STACKING_SIGILS for sigil in pick),
+        "sigil_duration": any(sigil[0] in DURATION_SIGILS for sigil in pick),
         "sigil_prio": sum(SIGIL_PRIO[sigil[0]] for sigil in pick),
     } for pick in picks])
 
@@ -435,6 +445,7 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
                  "precision", "toughness"):
         stats[name] = 0.0
     stats["exact"] = False
+    stats["floored"] = False  # the gear cannot shed enough concentration
     utilities = stats["utility"].to_numpy()
     for utility in dict.fromkeys(utilities):
         mask = utilities == utility
@@ -454,6 +465,7 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
         stats.loc[mask, "remainder"] = remainder
         stats.loc[mask, "overshoot"] = delta * multiplier  # panel points
         stats.loc[mask, "exact"] = abs(delta) <= EXACT_EPSILON
+        stats.loc[mask, "floored"] = remainder < gear.conc_floor() - EXACT_EPSILON
         gear_values = gear.point_value_matrix[index]
         stats.loc[mask, "healing"] = (stats.loc[mask, "healing_base"]
                                       + gear_values[:, 0]) * multiplier
@@ -467,6 +479,11 @@ def _boon_solve(profession: Profession, build: BuildConstraints) -> pd.DataFrame
                                         + gear_values[:, 4]) * multiplier
 
     stats["concentration_total"] = target + stats["overshoot"]
+
+    # a duration sigil that pushes the build over the cap on its own (the
+    # gear is already at its concentration floor) is wasted: the slot goes
+    # to a proc sigil like Water instead - only the rows without it compete
+    stats = stats.loc[~(stats["sigil_duration"] & stats["floored"])].copy()
 
     # outgoing healing stacks additively in GW2
     stats["outgoing"] = (profession.outgoing_heal_pct()

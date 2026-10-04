@@ -1453,12 +1453,12 @@ const BOON_SIGIL_NAMES = {
   life: "Life (+250 healing at 25 kill stacks)",
   benevolence: "Benevolence (+12.5% outgoing healing at 25 kill stacks)",
   transference: "Transference (+10% outgoing healing)",
-  free: "utility sigil of your choice (Water, Renewal, …)",
+  free: "Water (or another proc sigil of your choice)",
 };
 const BOON_SIGIL_SHORT = {
   concentration: "Concentration", bounty: "Bounty", life: "Life",
   benevolence: "Benevolence", transference: "Transference",
-  free: "utility sigil of your choice",
+  free: "Water",
 };
 const BOON_UTILITY_NAMES = {
   magnanimous: "Magnanimous Maintenance Oil (concentration = 3% of vitality + toughness)",

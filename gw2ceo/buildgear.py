@@ -39,7 +39,7 @@ SIGILS = {
     "concentration": "Superior Sigil of Concentration", "bounty": "Superior Sigil of Bounty",
     "life": "Superior Sigil of Life", "benevolence": "Superior Sigil of Benevolence",
     "transference": "Superior Sigil of Transference",
-    "free": "utility sigil of your choice",
+    "free": "Superior Sigil of Water",
 }
 STACKING_SIGILS = {"perception", "bloodlust", "cruelty", "bounty", "life", "benevolence"}
 FOODS = {
