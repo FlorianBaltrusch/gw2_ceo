@@ -169,7 +169,6 @@ async function selectProfession(profession) {
 
   renderSpecGrid(profession, specs.filter(s => s.elite));
   showOverlay("specs");
-  el("spec-question-prof").textContent = profession;
   el("prof-intro-img").src = professionImage(profession);
   el("prof-intro-name").textContent = profession;
   el("prof-intro-lore").textContent = PROFESSION_LORE[profession] || "";
