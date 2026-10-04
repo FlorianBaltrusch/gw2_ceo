@@ -56,3 +56,8 @@ set2 = [
   { type = "Pistol", prefix = "Trailblazer's", sigil = "Superior Sigil of Doom" },
   { type = "Sword", prefix = "Trailblazer's", sigil = "Superior Sigil of Celerity" },
 ]
+
+[[alternatives]]                # one trait line that stands in for one of the build's lines
+replaces = "Blood Magic"
+traitline = { line = "Death Magic", traits = ["Shrouded Removal", "Deadly Strength", "Corrupter's Fervor"] }
+note = "Death Magic can be taken instead of Blood Magic."

@@ -254,6 +254,13 @@ function renderCards() {
     names.className = "names";
     names.textContent = build.traitlines.map(line => line.name).join(" · ");
     lines.append(names);
+    if (build.alternatives?.length) {
+      const alt = document.createElement("span");
+      alt.className = "alt";
+      alt.textContent = `or ${build.alternatives.map(a => a.name).join(" / ")}`;
+      alt.title = build.alternatives.map(a => `${a.name} instead of ${a.replaces}`).join("\n");
+      lines.append(alt);
+    }
     row2.append(weapons, lines);
 
     card.append(row1, row2);
@@ -286,16 +293,37 @@ async function showDetail(slug) {
   columns.className = "build-columns";
   const traits = section("Traits", traitLines(build.lines));
   traits.classList.add("col-traits");
+  const alternatives = build.alternatives || [];
+  if (alternatives.length) traits.append(alternativePanels(alternatives));
+
+  // gear variants: the build's gear, plus one tab per alternative whose
+  // optimizer result differs from it
+  const differing = alternatives.filter(alt => alt.gear_differs);
+  const variants = [
+    { label: differing.length === 1 ? `with ${differing[0].replaces}` : "Main build",
+      gear: build.gear, warning: build.gear_warning, character: build.character },
+    ...differing.map(alt => ({ label: `with ${alt.line.name}`, gear: alt.gear,
+                               warning: alt.gear_warning, character: alt.character })),
+  ];
+  const tabbed = (title, render) => {
+    const sec = section(title, variantPanes(variants, render));
+    if (variants.length > 1) withTabs(sec, variantTabs(variants));
+    return sec;
+  };
+
   const side = document.createElement("div");
   side.className = "col-side";
   side.append(section("Skills", skillBars(build.skills)));
-  if (build.character) side.append(section("Character", characterCard(build.character)));
+  if (build.character) {
+    side.append(tabbed("Character", variant => variant.character
+      ? characterCard(variant.character) : document.createElement("div")));
+  }
   columns.append(traits, side);
   view.append(
     backLink(),
     header(build),
     columns,
-    section("Gear", gearPanel(build.gear, build.gear_warning)),
+    tabbed("Gear", variant => gearPanel(variant.gear, variant.warning)),
     section("Links", links(build)),
   );
   if (build.notes.trim()) view.append(section("Notes", notes(build.notes)));
@@ -428,6 +456,83 @@ function traitLines(lines) {
     wrap.append(picks);
   }
   return wrap;
+}
+
+// an alternative trait line, drawn like the build's own lines, with what it
+// stands in for, the author's note and the chat link of that variant
+function alternativePanels(alternatives) {
+  const wrap = document.createElement("div");
+  wrap.className = "alternatives";
+  for (const alt of alternatives) {
+    const head = document.createElement("h3");
+    head.className = "alternative-head";
+    const name = document.createElement("b");
+    name.textContent = alt.line.name;
+    head.append("Alternative: ", name,
+                alt.replaces === alt.line.name ? " with other picks" : ` instead of ${alt.replaces}`);
+    wrap.append(head, traitLines([alt.line]));
+
+    const row = document.createElement("div");
+    row.className = "alternative-row";
+    const info = document.createElement("p");
+    info.className = "hint";
+    info.textContent = [
+      alt.note,
+      alt.gear_differs ? `Different gear: see the "with ${alt.line.name}" tab.`
+        : alt.gear_warning || "Same gear as the main build.",
+    ].filter(Boolean).join(" ");
+    row.append(info, copyButton(alt.chatlink, "Copy chat link"));
+    wrap.append(row);
+  }
+  return wrap;
+}
+
+// --- gear variants: one pane per variant, switched by synced tab bars ---
+
+function variantPanes(variants, render) {
+  const wrap = document.createElement("div");
+  variants.forEach((variant, index) => {
+    const pane = document.createElement("div");
+    pane.className = index ? "variant-pane hidden" : "variant-pane";
+    pane.dataset.variant = index;
+    pane.append(render(variant));
+    wrap.append(pane);
+  });
+  return wrap;
+}
+
+function variantTabs(variants) {
+  const bar = document.createElement("div");
+  bar.className = "result-tabs variant-tabs";
+  bar.setAttribute("role", "tablist");
+  variants.forEach((variant, index) => {
+    const tab = document.createElement("button");
+    tab.type = "button";
+    tab.setAttribute("role", "tab");
+    tab.textContent = variant.label;
+    if (!index) tab.classList.add("active");
+    tab.addEventListener("click", () => selectVariant(index));
+    bar.append(tab);
+  });
+  return bar;
+}
+
+function selectVariant(index) {
+  for (const bar of document.querySelectorAll(".variant-tabs")) {
+    [...bar.children].forEach((tab, i) => tab.classList.toggle("active", i === index));
+  }
+  for (const pane of document.querySelectorAll(".variant-pane")) {
+    pane.classList.toggle("hidden", Number(pane.dataset.variant) !== index);
+  }
+}
+
+// the section's title row gets the tab bar beside the heading
+function withTabs(sec, bar) {
+  const heading = sec.querySelector("h2");
+  const head = document.createElement("div");
+  head.className = "section-head";
+  heading.replaceWith(head);
+  head.append(heading, bar);
 }
 
 // the connectors run minor → chosen major → next minor; measured from the
@@ -691,20 +796,7 @@ function links(build) {
   box.className = "linkbox";
   const code = document.createElement("code");
   code.textContent = build.chatlink;
-  const copy = document.createElement("button");
-  copy.type = "button";
-  copy.className = "ghost-button";
-  copy.textContent = "Copy chat link";
-  copy.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(build.chatlink);
-      copy.textContent = "Copied";
-    } catch {
-      copy.textContent = "Select and copy the text";
-    }
-    setTimeout(() => { copy.textContent = "Copy chat link"; }, 2000);
-  });
-  box.append(code, copy);
+  box.append(code, copyButton(build.chatlink, "Copy chat link"));
   wrap.append(hint, box);
 
   if (build.optimizer) {
@@ -718,6 +810,23 @@ function links(build) {
     wrap.append(row);
   }
   return wrap;
+}
+
+function copyButton(text, label) {
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.className = "ghost-button";
+  copy.textContent = label;
+  copy.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      copy.textContent = "Copied";
+    } catch {
+      copy.textContent = "Select and copy the text";
+    }
+    setTimeout(() => { copy.textContent = label; }, 2000);
+  });
+  return copy;
 }
 
 function notes(text) {

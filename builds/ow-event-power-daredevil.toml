@@ -26,3 +26,9 @@ Relic candidates: Thief, Zakiros.
 
 Deadly Arts and Critical Strikes are the go-to damage lines. Trickery is an open-world option that gives you more initiative and boons for your allies.
 """
+
+[[alternatives]]                # one trait line that stands in for one of the build's lines
+replaces = "Trickery"
+traitline = { line = "Critical Strikes", traits = ["Twin Fangs", "Practiced Tolerance", "No Quarter"] }
+note = "More damage, no boons for allies. Provisional pick among the four lines - to be adjusted."
+optimizer = "/ceo?profession=Thief&spec=Daredevil&mode=crit&traits=1245%2C1704%2C13062%2C1281%2C1904%2C1272%2C1268&env=4p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link' with this line ticked

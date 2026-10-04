@@ -110,6 +110,42 @@ try:
     wait.until(lambda d: count(".build-card") == 6)
     check("back to filtered list", "prof=Mesmer" in driver.current_url, driver.current_url)
 
+    # an alternative trait line: drawn under the build's lines, its gear in a second tab
+    driver.get(BASE + "/builds/support-tempest")
+    wait.until(lambda d: count(".traitline") == 4)
+    check("alternative line drawn as a fourth panel", count(".alternatives .traitline") == 1
+          and count(".alternatives .major.selected") == 3)
+    head = driver.find_element(By.CSS_SELECTOR, ".alternative-head").text
+    check("alternative caption names both lines", "Arcane" in head and "Earth" in head, head)
+    check("alternative has its own chat link button", count(".alternative-row .ghost-button") == 1)
+    hint = driver.find_element(By.CSS_SELECTOR, ".alternative-row .hint").text
+    check("alternative points to its gear tab", "Different gear" in hint, hint)
+    tabs = driver.find_elements(By.CSS_SELECTOR, ".variant-tabs")
+    check("gear and character carry synced tabs", len(tabs) == 2
+          and all(len(t.find_elements(By.TAG_NAME, "button")) == 2 for t in tabs), str(len(tabs)))
+    labels = [b.text for b in tabs[0].find_elements(By.TAG_NAME, "button")]
+    check("tabs named after the lines", labels == ["with Earth", "with Arcane"], str(labels))
+    main_gear = driver.find_element(By.CSS_SELECTOR, ".variant-pane[data-variant='0'] .gear-panel").text
+    tabs[-1].find_elements(By.TAG_NAME, "button")[1].click()
+    wait.until(lambda d: all(p.is_displayed() for p in d.find_elements(By.CSS_SELECTOR, ".variant-pane[data-variant='1']")))
+    check("second tab shows both panes and hides the first",
+          all(not p.is_displayed() for p in driver.find_elements(By.CSS_SELECTOR, ".variant-pane[data-variant='0']"))
+          and all(t.find_elements(By.TAG_NAME, "button")[1].get_attribute("class") == "active" for t in tabs))
+    alt_gear = driver.find_element(By.CSS_SELECTOR, ".variant-pane[data-variant='1'] .gear-panel").text
+    check("alternative gear differs from the main gear", alt_gear != main_gear and "Harrier's" in alt_gear + main_gear)
+
+    # an alternative without its own gear: no tabs
+    driver.get(BASE + "/builds/wvw-condi-necromancer")
+    wait.until(lambda d: count(".traitline") == 4)
+    check("alternative without optimizer link: same gear, no tabs", count(".variant-tabs") == 0
+          and "Same gear" in driver.find_element(By.CSS_SELECTOR, ".alternative-row .hint").text)
+
+    # the card names the alternative
+    driver.get(BASE + "/builds?cat=support")
+    wait.until(lambda d: count(".build-card") == 3)
+    alts = [a.text for a in driver.find_elements(By.CSS_SELECTOR, ".card-lines .alt")]
+    check("card marks the alternative line", alts == ["or Arcane"], str(alts))
+
     # unknown build
     driver.get(BASE + "/builds/does-not-exist")
     wait.until(lambda d: count(".not-found") == 1)

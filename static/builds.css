@@ -318,6 +318,30 @@
 }
 .build-section .hint { margin-top: -6px; }
 
+/* an alternative trait line below the build's own: same panel, a dashed
+   rule and a small caption telling what it stands in for */
+.alternatives { margin-top: 22px; padding-top: 14px; border-top: 1px dashed var(--border); }
+.alternative-head {
+  margin: 0 0 10px;
+  font-weight: 500;
+  font-size: 1rem;
+  font-variant: small-caps;
+  letter-spacing: .05em;
+  color: var(--text-dim);
+}
+.alternative-head b { font-weight: 500; color: var(--gold); }
+.alternative-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; }
+.alternative-row .hint { margin: 0; flex: 1 1 260px; }
+.alternatives .traitline-picks { margin-bottom: 8px; }
+
+/* gear variants: the section title with the tab bar beside it, one pane per
+   variant (the tab bars of the character card and the gear stay in sync) */
+.section-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 12px; }
+.section-head > h2 { margin: 0; }
+.variant-tabs { margin: 0; }
+.variant-tabs button { flex: 0 0 auto; padding: 7px 16px; white-space: nowrap; }
+.card-lines .alt { color: var(--text-dim); margin-left: 6px; }
+
 /* trait lines, styled after the GW2 Armory specialization widget (as on
    Snow Crows): the banner art as a flat 40% layer over near-black, one
    art-filled hexagon on the left, 40px icons, and the chosen traits told

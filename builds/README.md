@@ -72,6 +72,29 @@ weapons = ["Scepter", "Warhorn", "Staff"]
 - A file may still carry `chatlink`; then that link wins and the words are
   ignored.
 
+## An alternative trait line
+
+A build may name one (or more) alternative trait lines. Each
+`[[alternatives]]` entry is a line that stands in for one of the build's
+three lines; the page draws it under the build's lines like them, with its
+own chat link to copy.
+
+```toml
+[[alternatives]]
+replaces = "Earth"              # which of the build's lines it stands in for
+traitline = { line = "Arcane", traits = ["Arcane Restoration", "Arcane Resurrection", "Evasive Arcana"] }
+note = "Arcane can be taken instead of Earth."     # optional, shown under the panel
+optimizer = "/ceo?...&traits=1938,2004&..."        # optional: the alternative's own gear
+```
+
+- `replaces` may be left out when the alternative is the same line with
+  other picks.
+- Without `optimizer` the alternative uses the build's gear. With one, the
+  page runs it too; when the result differs from the build's gear, the
+  Gear and Character sections get a second tab ("with Arcane") showing it.
+  Set the alternative up in the optimizer with its line ticked and paste
+  its "Copy optimizer link", as for the build itself.
+
 ## Refining the gear
 
 A `[gear]` section adds what the solver cannot know or overrides single

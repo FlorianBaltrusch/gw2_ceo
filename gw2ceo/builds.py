@@ -188,6 +188,46 @@ def _closest(name: str, candidates, limit=3) -> str:
     return f" Did you mean {', '.join(repr(c) for c in originals)}?" if originals else ""
 
 
+def _encode_line(profession: str, entry, where: str) -> bytes:
+    """The two bytes of one trait line in a chat link (specialization id,
+    choice bits) from { line = "Fire", traits = ["Burning Precision", 2, ...] }."""
+    specs = gd.specializations.loc[gd.specializations["profession"] == profession]
+    line_name = entry.get("line", "") if isinstance(entry, dict) else ""
+    row = specs.loc[specs["name"].str.lower() == str(line_name).lower()]
+    if row.empty:
+        raise ValueError(f"{where}: unknown trait line {line_name!r} for {profession}; "
+                         f"choose from {specs['name'].tolist()}")
+    spec_id = int(row["id"].iloc[0])
+    spec = get_api_data(f"specializations/{spec_id}")
+    majors = {trait["id"]: trait["name"] for trait in get_api_data_bulk("traits", spec["major_traits"])}
+    names_by_tier = [[majors[trait_id] for trait_id in spec["major_traits"][3 * tier:3 * tier + 3]]
+                     for tier in range(3)]
+    choices = 0
+    picks = list(entry.get("traits", []))
+    if len(picks) > 3:
+        raise ValueError(f"{where}: {line_name} lists {len(picks)} traits, a line has three tiers")
+    for tier, pick in enumerate(picks):
+        if pick in (None, "", 0):
+            continue
+        if isinstance(pick, int):
+            if not 1 <= pick <= 3:
+                raise ValueError(f"{where}: {line_name} tier {tier + 1}: a position is 1, 2 or 3")
+            position = pick
+        else:
+            options = names_by_tier[tier]
+            found = [i for i, name in enumerate(options) if _norm(name) == _norm(pick)]
+            if not found:
+                elsewhere = [f"{TIER_NAMES[t]} tier" for t in range(3) if t != tier
+                             and any(_norm(n) == _norm(pick) for n in names_by_tier[t])]
+                hint = (f" ({pick!r} is a {elsewhere[0]} trait)" if elsewhere
+                        else _closest(pick, sum(names_by_tier, [])))
+                raise ValueError(f"{where}: {line_name} {TIER_NAMES[tier]} trait {pick!r} not found; "
+                                 f"the options are {options}.{hint}")
+            position = found[0] + 1
+        choices |= position << (2 * tier)
+    return bytes([spec_id, choices])
+
+
 def encode_template(raw: dict, where: str) -> str:
     """The build template chat link from a build written in words:
 
@@ -205,48 +245,11 @@ def encode_template(raw: dict, where: str) -> str:
     data = bytearray([0x0D, PROFESSION_CODES.index(profession) + 1])
 
     # trait lines
-    specs = gd.specializations.loc[gd.specializations["profession"] == profession]
     entries = list(raw.get("traitlines", []))
     if not 1 <= len(entries) <= 3:
         raise ValueError(f"{where}: traitlines needs one to three entries")
     for entry in entries + [None] * (3 - len(entries)):
-        if entry is None:
-            data += b"\x00\x00"
-            continue
-        line_name = entry.get("line", "") if isinstance(entry, dict) else ""
-        row = specs.loc[specs["name"].str.lower() == str(line_name).lower()]
-        if row.empty:
-            raise ValueError(f"{where}: unknown trait line {line_name!r} for {profession}; "
-                             f"choose from {specs['name'].tolist()}")
-        spec_id = int(row["id"].iloc[0])
-        spec = get_api_data(f"specializations/{spec_id}")
-        majors = {trait["id"]: trait["name"] for trait in get_api_data_bulk("traits", spec["major_traits"])}
-        names_by_tier = [[majors[trait_id] for trait_id in spec["major_traits"][3 * tier:3 * tier + 3]]
-                         for tier in range(3)]
-        choices = 0
-        picks = list(entry.get("traits", []))
-        if len(picks) > 3:
-            raise ValueError(f"{where}: {line_name} lists {len(picks)} traits, a line has three tiers")
-        for tier, pick in enumerate(picks):
-            if pick in (None, "", 0):
-                continue
-            if isinstance(pick, int):
-                if not 1 <= pick <= 3:
-                    raise ValueError(f"{where}: {line_name} tier {tier + 1}: a position is 1, 2 or 3")
-                position = pick
-            else:
-                options = names_by_tier[tier]
-                found = [i for i, name in enumerate(options) if _norm(name) == _norm(pick)]
-                if not found:
-                    elsewhere = [f"{TIER_NAMES[t]} tier" for t in range(3) if t != tier
-                                 and any(_norm(n) == _norm(pick) for n in names_by_tier[t])]
-                    hint = (f" ({pick!r} is a {elsewhere[0]} trait)" if elsewhere
-                            else _closest(pick, sum(names_by_tier, [])))
-                    raise ValueError(f"{where}: {line_name} {TIER_NAMES[tier]} trait {pick!r} not found; "
-                                     f"the options are {options}.{hint}")
-                position = found[0] + 1
-            choices |= position << (2 * tier)
-        data += bytes([spec_id, choices])
+        data += _encode_line(profession, entry, where) if entry is not None else b"\x00\x00"
 
     # skills: names -> palette ids, land and underwater interleaved
     prof = get_api_data(f"professions/{profession}")
@@ -432,6 +435,73 @@ def merge_gear(derived: dict | None, manual: dict) -> dict:
     }
 
 
+def _alternative_link(chatlink: str, template: dict, alt: dict, where: str) -> tuple[str, int, int]:
+    """The build's chat link with one trait line swapped for the alternative.
+    Returns (link, the alternative's spec id, the replaced line's spec id)."""
+    entry = alt.get("traitline")
+    if not isinstance(entry, dict) or not entry.get("line"):
+        raise ValueError(f"{where}: needs traitline = {{ line = \"...\", traits = [...] }}")
+    line_bytes = _encode_line(template["profession"], entry, where)
+    spec_id = line_bytes[0]
+    ids_by_name = {line["name"].lower(): line["id"] for line in template["lines"]}
+    replaces = alt.get("replaces")
+    if replaces:
+        if str(replaces).lower() not in ids_by_name:
+            raise ValueError(f"{where}: replaces {replaces!r}, but the build's lines are "
+                             f"{[line['name'] for line in template['lines']]}")
+        replaced_id = ids_by_name[str(replaces).lower()]
+    elif spec_id in ids_by_name.values():
+        replaced_id = spec_id      # the same line with other picks
+    else:
+        raise ValueError(f"{where}: say which of the build's lines {entry['line']!r} stands in for "
+                         f"(replaces = \"...\")")
+    data = bytearray(b64decode(chatlink.strip().strip("[]").removeprefix("&")))
+    for index in range(3):
+        if data[2 + 2 * index] == replaced_id:
+            data[2 + 2 * index:4 + 2 * index] = line_bytes
+            break
+    return "[&" + b64encode(bytes(data)).decode() + "]", spec_id, replaced_id
+
+
+def _alternatives(raw: dict, where: str, chatlink: str, template: dict,
+                  manual: dict, main_gear: dict) -> list[dict]:
+    """The build's [[alternatives]]: each is one trait line that stands in
+    for one of the build's lines (or the same line with other picks). An
+    alternative with its own optimizer link gets its own gear; when that
+    gear differs from the build's, the page shows it in a second tab."""
+    alternatives = []
+    for index, alt in enumerate(raw.get("alternatives", []), 1):
+        here = f"{where} alternative {index}"
+        link, spec_id, replaced_id = _alternative_link(chatlink, template, alt, here)
+        decoded = decode_template(link)
+        line = next(line for line in decoded["lines"] if line["id"] == spec_id)
+        replaced = next(line for line in template["lines"] if line["id"] == replaced_id)
+        gear, warning, differs = None, None, False
+        if alt.get("optimizer"):
+            try:
+                derived = buildgear.derive(alt["optimizer"], template["profession"],
+                                           decoded["weapons"])
+            except (ValueError, NotImplementedError, KeyError) as error:
+                warning = (f"The alternative's optimizer link could not be evaluated ({error}); "
+                           "the build's gear applies.")
+            else:
+                gear = merge_gear(derived, manual)
+                differs = gear != main_gear
+        alternatives.append({
+            "line": line,
+            "replaces": replaced["name"],
+            "replaces_icon": replaced["icon"],
+            "note": str(alt.get("note", "")),
+            "chatlink": link,
+            "optimizer": alt.get("optimizer"),
+            "gear_differs": differs,
+            "gear": gear if differs else None,
+            "character": gear.get("character") if differs and gear else None,
+            "gear_warning": warning,
+        })
+    return alternatives
+
+
 def load_build(path: str) -> dict:
     with open(path, "rb") as file:
         raw = tomllib.load(file)
@@ -467,6 +537,7 @@ def load_build(path: str) -> dict:
             gear_warning = (f"The optimizer link could not be evaluated ({error}). "
                             "Showing only the gear written in the build file.")
     gear = merge_gear(derived, manual)
+    alternatives = _alternatives(raw, where, chatlink, template, manual, gear)
 
     # the card's weapon summary: the land sets, or the chat link's types
     if gear["weapon_sets"]:
@@ -505,6 +576,7 @@ def load_build(path: str) -> dict:
         "gear": gear,
         "gear_warning": gear_warning,
         "character": gear.get("character"),
+        "alternatives": alternatives,
     }
 
 
@@ -575,4 +647,6 @@ def summary(build: dict) -> dict:
         "spec", "spec_icon", "banner", "profession_icon", "weapon_summary",
     )} | {
         "traitlines": [{"name": line["name"], "icon": line["icon"]} for line in build["lines"]],
+        "alternatives": [{"name": alt["line"]["name"], "icon": alt["line"]["icon"],
+                          "replaces": alt["replaces"]} for alt in build.get("alternatives", [])],
     }

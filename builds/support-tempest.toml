@@ -20,3 +20,9 @@ Elite alternative: Rebound! instead of Glyph of Elementals.
 
 Relic candidates: Karakosa, Castora.
 """
+
+[[alternatives]]                # one trait line that stands in for one of the build's lines
+replaces = "Earth"
+traitline = { line = "Arcane", traits = ["Arcane Restoration", "Arcane Resurrection", "Evasive Arcana"] }
+note = "Arcane can be taken instead of Earth."
+optimizer = "/ceo?profession=Elementalist&spec=Tempest&mode=boon&traits=1938%2C2004&env=3p&weapon=1h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0&kpos=0"  # PROVISIONAL - replace with your own 'Copy optimizer link' with this line ticked
