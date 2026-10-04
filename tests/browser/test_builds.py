@@ -160,8 +160,8 @@ try:
     check("pets shown under the skills", pets == ["Fanged Iboga", "Jungle Stalker"], str(pets))
     driver.get(BASE + "/builds/ow-event-power-scrapper")
     wait.until(lambda d: count(".traitline") == 4)
-    check("an open tier leaves its majors unselected (Tools master tier of the tagging Scrapper)",
-          count(".major.selected") == 11, str(count(".major.selected")))
+    check("every tier chosen: nine majors in the build's lines plus three in the Alchemy alternative",
+          count(".major.selected") == 12, str(count(".major.selected")))
 
     # unknown build
     driver.get(BASE + "/builds/does-not-exist")

@@ -6,7 +6,7 @@ tags = ["event"]
 summary = "Rifle and hammer Scrapper for events and tagging; Tools and Firearms with gyros for the group."
 profession = "Engineer"
 traitlines = [
-  { line = "Tools", traits = ["Static Discharge", 0, "Adrenal Implant"] },
+  { line = "Tools", traits = ["Static Discharge", "Streamlined Kits", "Adrenal Implant"] },
   { line = "Firearms", traits = ["Sanguine Array", "Juggernaut", "Heavy Metal"] },
   { line = "Scrapper", traits = ["Gyroscopic Acceleration", "Rapid Regeneration", "Applied Force"] },
 ]
@@ -14,8 +14,6 @@ skills = ["Medic Gyro", "Blast Gyro", "Shredder Gyro", "Flamethrower", "Sneak Gy
 weapons = ["Rifle", "Hammer"]
 optimizer = "/ceo?profession=Engineer&spec=Scrapper&mode=crit&traits=536%2C1849&env=4p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
 notes = """
-Tools master tier: still open - "Fire Shield" is not a Tools trait; the options are Streamlined Kits, Lock On and Takedown Round.
-
 Trait alternatives: Sharpshooter instead of Heavy Metal.
 
 Sigils: Fire and Speed.

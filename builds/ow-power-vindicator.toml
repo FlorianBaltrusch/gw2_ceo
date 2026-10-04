@@ -16,7 +16,11 @@ optimizer = "/ceo?profession=Revenant&spec=Vindicator&mode=crit&traits=1719%2C22
 notes = """
 Legends: Alliance (active) and Assassin; the skills follow from the legends.
 
-Trait alternatives: Vassals of the Empire (formerly Empire Divided) instead of Forerunner of Death, which gives the Death Drop dodge.
+Trait alternatives: Thrill of Combat instead of Notoriety and Dance of Death instead of Swift Termination for defense; Incensed Response instead of Spirit Boon if you are not at 25 might.
+
+Legend alternative: Dwarf instead of Assassin for defense.
+
+Sigils: Stamina could be good.
 
 Relic candidates: Thief, Evasion.
 """

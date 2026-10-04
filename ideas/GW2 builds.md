@@ -282,7 +282,7 @@ main-hand/off-hand pair, "+" separates weapon sets, "or" lists alternatives.
 
 - Weapons: Rifle + Hammer
 - Traits:
-  - Tools: Static Discharge, ? (Fire Shield is not a Tools trait; the master tier offers Streamlined Kits, Lock On or Takedown Round), Adrenal Implant
+  - Tools: Static Discharge, Streamlined Kits, Adrenal Implant
   - Firearms: Sanguine Array, Juggernaut, Heavy Metal or Sharpshooter
   - Scrapper: Gyroscopic Acceleration, Rapid Regeneration, Applied Force
   - Alchemy (can be taken instead of Tools): Health Insurance, Blast Zone, Equal and Opposite Reaction
@@ -301,7 +301,7 @@ main-hand/off-hand pair, "+" separates weapon sets, "or" lists alternatives.
 - Traits:
   - Explosives: Short Fuse or Glass Cannon, Aim-Assisted Rocket, Big Boomer
   - Firearms: High Caliber or Sanguine Array, No Scope, Heavy Metal or Sharpshooter
-  - Mechanist: Mech Arms: Jade Cannons, ?, ? (Core Reactor Shot and Jade Mortar are the mech's skills, not traits; the master tier offers Mech Frame: Conductive Alloys, Channeling Conduits or Variable Mass Distributor, the grandmaster tier Mech Core: Jade Dynamo, Barrier Engine or J-Drive)
+  - Mechanist: Mech Arms: Jade Cannons, Mech Frame: Variable Mass Distributor, Mech Core: Jade Dynamo
   - Tools (can be taken instead of Firearms): Power Wrench, Takedown Round, Adrenal Implant
 - Utility skills:
   - Rectifier Signet
@@ -476,11 +476,12 @@ main-hand/off-hand pair, "+" separates weapon sets, "or" lists alternatives.
 
 - Weapons: Greatsword + Sword/Sword
 - Traits:
-  - Devastation: Unsuspecting Strikes, Notoriety, Swift Termination
-  - Invocation: Rising Tide, Spirit Boon, Roiling Mists
-  - Vindicator: Leviathan Strength, Reaver's Curse, Forerunner of Death (for Death Drop) or Vassals of the Empire (formerly Empire Divided)
-- Legends: Alliance + Assassin
+  - Devastation: Unsuspecting Strikes, Notoriety (or Thrill of Combat for defense), Swift Termination (or Dance of Death for defense)
+  - Invocation: Rising Tide, Spirit Boon (or Incensed Response if not at 25 might), Roiling Mists
+  - Vindicator: Leviathan Strength, Reaver's Curse, Forerunner of Death
+- Legends: Alliance + Assassin (or Dwarf for defense)
 - Relics: Thief, Evasion
+- Sigils: Stamina could be good
 
 ## Warrior
 
