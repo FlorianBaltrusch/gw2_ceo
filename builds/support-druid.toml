@@ -1,0 +1,31 @@
+# Support (Heal/Boon) Druid - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Support (Heal/Boon) Druid"
+category = "support"
+tags = []
+summary = "Heal and boon Druid on staff with mace/warhorn; spirits and glyphs for the group."
+profession = "Ranger"
+traitlines = [
+  { line = "Marksmanship", traits = ["Clarion Bond", "Moment of Clarity", "Predator's Onslaught"] },
+  { line = "Nature Magic", traits = ["Wellspring", "Spirited Arrival", "Invigorating Bond"] },
+  { line = "Druid", traits = ["Verdant Etching", "Grace of the Land", "Lingering Light"] },
+]
+skills = ["Glyph of Rejuvenation", "Glyph of Burgeoning", "Stone Spirit", "Sun Spirit", "Glyph of the Stars"]
+weapons = ["Staff", "Mace", "Warhorn"]
+pets = ["Fanged Iboga", "Jungle Stalker"]
+optimizer = "/ceo?profession=Ranger&spec=Druid&mode=boon&traits=1059%2C978%2C2058%2C1992&env=3p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0&kpos=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Trait alternatives: Remorseless instead of Predator's Onslaught; Windborne Notes instead of Spirited Arrival; Nature's Vengeance instead of Invigorating Bond.
+
+Utility alternatives: Storm Spirit instead of Glyph of Burgeoning; Spirit of Nature instead of Glyph of the Stars.
+
+Pets: Fanged Iboga (DPS) or Jungle Stalker (Might), Electric Wyvern (CC), River Otter (Heal), Jacaranda (AoE), Rock Gazelle (CC), Red Moa (Fury), Wolf (Fear), Brown Bear (condition cleanse), Fern Hound (Regeneration), White Tiger (Aegis), Siege Turtle (Protection).
+
+Relic candidates: Karakosa, Monk, Flock.
+"""
+
+[[alternatives]]                # one trait line that stands in for one of the build's lines
+replaces = "Marksmanship"
+traitline = { line = "Skirmishing", traits = ["Sharpened Edges", "Fang and Claw", "Quick Draw"] }
+note = "Skirmishing can be taken instead of Marksmanship."
+optimizer = "/ceo?profession=Ranger&spec=Druid&mode=boon&traits=1068%2C1059%2C978%2C2058%2C1992&env=3p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0&kpos=0"  # PROVISIONAL - replace with your own 'Copy optimizer link' with this line ticked

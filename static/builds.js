@@ -253,14 +253,14 @@ function renderCards() {
     const names = document.createElement("span");
     names.className = "names";
     names.textContent = build.traitlines.map(line => line.name).join(" · ");
-    lines.append(names);
     if (build.alternatives?.length) {
       const alt = document.createElement("span");
       alt.className = "alt";
       alt.textContent = `or ${build.alternatives.map(a => a.name).join(" / ")}`;
       alt.title = build.alternatives.map(a => `${a.name} instead of ${a.replaces}`).join("\n");
-      lines.append(alt);
+      names.append(alt);   // flows with the names, wraps with them
     }
+    lines.append(names);
     row2.append(weapons, lines);
 
     card.append(row1, row2);
@@ -313,7 +313,9 @@ async function showDetail(slug) {
 
   const side = document.createElement("div");
   side.className = "col-side";
-  side.append(section("Skills", skillBars(build.skills)));
+  const skills = section("Skills", skillBars(build.skills));
+  if (build.pets || build.legends) skills.append(companions(build));
+  side.append(skills);
   if (build.character) {
     side.append(tabbed("Character", variant => variant.character
       ? characterCard(variant.character) : document.createElement("div")));
@@ -604,6 +606,43 @@ function skillBars(skills) {
     });
     bar.append(caption, list);
     wrap.append(bar);
+  }
+  return wrap;
+}
+
+// a Ranger's pets or a Revenant's legends, under the skill bars
+function companions(build) {
+  const wrap = document.createElement("div");
+  wrap.className = "companions";
+  const source = build.pets || build.legends;
+  const names = (entries) => entries.map(entry => entry && entry.name).join("|");
+  // one row when the underwater pair is the same (or empty), two otherwise
+  const groups = [[build.pets ? "Pets" : "Legends", source.land]];
+  if (source.aquatic.some(Boolean) && names(source.aquatic) !== names(source.land)) {
+    groups.push(["Underwater", source.aquatic]);
+  }
+  for (const [label, entries] of groups) {
+    if (!entries.some(Boolean)) continue;
+    const caption = document.createElement("span");
+    caption.className = "skillbar-label";
+    caption.textContent = label;
+    wrap.append(caption);
+    const row = document.createElement("div");
+    row.className = "companion-row";
+    for (const entry of entries) {
+      if (!entry) continue;
+      const item = document.createElement("span");
+      item.className = "companion";
+      const img = document.createElement("img");
+      img.src = entry.icon;
+      img.alt = "";
+      if (entry.description) img.title = entry.description;
+      const name = document.createElement("span");
+      name.textContent = entry.name;
+      item.append(img, name);
+      row.append(item);
+    }
+    wrap.append(row);
   }
   return wrap;
 }

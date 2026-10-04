@@ -12,6 +12,7 @@ traitlines = [
 ]
 skills = ["Troll Unguent", "Protect Me!", "Quickening Zephyr", "Lightning Reflexes", "Strength of the Pack!"]
 weapons = ["Longbow", "Greatsword"]
+pets = ["Sky-Chak Striker", "Siege Turtle"]
 optimizer = "/ceo?profession=Ranger&spec=core&mode=crit&traits=&env=3p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=0&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=1"  # PROVISIONAL - replace with your own 'Copy optimizer link'
 notes = """
 Trait alternatives: Lead the Wind instead of Remorseless; Empathic Bond instead of Survival Instincts.

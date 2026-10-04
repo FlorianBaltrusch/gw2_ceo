@@ -1,0 +1,32 @@
+# Raid Power Mechanist - from ideas/GW2 builds.md. Underwater skills, relic decision, sigils and the
+# rotation notes are still open; the optimizer link is provisional until replaced.
+name = "Raid Power Mechanist"
+category = "raid"
+tags = []
+summary = "Rifle Mechanist for instanced content with Explosives and Firearms; a second rifle carries a stacking sigil."
+profession = "Engineer"
+traitlines = [
+  { line = "Explosives", traits = ["Short Fuse", "Aim-Assisted Rocket", "Big Boomer"] },
+  { line = "Firearms", traits = ["High Caliber", "No Scope", "Heavy Metal"] },
+  { line = "Mechanist", traits = ["Mech Arms: Jade Cannons", 0, 0] },
+]
+skills = ["Rectifier Signet", "Grenade Kit", "Force Signet", "Shift Signet", "Overclock Signet"]
+weapons = ["Rifle"]
+optimizer = "/ceo?profession=Engineer&spec=Mechanist&mode=crit&traits=536%2C1914%2C1923&env=3p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
+notes = """
+Weapons: Rifle + Rifle, the second one for a stacking sigil.
+
+Mechanist master and grandmaster tiers: still open - Core Reactor Shot and Jade Mortar are the mech's skills, not traits. The master options are Mech Frame: Conductive Alloys, Channeling Conduits or Variable Mass Distributor, the grandmaster options Mech Core: Jade Dynamo, Barrier Engine or J-Drive.
+
+Trait alternatives: Glass Cannon instead of Short Fuse; Sanguine Array instead of High Caliber; Sharpshooter instead of Heavy Metal.
+
+Utility alternatives: Bomb Kit or Throw Mine instead of Grenade Kit.
+
+Relic candidates: Pirate Queen, Thief, Claw.
+"""
+
+[[alternatives]]                # one trait line that stands in for one of the build's lines
+replaces = "Firearms"
+traitline = { line = "Tools", traits = ["Power Wrench", "Takedown Round", "Adrenal Implant"] }
+note = "Tools can be taken instead of Firearms."
+optimizer = "/ceo?profession=Engineer&spec=Mechanist&mode=crit&traits=&env=3p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=0&utility=1&writs=1&stacking=0&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link' with this line ticked

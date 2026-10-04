@@ -69,6 +69,11 @@ weapons = ["Scepter", "Warhorn", "Staff"]
   without it each land skill is used underwater where the game allows it.
 - `weapons` is optional: without it the types of the gear's `set1`/`set2`
   entries are used. Each type is listed once, as in the game's links.
+- A Ranger names `pets = ["Fanged Iboga", "Jungle Stalker"]` (and
+  `aquatic_pets`); a Revenant names `legends = ["Alliance", "Assassin"]`
+  (active first; `aquatic_legends` when they differ) and leaves `skills`
+  out - the legend's skills are shown. Both land in the chat link's
+  profession block and under the skills on the page.
 - A file may still carry `chatlink`; then that link wins and the words are
   ignored.
 

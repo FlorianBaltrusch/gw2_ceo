@@ -265,19 +265,51 @@ main-hand/off-hand pair, "+" separates weapon sets, "or" lists alternatives.
 
 ### Open World Power Scrapper
 
-- Mukluk? (no content yet)
+- Weapons: Hammer + Hammer (for a stacking sigil)
+- Traits:
+  - Explosives: Glass Cannon, Explosive Temper, Big Boomer
+  - Firearms: High Caliber, No Scope, Heavy Metal or Sharpshooter
+  - Scrapper: Gyroscopic Acceleration, Object in Motion, Kinetic Accelerators (or Applied Force for DPS but without Quickness)
+- Utility skills:
+  - A.E.D. or Medic Gyro
+  - Bomb Kit or Blast Gyro
+  - Shredder Gyro
+  - Throw Mine or Grenade Kit
+  - Elite Mortar Kit or Supply Crate
+- Relics: Fireworks, Claw, Zakiros, Midnight King, Eagle, Thief, Mist Stranger, Bloodstone
 
 ### Open World (Event/Tagging) Power Scrapper
 
-- Mukluk? (no content yet)
+- Weapons: Rifle + Hammer
+- Traits:
+  - Tools: Static Discharge, ? (Fire Shield is not a Tools trait; the master tier offers Streamlined Kits, Lock On or Takedown Round), Adrenal Implant
+  - Firearms: Sanguine Array, Juggernaut, Heavy Metal or Sharpshooter
+  - Scrapper: Gyroscopic Acceleration, Rapid Regeneration, Applied Force
+  - Alchemy (can be taken instead of Tools): Health Insurance, Blast Zone, Equal and Opposite Reaction
+- Utility skills:
+  - Medic Gyro
+  - Blast Gyro
+  - Shredder Gyro
+  - Flamethrower
+  - Sneak Gyro
+- Relics: Speed
+- Sigils: Fire and Speed
 
-### WvW Support Scrapper (?)
+### Raid Power Mechanist
 
-- Mukluk? (no content yet)
-
-### Raid Power Mechanist (?)
-
-- (no content yet)
+- Weapons: Rifle + Rifle (for a stacking sigil)
+- Traits:
+  - Explosives: Short Fuse or Glass Cannon, Aim-Assisted Rocket, Big Boomer
+  - Firearms: High Caliber or Sanguine Array, No Scope, Heavy Metal or Sharpshooter
+  - Mechanist: Mech Arms: Jade Cannons, ?, ? (Core Reactor Shot and Jade Mortar are the mech's skills, not traits; the master tier offers Mech Frame: Conductive Alloys, Channeling Conduits or Variable Mass Distributor, the grandmaster tier Mech Core: Jade Dynamo, Barrier Engine or J-Drive)
+  - Tools (can be taken instead of Firearms): Power Wrench, Takedown Round, Adrenal Implant
+- Utility skills:
+  - Rectifier Signet
+  - Grenade Kit or Bomb Kit or Throw Mine
+  - Force Signet
+  - Shift Signet
+  - Overclock Signet
+- Relics: Pirate Queen, Thief, Claw
 
 ## Ranger
 
@@ -294,7 +326,7 @@ main-hand/off-hand pair, "+" separates weapon sets, "or" lists alternatives.
   - Quickening Zephyr
   - Lightning Reflexes
   - "Strength of the Pack!" or Entangle
-- Pets: Sky-Chak, Siege Turtle, Smokescale, Rock Gazelle, Tiger, Wolf and Owl for free-to-play, Jaguar, Krytan Drakehound
+- Pets: Sky-Chak Striker, Siege Turtle, Smokescale, Rock Gazelle, Tiger, Wolf and Owl for free-to-play, Jaguar, Krytan Drakehound
 - Relics: Mist Stranger, Thief, Speed, Water, Wayfinder
 - Sigils:
   - Longbow: Air/Clarity or Air/Force or Air/Blood
@@ -303,7 +335,20 @@ main-hand/off-hand pair, "+" separates weapon sets, "or" lists alternatives.
 
 ### Support (Heal/Boon) Druid
 
-- Mukluk video (no content yet)
+- Weapons: Staff + Mace/Warhorn
+- Traits:
+  - Marksmanship: Clarion Bond, Moment of Clarity, Predator's Onslaught or Remorseless
+  - Nature Magic: Wellspring, Spirited Arrival or Windborne Notes, Invigorating Bond or Nature's Vengeance
+  - Druid: Verdant Etching, Grace of the Land, Lingering Light
+  - Skirmishing (can be taken instead of Marksmanship): Sharpened Edges, Fang and Claw, Quick Draw
+- Utility skills:
+  - Glyph of Rejuvenation
+  - Glyph of Burgeoning or Storm Spirit
+  - Stone Spirit
+  - Sun Spirit
+  - Glyph of the Stars or Spirit of Nature
+- Pets: Fanged Iboga (DPS) or Jungle Stalker (Might), Electric Wyvern (CC), River Otter (Heal), Jacaranda (AoE), Rock Gazelle (CC), Red Moa (Fury), Wolf (Fear), Brown Bear (condition cleanse), Fern Hound (Regeneration), White Tiger (Aegis), Siege Turtle (Protection)
+- Relics: Karakosa, Monk, Flock
 
 ### Open World (Event/Boon) Power Galeshot
 
@@ -318,7 +363,7 @@ main-hand/off-hand pair, "+" separates weapon sets, "or" lists alternatives.
   - Piercing Gales
   - Mistral or Quickening Zephyr or Storm Spirit or "Sic 'Em!"
   - Perfect Storm or "Strength of the Pack!"
-- Pets: Carrion Devourer, Fanged Iboga, Lynx, Black Bear, Brown Bear, Red Moa, Pink Moa, Raptor, Phoenix, Jacaranda, Siege Turtle, Tiger, River Drake, Rock Gazelle, Hawk, Electric Wyvern
+- Pets: Carrion Devourer, Fanged Iboga, Lynx, Black Bear, Brown Bear, Red Moa, Pink Moa, Raptor Swiftwing, Phoenix, Jacaranda, Siege Turtle, Tiger, River Drake, Rock Gazelle, Hawk, Electric Wyvern
 - Relics: Midnight King, Claw, Zakiros, Fireworks, Eagle, Thief, Ogre (Sigil of Rage also sounds good)
 
 ## Thief
@@ -429,7 +474,13 @@ main-hand/off-hand pair, "+" separates weapon sets, "or" lists alternatives.
 
 ### Open World Power Vindicator
 
-- Coming soon
+- Weapons: Greatsword + Sword/Sword
+- Traits:
+  - Devastation: Unsuspecting Strikes, Notoriety, Swift Termination
+  - Invocation: Rising Tide, Spirit Boon, Roiling Mists
+  - Vindicator: Leviathan Strength, Reaver's Curse, Forerunner of Death (for Death Drop) or Vassals of the Empire (formerly Empire Divided)
+- Legends: Alliance + Assassin
+- Relics: Thief, Evasion
 
 ## Warrior
 

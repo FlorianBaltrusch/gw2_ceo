@@ -67,6 +67,15 @@ RARITIES = ("exotic", "ascended", "legendary")
 
 SKILL_LABELS = ["Heal", "Utility", "Utility", "Utility", "Elite"]
 
+# Revenant legends in a build template: the byte is the legend's code, which
+# is the number in the API id (/v2/legends/Legend<code>; wiki, chat link
+# format). Named after the legend's title or its champion.
+LEGEND_CODES = {"dragon": 1, "glint": 1, "assassin": 2, "shiro": 2, "dwarf": 3, "jalis": 3,
+                "demon": 4, "mallyx": 4, "renegade": 5, "kalla": 5, "centaur": 6, "ventari": 6,
+                "alliance": 7, "entity": 8}
+LEGEND_NAMES = {1: "Dragon", 2: "Assassin", 3: "Dwarf", 4: "Demon", 5: "Renegade",
+                6: "Centaur", 7: "Alliance", 8: "Entity"}
+
 
 def _icon_url(filename: str) -> str:
     """/icons/ URL stamped with the cached file's mtime, so a re-trimmed or
@@ -150,6 +159,28 @@ def decode_template(link: str) -> dict:
     palettes = struct.unpack_from("<10H", data, 8)
     skill_by_palette = dict(get_api_data(f"professions/{profession}")["skills_by_palette"])
     skill_ids = [skill_by_palette.get(palette) for palette in palettes]
+
+    # the profession block (bytes 28-43): a Ranger's pets, a Revenant's
+    # legends - whose skills the palettes do not carry (the API lists no
+    # palette ids for legend skills), so they come from the legends
+    pets = legends = None
+    if profession == "Ranger":
+        pet_ids = [pet_id for pet_id in data[28:32]]
+        found = {pet["id"]: pet for pet in get_api_data_bulk("pets", [p for p in pet_ids if p])}
+        entry = lambda pet_id: _pet_entry(found[pet_id]) if pet_id in found else None  # noqa: E731
+        pets = {"land": [entry(pet_ids[0]), entry(pet_ids[1])],
+                "aquatic": [entry(pet_ids[2]), entry(pet_ids[3])]}
+    elif profession == "Revenant":
+        codes = list(data[28:32])
+        legends = {"land": [_legend_entry(codes[0]), _legend_entry(codes[1])],
+                   "aquatic": [_legend_entry(codes[2]), _legend_entry(codes[3])]}
+        for offset, code in ((0, codes[0]), (1, codes[2])):   # land, then aquatic
+            if code and not any(skill_ids[offset::2]):
+                legend = get_api_data(f"legends/Legend{code}")
+                legend_skills = [legend["heal"], *legend["utilities"], legend["elite"]]
+                for slot in range(5):
+                    skill_ids[2 * slot + offset] = legend_skills[slot]
+
     skills = {skill["id"]: skill for skill in
               get_api_data_bulk("skills", [skill_id for skill_id in skill_ids if skill_id])}
     # palette order: heal, utility 1-3, elite - land and underwater interleaved
@@ -169,6 +200,28 @@ def decode_template(link: str) -> dict:
         "lines": lines,
         "skills": {"land": land, "aquatic": aquatic},
         "weapons": weapons,
+        "pets": pets,
+        "legends": legends,
+    }
+
+
+def _pet_entry(pet: dict) -> dict:
+    return {
+        "id": pet["id"],
+        "name": pet["name"].removeprefix("Juvenile "),
+        "description": plain_text(pet.get("description", "")),
+        "icon": f"/icons/pet_{pet['id']}.png",
+    }
+
+
+def _legend_entry(code: int) -> dict | None:
+    if not code or code not in LEGEND_NAMES:
+        return None
+    legend = get_api_data(f"legends/Legend{code}")
+    return {
+        "code": code,
+        "name": LEGEND_NAMES[code],
+        "icon": f"/icons/skill_{legend['swap']}.png",   # the legend's swap skill icon
     }
 
 
@@ -290,7 +343,7 @@ def encode_template(raw: dict, where: str) -> str:
             aquatic_palette, _ = lookup(aquatic_name, index, "underwater")
         palettes += [land_palette, aquatic_palette]
     data += struct.pack("<10H", *palettes)
-    data += bytes(16)   # profession block (pets, legends): none
+    data += _profession_block(profession, raw, where)
 
     # weapons: named, or the types of the gear's land sets
     weapon_names = raw.get("weapons")
@@ -313,6 +366,41 @@ def encode_template(raw: dict, where: str) -> str:
     data += bytes([len(weapon_ids)]) + struct.pack(f"<{len(weapon_ids)}H", *weapon_ids) + b"\x00"
 
     return "[&" + b64encode(bytes(data)).decode() + "]"
+
+
+def _profession_block(profession: str, raw: dict, where: str) -> bytes:
+    """The 16 profession-specific bytes of a chat link: a Ranger's pets
+    (pets = [...], aquatic_pets = [...]; land pet 1, land pet 2, aquatic pet
+    1, aquatic pet 2) or a Revenant's legends (legends = [active, inactive],
+    aquatic_legends likewise); zero for every other profession."""
+    block = bytearray(16)
+    if profession == "Ranger" and (raw.get("pets") or raw.get("aquatic_pets")):
+        all_pets = get_api_data_bulk("pets", get_api_data("pets"))
+        by_name = {_norm(pet["name"].removeprefix("Juvenile ")): pet["id"] for pet in all_pets}
+        for offset, key in ((0, "pets"), (2, "aquatic_pets")):
+            names = list(raw.get(key, []))
+            if len(names) > 2:
+                raise ValueError(f"{where}: {key} lists {len(names)} pets, a Ranger carries two")
+            for index, name in enumerate(names):
+                if _norm(name) not in by_name:
+                    raise ValueError(f"{where}: unknown pet {name!r}."
+                                     f"{_closest(name, [p['name'].removeprefix('Juvenile ') for p in all_pets])}")
+                block[offset + index] = by_name[_norm(name)]
+    elif profession == "Revenant" and (raw.get("legends") or raw.get("aquatic_legends")):
+        land = list(raw.get("legends", []))
+        aquatic = list(raw.get("aquatic_legends", land))   # the same legends underwater by default
+        for offset, names, key in ((0, land, "legends"), (2, aquatic, "aquatic_legends")):
+            if len(names) > 2:
+                raise ValueError(f"{where}: {key} lists {len(names)} legends, a Revenant carries two")
+            for index, name in enumerate(names):
+                code = LEGEND_CODES.get(_norm(name).replace("legendary", "").replace("stance", "").strip())
+                if code is None:
+                    raise ValueError(f"{where}: unknown legend {name!r}; choose from "
+                                     f"{sorted(set(LEGEND_NAMES.values()))}")
+                block[offset + index] = code
+        # bytes 4-15 would hold the inactive legends' utility order (palette
+        # ids the API does not publish) - zero means the default order
+    return bytes(block)
 
 
 def _item(value, where: str, weapon: bool = False) -> dict:
@@ -518,6 +606,8 @@ def load_build(path: str) -> dict:
     if raw.get("chatlink"):
         chatlink = raw["chatlink"].strip()
     elif raw.get("profession") and raw.get("traitlines"):
+        if str(raw["profession"]).lower() == "revenant" and not raw.get("legends") and not raw.get("skills"):
+            raise ValueError(f"{where}: a Revenant build names its legends (legends = [\"Alliance\", \"Assassin\"])")
         chatlink = encode_template(raw, where)
     else:
         raise ValueError(f"{where}: give either 'chatlink' or 'profession' + 'traitlines' "
@@ -571,6 +661,8 @@ def load_build(path: str) -> dict:
         "profession_icon": f"/icons/tango_{template['profession']}.png",
         "lines": template["lines"],
         "skills": template["skills"],
+        "pets": template.get("pets"),
+        "legends": template.get("legends"),
         "template_weapons": template["weapons"],
         "weapon_summary": weapon_summary,
         "gear": gear,

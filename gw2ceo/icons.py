@@ -113,6 +113,9 @@ def _resolve(filename: str):
     if match := re.fullmatch(r"skill_(\d+)\.png", filename):
         return (get_api_data(f"skills/{match.group(1)}").get("icon"), False)
 
+    if match := re.fullmatch(r"pet_(\d+)\.png", filename):
+        return (get_api_data(f"pets/{match.group(1)}").get("icon"), False)
+
     if match := re.fullmatch(r"prof_([A-Za-z]+)\.png", filename):
         return (get_api_data(f"professions/{match.group(1)}").get("icon_big"), False)
 

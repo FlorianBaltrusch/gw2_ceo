@@ -12,6 +12,7 @@ traitlines = [
 ]
 skills = ["Soothing Breeze", "Signet of the Wild", "Piercing Gales", "Mistral", "Perfect Storm"]
 weapons = ["Longbow", "Greatsword"]
+pets = ["Carrion Devourer", "Fanged Iboga"]
 optimizer = "/ceo?profession=Ranger&spec=Galeshot&mode=crit&traits=1068%2C1888%2C12491&env=4p&weapon=2h&asc=all&fury=1&might=25&food=1&ascended_food=1&pie=1&utility=1&writs=0&stacking=1&herald=1&single_sigil=0&relic_reserved=0&stowed=0&tank=0&wvw=0"  # PROVISIONAL - replace with your own 'Copy optimizer link'
 notes = """
 Weapons: Longbow plus whatever you like (Greatsword, Axe/Axe, Spear ...).

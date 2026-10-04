@@ -33,7 +33,7 @@ try:
     driver.get(BASE + "/builds")
     wait.until(lambda d: count(".build-card") >= 20)
     total = count(".build-card")
-    check("all build files listed", total == 23, str(total))
+    check("all build files listed", total == 28, str(total))
     card = driver.find_element(By.CSS_SELECTOR, ".build-card")
     check("card row one: spec + profession (Tempest first: HoT before the newer specs)",
           card.find_element(By.CSS_SELECTOR, ".card-spec").text == "Tempest"
@@ -51,8 +51,8 @@ try:
     groups = driver.find_elements(By.CSS_SELECTOR, ".filter-group .control-label")
     check("profession filter comes first", groups[0].text.lower() == "profession", str([g.text for g in groups]))
     driver.find_element(By.CSS_SELECTOR, "#category-filter button[data-value='raid']").click()
-    wait.until(lambda d: count(".build-card") == 5)
-    check("raid filter keeps the five raid builds", count(".build-card") == 5
+    wait.until(lambda d: count(".build-card") == 6)
+    check("raid filter keeps the six raid builds", count(".build-card") == 6
           and all("instanced" in b.text.lower() for b in driver.find_elements(By.CSS_SELECTOR, ".build-card .badge")))
     check("filter in URL", "cat=raid" in driver.current_url, driver.current_url)
 
@@ -142,9 +142,26 @@ try:
 
     # the card names the alternative
     driver.get(BASE + "/builds?cat=support")
-    wait.until(lambda d: count(".build-card") == 3)
+    wait.until(lambda d: count(".build-card") == 4)
     alts = [a.text for a in driver.find_elements(By.CSS_SELECTOR, ".card-lines .alt")]
-    check("card marks the alternative line", alts == ["or Arcane"], str(alts))
+    check("cards mark the alternative lines", alts == ["or Arcane", "or Skirmishing"], str(alts))
+
+    # a Revenant: skills from the active legend, legends shown; a Ranger: pets shown
+    driver.get(BASE + "/builds/ow-power-vindicator")
+    wait.until(lambda d: count(".traitline") == 3)
+    names = [f.text for f in driver.find_elements(By.CSS_SELECTOR, ".skill figcaption")]
+    check("revenant skills come from the active legend",
+          "Selfish Spirit" in names and "Spear of Archemorus" in names, str(names))
+    legends = [c.text for c in driver.find_elements(By.CSS_SELECTOR, ".companions .companion")]
+    check("legends shown under the skills", legends == ["Alliance", "Assassin"], str(legends))
+    driver.get(BASE + "/builds/support-druid")
+    wait.until(lambda d: count(".traitline") == 4)
+    pets = [c.text for c in driver.find_elements(By.CSS_SELECTOR, ".companions .companion")]
+    check("pets shown under the skills", pets == ["Fanged Iboga", "Jungle Stalker"], str(pets))
+    driver.get(BASE + "/builds/ow-event-power-scrapper")
+    wait.until(lambda d: count(".traitline") == 4)
+    check("an open tier leaves its majors unselected (Tools master tier of the tagging Scrapper)",
+          count(".major.selected") == 11, str(count(".major.selected")))
 
     # unknown build
     driver.get(BASE + "/builds/does-not-exist")

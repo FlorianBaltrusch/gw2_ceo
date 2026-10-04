@@ -340,7 +340,7 @@
 .section-head > h2 { margin: 0; }
 .variant-tabs { margin: 0; }
 .variant-tabs button { flex: 0 0 auto; padding: 7px 16px; white-space: nowrap; }
-.card-lines .alt { color: var(--text-dim); margin-left: 6px; }
+.card-lines .alt { color: var(--text-dim); margin-left: 6px; white-space: nowrap; }
 
 /* trait lines, styled after the GW2 Armory specialization widget (as on
    Snow Crows): the banner art as a flat 40% layer over near-black, one
@@ -520,6 +520,12 @@
 .skill.elite img { border-color: var(--gold); }
 .skill figcaption { font-size: .7rem; color: var(--text-dim); margin-top: 4px; line-height: 1.25; }
 .skill .empty { opacity: var(--alpha-mid, 50%); }
+
+/* pets or legends under the skill bars */
+.companions { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
+.companion-row { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-bottom: 6px; }
+.companion { display: flex; align-items: center; gap: 8px; color: var(--text); }
+.companion img { width: 36px; height: 36px; border-radius: 6px; border: 1px solid var(--border); object-fit: cover; background: #000; }
 
 /* gear panel */
 
