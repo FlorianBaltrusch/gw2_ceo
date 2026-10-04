@@ -16,7 +16,10 @@ images on demand - a fresh clone renders every build without preparation.
 """
 
 import difflib
+import glob
+import hashlib
 import html
+import json
 import os
 import re
 import struct
@@ -505,6 +508,45 @@ def load_build(path: str) -> dict:
     }
 
 
+CACHE_DIR = os.path.join("assets", "api-cache", "builds")
+
+
+def _data_version() -> str:
+    """Fingerprint of everything a loaded build depends on besides its own
+    file: the solver's data tables and the code. Any change invalidates the
+    cached builds (a deploy touches the files' mtimes, which is fine)."""
+    parts = []
+    for pattern in ("assets/*.csv", "gw2ceo/*.py"):
+        for path in sorted(glob.glob(pattern)):
+            stat = os.stat(path)
+            parts.append(f"{path}:{stat.st_mtime_ns}:{stat.st_size}")
+    return hashlib.sha1("\n".join(parts).encode()).hexdigest()
+
+
+def load_build_cached(path: str, version: str) -> dict:
+    """load_build() through a JSON cache keyed by the file's content and the
+    data version - decoding and solving take a few hundred milliseconds per
+    build, reading the cache a few milliseconds."""
+    with open(path, "rb") as file:
+        content = file.read()
+    key = hashlib.sha1(content + version.encode()).hexdigest()
+    slug = os.path.splitext(os.path.basename(path))[0]
+    cache_path = os.path.join(CACHE_DIR, f"{slug}.json")
+    if os.path.isfile(cache_path):
+        try:
+            with open(cache_path) as file:
+                cached = json.load(file)
+            if cached.get("key") == key:
+                return cached["build"]
+        except (OSError, ValueError):
+            pass
+    build = load_build(path)
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    with open(cache_path, "w") as file:
+        json.dump({"key": key, "build": build}, file)
+    return build
+
+
 def load_all() -> list[dict]:
     """Every build in builds/, in a stable display order: by profession (the
     site's light-to-heavy order), then core before the elite specs in their
@@ -513,7 +555,8 @@ def load_all() -> list[dict]:
     open world, support, WvW), then name."""
     if not os.path.isdir(BUILDS_DIR):
         return []
-    builds = [load_build(os.path.join(BUILDS_DIR, name))
+    version = _data_version()
+    builds = [load_build_cached(os.path.join(BUILDS_DIR, name), version)
               for name in sorted(os.listdir(BUILDS_DIR)) if name.endswith(".toml")]
     slugs = [build["slug"] for build in builds]
     duplicates = {slug for slug in slugs if slugs.count(slug) > 1}

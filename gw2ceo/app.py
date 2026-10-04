@@ -1,4 +1,5 @@
 import os
+import threading
 
 import pandas as pd
 from flask import Flask, Response, abort, jsonify, redirect, request, send_from_directory
@@ -43,6 +44,7 @@ def builds_page(slug=None):
 # ---------- curated builds (builds/*.toml) ----------
 
 _build_cache: dict = {"stamp": None, "builds": []}
+_build_lock = threading.Lock()
 
 
 def build_library() -> list[dict]:
@@ -53,10 +55,23 @@ def build_library() -> list[dict]:
     names = sorted(name for name in os.listdir(folder) if name.endswith(".toml")) \
         if os.path.isdir(folder) else []
     stamp = tuple((name, os.path.getmtime(os.path.join(folder, name))) for name in names)
-    if stamp != _build_cache["stamp"]:
-        _build_cache["builds"] = builds.load_all()
-        _build_cache["stamp"] = stamp
-    return _build_cache["builds"]
+    with _build_lock:  # a request during the start-up warm-up waits instead of loading twice
+        if stamp != _build_cache["stamp"]:
+            _build_cache["builds"] = builds.load_all()
+            _build_cache["stamp"] = stamp
+        return _build_cache["builds"]
+
+
+# warm the build catalogue right after start, so the first visitor never
+# waits for the decoding and solving (a few seconds without the disk cache)
+def _warm_builds():
+    try:
+        build_library()
+    except Exception:  # noqa: BLE001 - a broken build file or no network must not kill the server
+        pass
+
+
+threading.Thread(target=_warm_builds, name="warm-builds", daemon=True).start()
 
 
 @app.route("/api/builds")
