@@ -53,7 +53,7 @@ try:
     check("wvw checkbox hidden in boon mode", not visible(driver, "wvw-label"))
     driver.find_element(By.CSS_SELECTOR, "#mode-choice button[data-value='power']").click()
     driver.execute_script("arguments[0].click()", driver.find_element(By.ID, "opt-wvw"))
-    check("power equipment renders", "Shoulders/Gloves/Boots" in text)
+    check("power equipment renders", all(slot in text for slot in ("Shoulders", "Gloves", "Boots")))
 finally:
     driver.quit()
 

@@ -71,6 +71,20 @@ class GearSelect:
                 meta.append((0, 0, 1))
             add_group(label, 1, options, meta, (maj_value, min_value))
 
+        # The group order is the tie preference among stat-identical splits
+        # (get_equipment): the group listed first takes as many precision-
+        # major pieces as any exact split allows, then the next group, and
+        # so on. The order follows the in-game panel: head, shoulders, chest,
+        # gloves, legs, boots, then the weapons, back item, accessories,
+        # amulet, rings, and the jewels last. Which piece carries which
+        # prefix never changes the stats (precision trades 1:1 per piece).
+        single("Head", min_gear["Head"], maj_gear["Head"])
+        single("Shoulders", min_gear["Shoulders"], maj_gear["Shoulders"])
+        single("Chest", min_gear["Chest"], maj_gear["Chest"])
+        single("Gloves", min_gear["Gloves"], maj_gear["Gloves"])
+        single("Legs", min_gear["Legs"], maj_gear["Legs"])
+        single("Boots", min_gear["Boots"], maj_gear["Boots"])
+
         # Weapon
         if build.weapon_type == "1h":
             add_group("Weapons (ascended)", num_asc["One-handed"],
@@ -84,24 +98,13 @@ class GearSelect:
             if num_ex["Two-handed"] == 0:
                 add_group("", 0, [0], [(0, 0, 0)])
 
-        # Chest, Legs, Head
-        single("Chest", min_gear["Chest"], maj_gear["Chest"])
-        single("Legs", min_gear["Legs"], maj_gear["Legs"])
-        single("Head", min_gear["Head"], maj_gear["Head"])
-
-        # Shoulders/Gloves/Boots share their stat values and are interchangeable
-        asc_sgb = num_asc[["Shoulders", "Gloves", "Boots"]].sum()
-        add_group("Shoulders/Gloves/Boots (ascended)", asc_sgb, *spread(ascend, "Shoulders", asc_sgb))
-        ex_sgb = num_ex[["Shoulders", "Gloves", "Boots"]].sum()
-        add_group("Shoulders/Gloves/Boots (exotic)", ex_sgb, *spread(exotic, "Shoulders", ex_sgb))
-
         # Trinkets
+        single("Back item", min_gear["Back item"], maj_gear["Back item"])
+        add_group("Accessories (ascended)", num_asc["Accessory"], *spread(ascend, "Accessory", num_asc["Accessory"]))
+        add_group("Accessories (exotic)", num_ex["Accessory"], *spread(exotic, "Accessory", num_ex["Accessory"]))
         single("Amulet", min_gear["Amulet"], maj_gear["Amulet"])
         add_group("Rings (ascended)", num_asc["Ring"], *spread(ascend, "Ring", num_asc["Ring"]))
         add_group("Rings (exotic)", num_ex["Ring"], *spread(exotic, "Ring", num_ex["Ring"]))
-        add_group("Accessories (ascended)", num_asc["Accessory"], *spread(ascend, "Accessory", num_asc["Accessory"]))
-        add_group("Accessories (exotic)", num_ex["Accessory"], *spread(exotic, "Accessory", num_ex["Accessory"]))
-        single("Back item", min_gear["Back item"], maj_gear["Back item"])
 
         # Jewels (upgrade slots of exotic trinkets)
         num_jewels = int(num_ex.iloc[8:12].sum())
@@ -110,7 +113,14 @@ class GearSelect:
         # memoize per instance (a class-level @cache would keep every
         # instance alive for the lifetime of the server)
         self.overshoot_values = cache(self._overshoot_values)
+        self.suffix_exact = cache(self._suffix_exact)
         self._point_table = None
+
+    def _preference(self, i):
+        """Option indices of group i in the tie preference: the most
+        precision-major pieces first, among equal counts the fewest Valkyrie."""
+        metas = self.option_meta[i]
+        return sorted(range(len(metas)), key=lambda j: (-metas[j][0], metas[j][2]))
 
     def point_table(self):
         """Every reachable armor-precision total with the best complementary
@@ -123,11 +133,14 @@ class GearSelect:
         if self._point_table is None:
             four_stats = self.constraints.gear_environment == "4p"
             points = {0.0: ((0.0, 0.0, 0.0), ())}
-            for (maj, mino), options, metas in zip(self.group_budgets,
-                                                   self.equipment, self.option_meta):
+            for i, ((maj, mino), options, metas) in enumerate(zip(self.group_budgets,
+                                                                  self.equipment, self.option_meta)):
                 merged = {}
                 for prec_sum, (value, choices) in points.items():
-                    for j, (option, (major, minor, none)) in enumerate(zip(options, metas)):
+                    # equal keys keep the first candidate: the tie preference
+                    # order makes that the split favouring the groups listed first
+                    for j in self._preference(i):
+                        option, (major, minor, none) = options[j], metas[j]
                         if four_stats:
                             power = maj * (major + minor)
                             ferocity = mino * major + maj * minor
@@ -166,17 +179,25 @@ class GearSelect:
         )
 
 
-    def get_equipment(self, target, i=None):
-        if i is None:
-            i = len(self.equipment)
-        if self.overshoot_values(target, i)[0] != 0:
+    def _suffix_exact(self, target, i):
+        """Can the groups from i on sum to target exactly? (stat values are
+        whole points, so a miss is at least one point away)"""
+        if i == len(self.equipment):
+            return abs(target) <= 1e-6
+        return any(self.suffix_exact(target - option, i + 1) for option in self.equipment[i])
+
+    def get_equipment(self, target, i=0):
+        """Every exact split of the groups from i on, in the tie preference
+        order: the group listed first takes the most precision-major pieces
+        any exact split allows, then the next group under that, and so on."""
+        if not self.suffix_exact(target, i):
             return
-        if i == 0:
+        if i == len(self.equipment):
             yield []
             return
-        for j, option in enumerate(self.equipment[i - 1]):
-            for equip in self.get_equipment(target - option, i - 1):
-                yield equip.copy() + [j]
+        for j in self._preference(i):
+            for rest in self.get_equipment(target - self.equipment[i][j], i + 1):
+                yield [j] + rest
 
     def get_best_equipment(self, target):
         """The exact assignment with the best complementary stats, or None.

@@ -86,7 +86,8 @@ ARMOR_TRINKET_KEYS = ["chest", "legs", "head", "shoulders", "gloves", "boots", "
 FAMILIES = {
     "Weapons": ["onehanded1", "onehanded2"], "Weapon": ["twohanded"],
     "Chest": ["chest"], "Legs": ["legs"], "Head": ["head"],
-    "Shoulders/Gloves/Boots": ["shoulders", "gloves", "boots"],
+    "Shoulders": ["shoulders"], "Gloves": ["gloves"], "Boots": ["boots"],
+    "Shoulders/Gloves/Boots": ["shoulders", "gloves", "boots"],   # boon mode keeps the family
     "Amulet": ["amulet"], "Rings": ["ring1", "ring2"],
     "Accessories": ["accessory1", "accessory2"], "Back item": ["back-item"],
 }

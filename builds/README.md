@@ -136,9 +136,13 @@ not carry underwater weapons.
 - The optimizer prices one weapon set (two one-handers or one two-hander).
   The other set gets the majority prefix of the optimized one and the same
   sigils, marked "not optimized separately"; override it if it differs.
-- When a slot family mixes prefixes (one Marauder and two Dragon's among
-  shoulders, gloves and boots), the pieces are assigned in a fixed order.
-  Which physical piece gets which prefix does not matter for the stats.
+- When several splits reach the cap with identical stats, the crit
+  optimizer hands the precision-major pieces (Assassin's, Marauder) out in
+  the in-game order: head, shoulders, chest, gloves, legs, boots, then
+  weapons, back item, accessories, amulet, rings, and the jewels last.
+  Which piece carries which prefix does not matter for the stats. Boon
+  mode still treats shoulders, gloves and boots as one family, assigned in
+  that order.
 - Two one-handers in the chat link are paired main hand with off hand in
   the order the link lists them; a lone dual-wieldable type pairs with
   itself (Sword/Sword). Weapon types are listed once per link, so this is
