@@ -1351,7 +1351,8 @@ function renderSolutionBody(container, r, env, singleSigil, backupInfo) {
     ["Precision infusions", `${r.prec_infusions} of ${r.total_infusions} (rest power)`],
   ];
   facts.unshift(["Critical chance", r.no_cap
-    ? `${critText} — wherever effective power peaks`
+    ? (r.crit_pct > 100.005 ? `${critText} — above the cap; the excess adds nothing`
+                            : `${critText} — wherever effective power peaks`)
     : r.exact ? critText
     : `${critText} — ${r.capped ? "above" : "below"} the cap, see the note under the gear`]);
   for (const [term, value] of facts) {

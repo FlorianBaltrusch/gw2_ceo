@@ -410,8 +410,9 @@ def calc_power(profession: Profession, build: BuildConstraints) -> dict:
         # the game's crit chance: (precision - 895) / 21 % plus the percentage
         # sources (in precision-equivalent points); capped at 100% - any
         # excess is worth nothing
-        chance = np.minimum(1.0, (panel_precision - CRIT_FLOOR + arrays["chance"][rows, None])
-                            / (TARGET - CRIT_FLOOR))
+        raw_chance = ((panel_precision - CRIT_FLOOR + arrays["chance"][rows, None])
+                      / (TARGET - CRIT_FLOOR))
+        chance = np.minimum(1.0, raw_chance)
         effective = (panel_power * (1 + chance * (0.5 + panel_ferocity / 1500))
                      * arrays["sigil_damage"][rows, None])
 
@@ -419,7 +420,7 @@ def calc_power(profession: Profession, build: BuildConstraints) -> dict:
         take = (np.arange(effective.shape[0]), best)
         columns["best_point"][rows] = best
         columns["effective_power"][rows] = effective[take]
-        columns["crit_pct"][rows] = chance[take] * 100
+        columns["crit_pct"][rows] = raw_chance[take] * 100   # reported uncapped: above 100% is visible, worth nothing
         columns["power"][rows] = panel_power[take]
         columns["precision"][rows] = panel_precision[take]
         columns["ferocity"][rows] = panel_ferocity[take]
