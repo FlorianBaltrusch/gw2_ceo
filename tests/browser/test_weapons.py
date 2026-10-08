@@ -48,6 +48,19 @@ try:
     driver.get(BASE + "/ceo?profession=Elementalist&spec=Evoker&mode=crit")
     wait.until(lambda d: len(d.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group")) > 0)
     text = driver.find_element(By.ID, "trait-groups").text
+
+    # the chosen elite line's minor traits start ticked, core minors do not
+    def minors_checked(group_name):
+        for group in driver.find_elements(By.CSS_SELECTOR, "#trait-groups .trait-group"):
+            if group.find_element(By.CSS_SELECTOR, ".trait-group-header .name").text == group_name:
+                labels = [l for l in group.find_elements(By.CSS_SELECTOR, ".trait")
+                          if l.find_element(By.CSS_SELECTOR, ".slot-tag").text.lower() == "minor"]
+                return [l.find_element(By.CSS_SELECTOR, "input").is_selected() for l in labels]
+        return None
+    evoker_minors = minors_checked("Evoker")
+    check("elite minors auto-ticked", bool(evoker_minors) and all(evoker_minors), str(evoker_minors))
+    fire_minors = minors_checked("Fire")
+    check("core minors stay unticked", fire_minors is not None and not any(fire_minors), str(fire_minors))
     check("Enhanced Potency listed", "Enhanced Potency" in text)
     check("familiar caption", "familiar:" in text, text[:400])
     chips = {c.text: c for c in driver.find_elements(
@@ -57,8 +70,10 @@ try:
           list(chips) == ["Fox", "Otter", "Hare", "Toad"], str(list(chips)))
     check("hare chip default active", "active" in str(chips["Hare"].get_attribute("class")))
     # radio behaviour: picking another familiar replaces the hare
-    driver.find_element(By.XPATH, "//label[.//span[contains(text(),'Enhanced Potency')]]"
-                        "/input").click()  # tick the trait so the warning can appear
+    potency = driver.find_element(By.XPATH, "//label[.//span[contains(text(),'Enhanced Potency')]]/input")
+    check("Enhanced Potency (an Evoker minor) starts ticked", potency.is_selected())
+    if not potency.is_selected():
+        potency.click()  # the warning needs the trait ticked
     chips["Toad"].click()
     check("toad replaces hare", "active" in str(chips["Toad"].get_attribute("class"))
           and "active" not in str(chips["Hare"].get_attribute("class")))

@@ -651,13 +651,19 @@ function traitGroup(title, iconSrc, groupEntries) {
   group.append(header);
 
   const memory = state.traitMemory?.[TRAIT_FAMILY[state.mode]];
+  // a fresh panel (no permalink, no remembered selection) starts with the
+  // chosen elite line's minor traits ticked: they are always active while
+  // the line is equipped, and the line is the one thing already chosen
+  const fresh = !state.pendingIds && !memory;
+  const eliteMinor = (entry) => fresh && !state.spec.coreArt && entry.kind === "trait"
+    && entry.slot === "Minor" && entry.specialization === state.spec.name;
   for (const entry of groupEntries) {
     const label = document.createElement("label");
     label.className = "trait";
 
     const box = document.createElement("input");
     box.type = "checkbox";
-    if (state.pendingIds?.has(entry.id) || memory?.selected.has(entry.id)) {
+    if (state.pendingIds?.has(entry.id) || memory?.selected.has(entry.id) || eliteMinor(entry)) {
       box.checked = true;
       state.selectedTraits.add(entry.id);
     }
