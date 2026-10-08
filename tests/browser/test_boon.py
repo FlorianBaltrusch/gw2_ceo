@@ -73,7 +73,7 @@ try:
     wait.until(lambda d: visible(d, "row-env"))
     check("crit traits restored", any("Righteous Instincts" in t for t in trait_names()))
     driver.find_element(By.ID, "optimize").click()
-    wait.until(lambda d: "effective power at 100% crit" in d.find_element(By.ID, "result").text.lower())
+    wait.until(lambda d: "effective power at 100.00% critical chance" in d.find_element(By.ID, "result").text.lower())
     check("crit result renders again", True)
 finally:
     driver.quit()

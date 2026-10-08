@@ -20,12 +20,17 @@ try:
     check("percentage traits enabled", len(boxes) >= 2
           and all(b.is_enabled() for b in boxes.values()), str(len(boxes)))
     for box in boxes.values():
-        driver.execute_script("arguments[0].click()", box)
+        if not box.is_selected():   # the Catalyst minor starts ticked
+            driver.execute_script("arguments[0].click()", box)
     driver.find_element(By.ID, "all-asc").click()
     driver.find_element(By.ID, "optimize").click()
     wait.until(lambda d: visible(d, "result"))
     text = driver.find_element(By.ID, "result").text
-    check("catalyst crit build solves", "effective power at 100% crit" in text.lower())
+    import re
+    check("catalyst crit build solves; caption shows the crit chance with two decimals",
+          re.search(r"effective power at \d+\.\d\d% critical chance", text, re.I) is not None, text[:200])
+    check("crit chance fact with two decimals",
+          re.search(r"critical chance\n\d+\.\d\d%", text, re.I) is not None, text[:300])
 
     driver.find_element(By.CSS_SELECTOR, "#mode-choice button[data-value='power']").click()
     check("power: env row visible", visible(driver, "row-env"))
@@ -36,6 +41,8 @@ try:
     wait.until(lambda d: "critical chance" in d.find_element(By.ID, "result").text.lower())
     text = driver.find_element(By.ID, "result").text
     check("power result shows crit% caption", "% critical chance" in text.lower())
+    check("power mode crit chance has two decimals",
+          re.search(r"at \d+\.\d\d% critical chance", text, re.I) is not None, text[:200])
     check("power result has crit chance fact", "wherever effective power peaks" in text)
     check("power result no cap warning", "out of reach" not in text and "overcapping" not in text)
 

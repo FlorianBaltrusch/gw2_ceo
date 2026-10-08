@@ -114,6 +114,10 @@ def solve(args) -> dict:
         armor precision floor."""
         result = json.loads(row.to_json())
         result["total_infusions"] = total_infusions
+        # the crit chance this split lands on: the cap, plus the overshoot
+        # (or minus the shortfall) in panel precision points, 21 per percent
+        signed = float(row["absolute_overshoot"]) * (1 if row["capped"] else -1)
+        result["crit_pct"] = 100 + signed / 21
 
         low_region = (constraints.gear_environment == "3p"
                       and row["remainder"] <= min_stats)
@@ -170,7 +174,7 @@ def power_result(profession: Profession, constraints: BuildConstraints) -> dict:
         result = json.loads(row.to_json())
         result["total_infusions"] = total_infusions
         result["no_cap"] = True  # this mode has no crit cap to miss
-        result["crit_pct"] = round(float(row["crit_pct"]), 1)
+        result["crit_pct"] = float(row["crit_pct"])
         choice = choices[int(row["best_point"])]
         groups = [(label, int(count), meta[j])
                   for (label, count), meta, j
