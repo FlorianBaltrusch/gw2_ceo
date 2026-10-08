@@ -9,6 +9,7 @@ from gw2ceo.gearselect import GearSelect
 from gw2ceo.profession import BASE_TOUGHNESS, Profession
 
 TARGET = 2995  # precision-equivalent for 100% critical chance at level 80
+CRIT_FLOOR = 895  # precision at 0% critical chance; every 21 points add 1% up to TARGET
 
 # tie preferences at equal effective power (lower is preferred):
 # a damage sigil is a free bonus at night, stacking sigils are fragile
@@ -406,7 +407,11 @@ def calc_power(profession: Profession, build: BuildConstraints) -> dict:
         panel_power = adjusted["power"] * multiplier
         panel_precision = precision * multiplier
         panel_ferocity = adjusted["ferocity"] * multiplier
-        chance = np.minimum(1.0, (panel_precision + arrays["chance"][rows, None]) / TARGET)
+        # the game's crit chance: (precision - 895) / 21 % plus the percentage
+        # sources (in precision-equivalent points); capped at 100% - any
+        # excess is worth nothing
+        chance = np.minimum(1.0, (panel_precision - CRIT_FLOOR + arrays["chance"][rows, None])
+                            / (TARGET - CRIT_FLOOR))
         effective = (panel_power * (1 + chance * (0.5 + panel_ferocity / 1500))
                      * arrays["sigil_damage"][rows, None])
 
