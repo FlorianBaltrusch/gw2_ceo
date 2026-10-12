@@ -28,9 +28,9 @@ try:
           any(a.get_attribute("href").endswith("/impressum") for a in driver.find_elements(By.CSS_SELECTOR, ".site-footer a")))
     driver.get(BASE + "/impressum")
     wait.until(lambda d: count(".legal") == 1)
-    check("legal page serves the Impressum and the privacy statement",
-          "Impressum" in driver.title and count("#datenschutz") == 1
-          and driver.find_element(By.CSS_SELECTOR, ".site-nav a.active").text == "Impressum")
+    check("legal page serves the Impressum and the privacy policy, not in the main navigation",
+          "Legal Notice" in driver.title and count("#impressum") == 1 and count("#privacy") == 1
+          and not any("impressum" in a.get_attribute("href") for a in driver.find_elements(By.CSS_SELECTOR, ".site-nav a")))
 
     # old optimizer deep links still work
     driver.get(BASE + "/?profession=Guardian&spec=Firebrand&mode=crit")
