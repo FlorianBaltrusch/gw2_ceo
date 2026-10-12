@@ -10,16 +10,19 @@
 <body>
 
   <!-- main app shell (visible once profession + spec are chosen) -->
-  <header id="topbar" class="topbar hidden">
-    <div class="selection">
-      <img id="topbar-spec-icon" class="topbar-icon" alt="">
-      <div>
-        <div id="topbar-title" class="topbar-title"></div>
-        <div class="topbar-subtitle">Critical Effect Optimizer</div>
-      </div>
+  <header id="topbar" class="site-bar hidden">
+    <div class="site-left">
+      <a class="site-brand" href="/"><span class="versal">C</span>ritical <span class="versal">E</span>ffect <span class="versal">O</span>ptimizer</a>
+      <span class="site-selection">
+        <img id="topbar-spec-icon" class="topbar-icon" alt="">
+        <span id="topbar-title"></span>
+      </span>
     </div>
-    <div class="topbar-actions">
-      <a class="ghost-button" href="/builds">Builds</a>
+    <div class="site-right">
+      <nav class="site-nav">
+        <a href="/ceo" class="active">Optimizer</a>
+        <a href="/builds">Builds</a>
+      </nav>
       <button id="change-selection" class="ghost-button">Change</button>
       <a class="ghost-button" href="/">&larr; Home</a>
     </div>

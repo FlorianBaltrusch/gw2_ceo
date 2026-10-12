@@ -72,39 +72,7 @@
 
 /* ---------- site bar (builds pages) ---------- */
 
-.site-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  max-width: 1100px;
-  margin: 18px auto 0;
-  padding: 10px 16px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-}
-.site-brand {
-  color: var(--gold);
-  text-decoration: none;
-  font-variant: small-caps;
-  letter-spacing: .05em;
-  font-size: 1.25rem;
-}
-.site-brand .versal { font-size: 1.35em; line-height: 0; }
-.site-right { display: flex; align-items: center; gap: 14px; }   /* nav links + the Home button */
-.site-nav { display: flex; gap: 6px; }
-.site-nav a {
-  color: var(--text-dim);
-  text-decoration: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  font-size: .95rem;
-  letter-spacing: .04em;
-}
-.site-nav a:hover { color: var(--text); border-color: var(--border); }
-.site-nav a.active { color: var(--gold); border-color: var(--border); }
+/* the site header (.site-bar) is shared with the optimizer and lives in style.css */
 
 .builds-main { max-width: 1100px; margin: 20px auto 60px; }
 

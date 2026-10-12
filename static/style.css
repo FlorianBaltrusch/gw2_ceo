@@ -309,24 +309,55 @@ a.ghost-button { text-decoration: none; }
 
 /* ---------- app shell after selection ---------- */
 
-.topbar {
+/* ---------- the site header, shared by the optimizer and the builds pages ----------
+   brand on the left (the optimizer adds its current selection), navigation
+   links and the action buttons on the right */
+.site-bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px 16px;
   max-width: 1100px;
   margin: 18px auto 0;
+  padding: 10px 16px;
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 10px 14px;
 }
-.selection { display: flex; align-items: center; gap: 12px; }
-.topbar-actions { display: flex; gap: 8px; }
-.topbar-actions a { text-decoration: none; }
-.topbar-icon { width: 44px; height: 44px; }
-.topbar-title { color: var(--gold); letter-spacing: .04em; }
-.topbar-subtitle { color: var(--text-dim); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; }
+.site-left, .site-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; min-width: 0; }
+.site-brand {
+  color: var(--gold);
+  text-decoration: none;
+  font-variant: small-caps;
+  letter-spacing: .05em;
+  font-size: 1.25rem;
+  white-space: nowrap;
+}
+.site-brand .versal { font-size: 1.35em; line-height: 0; }
+.site-selection {                   /* the optimizer's chosen spec, beside the brand */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+  color: var(--text);
+  letter-spacing: .03em;
+  white-space: nowrap;
+}
+.topbar-icon { width: 30px; height: 30px; }
+.site-nav { display: flex; gap: 6px; }
+.site-nav a {
+  color: var(--text-dim);
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  font-size: .95rem;
+  letter-spacing: .04em;
+}
+.site-nav a:hover { color: var(--text); border-color: var(--border); }
+.site-nav a.active { color: var(--gold); border-color: var(--border); }
 
 .main { max-width: 1100px; margin: 20px auto; }
 
