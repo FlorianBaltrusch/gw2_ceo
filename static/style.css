@@ -235,6 +235,7 @@ a.ghost-button { text-decoration: none; }
 /* ---------- specialization grid ---------- */
 
 .back { position: absolute; left: 0; top: 0; text-decoration: none; }
+.back.right { left: auto; right: 0; }   /* Home sits top right, like on the other pages */
 #spec-picker { position: relative; padding-top: 56px; }
 #profession-picker { position: relative; padding-top: 44px; }
 
