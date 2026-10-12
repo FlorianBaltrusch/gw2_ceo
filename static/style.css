@@ -56,6 +56,7 @@ body {
 
 button { font: inherit; cursor: pointer; }
 
+a.ghost-button { text-decoration: none; }
 .ghost-button {
   background: none;
   color: var(--text-dim);

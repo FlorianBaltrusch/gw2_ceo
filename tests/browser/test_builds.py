@@ -47,6 +47,10 @@ try:
           and specs.index("Necromancer") < specs.index("Reaper") < specs.index("Scourge")
           and specs.index("Guardian") < specs.index("Dragonhunter") < specs.index("Willbender"), str(specs))
 
+    home = driver.find_element(By.CSS_SELECTOR, ".site-bar .ghost-button")
+    check("builds page has a Home button", home.text.endswith("Home") and home.get_attribute("href").rstrip("/") == BASE.rstrip("/"),
+          home.get_attribute("href"))
+
     # category filter
     groups = driver.find_elements(By.CSS_SELECTOR, ".filter-group .control-label")
     check("profession filter comes first", groups[0].text.lower() == "profession", str([g.text for g in groups]))

@@ -92,6 +92,7 @@
   font-size: 1.25rem;
 }
 .site-brand .versal { font-size: 1.35em; line-height: 0; }
+.site-right { display: flex; align-items: center; gap: 14px; }   /* nav links + the Home button */
 .site-nav { display: flex; gap: 6px; }
 .site-nav a {
   color: var(--text-dim);
