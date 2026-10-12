@@ -54,6 +54,19 @@ body {
 
 .hidden { display: none !important; }
 
+/* legal notice link at the foot of every page (and inside the optimizer's picker) */
+.site-footer, .picker-footer {
+  max-width: 1100px;
+  margin: 48px auto 24px;
+  text-align: center;
+  font-size: .85rem;
+  letter-spacing: .04em;
+  color: var(--text-dim);
+}
+.picker-footer { margin-top: 40px; }
+.site-footer a, .picker-footer a { color: var(--text-dim); text-decoration: none; }
+.site-footer a:hover, .picker-footer a:hover { color: var(--gold); }
+
 button { font: inherit; cursor: pointer; }
 
 .ghost-button {
