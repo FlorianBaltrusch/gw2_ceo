@@ -30,7 +30,10 @@ try:
     wait.until(lambda d: count(".legal") == 1)
     check("legal page serves the Impressum and the privacy policy, not in the main navigation",
           "Legal Notice" in driver.title and count("#impressum") == 1 and count("#privacy") == 1
-          and not any("impressum" in a.get_attribute("href") for a in driver.find_elements(By.CSS_SELECTOR, ".site-nav a")))
+          and count(".site-nav") == 0 and driver.find_element(By.ID, "legal-back").text.endswith("Back"))
+    driver.find_element(By.ID, "legal-back").click()
+    wait.until(lambda d: count(".door") == 2)
+    check("back button returns to the page you came from", driver.current_url.rstrip("/").endswith(BASE.rstrip("/")), driver.current_url)
 
     # old optimizer deep links still work
     driver.get(BASE + "/?profession=Guardian&spec=Firebrand&mode=crit")

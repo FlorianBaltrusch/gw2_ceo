@@ -13,10 +13,7 @@
 
   <header class="site-bar">
     <a class="site-brand" href="/"><span class="versal">C</span>ritical <span class="versal">E</span>ffect <span class="versal">O</span>ptimizer</a>
-    <nav class="site-nav">
-      <a href="/ceo">Optimizer</a>
-      <a href="/builds">Builds</a>
-    </nav>
+    <a href="/" class="ghost-button" id="legal-back">&larr; Back</a>
   </header>
 
   <main class="builds-main legal">
@@ -25,9 +22,9 @@
     <section>
       <h2>Provider</h2>
       <p class="hint">Information required by German law (§ 18 (1) MStV, § 5 DDG). This site is
-        operated from Germany.</p>
+        operated from Germany by the holder of the domain, who also hosts it.</p>
       <address>
-        Florian Baltrusch<br>
+        Matheo Möbis<br>
         <mark>[Street and number]</mark><br>
         <mark>[Postcode Town]</mark><br>
         Germany
@@ -37,33 +34,41 @@
     </section>
 
     <section>
+      <h2>The project</h2>
+      <p>Critical Effect Optimizer is a fan project by Florian Baltrusch, Tobias Sträubig and
+        Matheo Möbis. Florian Baltrusch and Tobias Sträubig built the optimizer and its backend;
+        Matheo Möbis deploys the website and owns the domain.</p>
+    </section>
+
+    <section>
       <h2>Liability for content</h2>
-      <p>The content of this site has been prepared with great care. I cannot, however, guarantee
+      <p>The content of this site has been prepared with great care. We cannot, however, guarantee
         that it is accurate, complete or up to date; this applies in particular to the calculated
-        gear and build recommendations, which you use at your own risk. As a service provider I am
-        responsible for my own content on these pages under general law (§ 7 (1) DDG). Under §§ 8
-        to 10 DDG I am not obliged to monitor transmitted or stored third-party information or to
+        gear and build recommendations, which you use at your own risk. As the service provider we are
+        responsible for our own content on these pages under general law (§ 7 (1) DDG). Under §§ 8
+        to 10 DDG we are not obliged to monitor transmitted or stored third-party information or to
         investigate circumstances indicating illegal activity. Obligations to remove or block the use
         of information under general law remain unaffected; liability in this respect is only possible
-        from the moment I become aware of a specific infringement. Upon becoming aware of such an
-        infringement, I will remove the content concerned without delay.</p>
+        from the moment we become aware of a specific infringement. Upon becoming aware of such an
+        infringement, we will remove the content concerned without delay.</p>
     </section>
 
     <section>
       <h2>Liability for links</h2>
-      <p>This site contains links to external websites of third parties over whose content I have no
-        influence. I therefore cannot accept any liability for that content; the respective provider
-        or operator of the linked pages is always responsible for it. The linked pages were checked
-        for possible legal violations at the time of linking, and no illegal content was recognisable
-        then. Upon becoming aware of any infringement, I will remove such links without delay.</p>
+      <p>This site contains links to external websites of third parties over whose content we have
+        no influence. We therefore cannot accept any liability for that content; the respective
+        provider or operator of the linked pages is always responsible for it. The linked pages were
+        checked for possible legal violations at the time of linking, and no illegal content was
+        recognisable then. Upon becoming aware of any infringement, we will remove such links without
+        delay.</p>
     </section>
 
     <section>
       <h2>Copyright</h2>
-      <p>The content I created for this site (texts, calculations, build lists, source code) is
+      <p>The content we created for this site (texts, calculations, build lists, source code) is
         subject to German copyright law. Reproduction, editing, distribution and any kind of use
         beyond the limits of copyright law require written consent. Where content on this site was not
-        created by me, the copyrights of third parties are respected; in particular the following
+        created by us, the copyrights of third parties are respected; in particular the following
         notice applies.</p>
       <h3>Guild Wars 2</h3>
       <p>This website is a private, non-commercial fan project and is not affiliated with ArenaNet,
@@ -82,8 +87,8 @@
     <section>
       <h2>Controller</h2>
       <p>The controller within the meaning of the General Data Protection Regulation (GDPR) is
-        Florian Baltrusch, <mark>[Street and number]</mark>, <mark>[Postcode Town]</mark>, Germany,
-        e-mail: <mark>[e-mail address]</mark>.</p>
+        the provider named above: Matheo Möbis, <mark>[Street and number]</mark>,
+        <mark>[Postcode Town]</mark>, Germany, e-mail: <mark>[e-mail address]</mark>.</p>
     </section>
 
     <section>
@@ -109,14 +114,14 @@
 
     <section>
       <h2>Contact by e-mail</h2>
-      <p>If you write to me by e-mail, your details are stored to handle the request and for
-        follow-up questions (Art. 6 (1) (f) GDPR, or (b) where the request concerns a contract). I do
-        not pass these data on without your consent.</p>
+      <p>If you write to us by e-mail, your details are stored to handle the request and for
+        follow-up questions (Art. 6 (1) (f) GDPR, or (b) where the request concerns a contract). We
+        do not pass these data on without your consent.</p>
     </section>
 
     <section>
       <h2>Your rights</h2>
-      <p>You have the right to obtain information about the personal data I hold about you
+      <p>You have the right to obtain information about the personal data we hold about you
         (Art. 15 GDPR), to rectification (Art. 16), erasure (Art. 17), restriction of processing
         (Art. 18), data portability (Art. 20) and to object to processing (Art. 21 GDPR). You may also
         lodge a complaint with a data protection supervisory authority (Art. 77 GDPR).</p>
@@ -127,5 +132,15 @@
   <footer class="site-footer">
     <a href="/">Home</a> · <a href="/impressum">Impressum &amp; Privacy</a>
   </footer>
+
+  <script>
+    // "Back" returns to the page you came from when it was one of ours,
+    // otherwise to the start page
+    document.getElementById("legal-back").addEventListener("click", (event) => {
+      let ours = false;
+      try { ours = history.length > 1 && new URL(document.referrer).origin === location.origin; } catch {}
+      if (ours) { event.preventDefault(); history.back(); }
+    });
+  </script>
 </body>
 </html>
