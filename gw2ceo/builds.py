@@ -1,4 +1,4 @@
-"""Curated builds: one TOML file per build in builds/.
+"""The site's builds: one TOML file per build in builds/.
 
 A build file names the build, its category, the in-game build template
 chat link and the optimizer link. Traits, skills and weapon types are

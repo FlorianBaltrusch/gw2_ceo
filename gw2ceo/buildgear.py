@@ -1,4 +1,4 @@
-"""Gear of a curated build, derived from its optimizer link.
+"""Gear of one of the site's builds, derived from its optimizer link.
 
 The optimizer link (the result card's "Copy optimizer link") carries every
 input of the solver, so the build page runs the same calculation and lists

@@ -1,4 +1,4 @@
-// Curated builds: /builds lists them with filters, /builds/<slug> shows one.
+// The site's builds: /builds lists them with filters, /builds/<slug> shows one.
 // Both views live in this page; the URL decides which one renders, so the
 // browser's back/forward buttons work like on the optimizer.
 

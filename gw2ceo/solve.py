@@ -1,7 +1,7 @@
 """The optimizer's request handling, independent of Flask: turn the query
 parameters of /calculate (or of an optimizer link) into a solved build.
 
-Shared by the /calculate endpoint and by the curated builds, whose gear
+Shared by the /calculate endpoint and by the site's builds, whose gear
 listing is derived from the optimizer link stored in the build file."""
 
 import json

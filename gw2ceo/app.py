@@ -21,7 +21,7 @@ IMAGE_CACHE_SECONDS = 3600
 
 @app.route("/")
 def landing():
-    """The two doors: build your own (the optimizer) or browse the curated
+    """The two doors: build your own (the optimizer) or browse the site's
     builds. Deep links from before the landing page existed carried the
     optimizer's query on the root - send them on."""
     if request.args.get("profession"):
@@ -41,7 +41,7 @@ def builds_page(slug=None):
     return app.send_static_file("builds.html")
 
 
-# ---------- curated builds (builds/*.toml) ----------
+# ---------- the site's builds (builds/*.toml) ----------
 
 _build_cache: dict = {"stamp": None, "builds": []}
 _build_lock = threading.Lock()

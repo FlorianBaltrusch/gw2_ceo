@@ -855,7 +855,7 @@ const setWeapon = setupSegmented("weapon-choice", value => {
 // optimizer link adds everything else - ticked traits, stack/attunement
 // assumptions, gear toggles - so a build can be reopened exactly as it was;
 // loading one restores the panel and runs the optimizer. The builds pages
-// store such links to open a curated build in the optimizer.
+// store such links to open one of the site's builds in the optimizer.
 
 const TOGGLES = {  // URL key -> checkbox id
   fury: "opt-fury", food: "opt-food", ascended_food: "opt-ascended-food", pie: "opt-pie",

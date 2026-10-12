@@ -1,4 +1,4 @@
-# Curated builds
+# The site's builds
 
 One TOML file per build. The file name (without `.toml`) is the build's URL
 slug: `builds/ow-tempest.toml` is shown at `/builds/ow-tempest`. The server
