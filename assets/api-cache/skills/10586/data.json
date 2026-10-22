@@ -1,0 +1,1 @@
+{"name": "Locked", "description": "You cannot use skills while transformed.", "icon": "https://render.guildwars2.com/file/A9050BAB0847390C0112694321B0F6AEDF7AE1FB/102804.png", "type": "Profession", "weapon_type": "None", "professions": ["Engineer", "Necromancer"], "slot": "Profession_1", "flags": [], "specialization": 70, "id": 10586, "chat_link": "[&BlopAAA=]"}
