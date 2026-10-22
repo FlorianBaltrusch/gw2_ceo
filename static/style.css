@@ -43,13 +43,19 @@
 
 * { box-sizing: border-box; }
 
+/* the page colour reaches every edge: the html element carries it (phones
+   paint it behind the status bar and when over-scrolling), dark form
+   controls and scrollbars, and content stays clear of notches */
+html { background-color: var(--bg); color-scheme: dark; }
 body {
   margin: 0;
   min-height: 100vh;
   background: radial-gradient(ellipse at 50% -20%, var(--bg-glow) 0%, var(--bg) 60%);
+  background-color: var(--bg);
   color: var(--text);
   font-family: "Libertine", "Linux Libertine", Georgia, serif;
-  padding-inline: 16px;
+  padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
 }
 
 .hidden { display: none !important; }
@@ -97,6 +103,7 @@ a.ghost-button { text-decoration: none; }
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px);
   background: radial-gradient(ellipse at 50% -20%, var(--bg-glow) 0%, var(--bg) 70%);
   padding: 40px 16px 60px;
   animation: overlay-in .35s ease;

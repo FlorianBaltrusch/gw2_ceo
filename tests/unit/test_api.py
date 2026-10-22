@@ -14,6 +14,9 @@ def test_pages(client):
     page = client.get("/impressum").data
     assert b'id="impressum"' in page and b'id="privacy"' in page and b"info@gw2ceo.com" in page
     assert client.get("/?profession=Guardian&spec=Firebrand").status_code == 302
+    for path in ("/", "/ceo", "/builds", "/impressum"):
+        head = client.get(path).data
+        assert b'name="theme-color"' in head and b"viewport-fit=cover" in head, path
 
 
 def test_static_and_images(client):

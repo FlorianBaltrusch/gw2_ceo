@@ -25,6 +25,7 @@ const el = (id) => document.getElementById(id);
 function applyTheme(profession) {
   if (profession) document.documentElement.dataset.profession = profession;
   else delete document.documentElement.dataset.profession;
+  syncThemeColor();
 }
 
 // ---------- URL navigation ----------

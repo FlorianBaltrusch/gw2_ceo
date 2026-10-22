@@ -8,6 +8,25 @@ const PROFESSION_ORDER = [
   "Guardian", "Revenant", "Warrior",         // heavy
 ];
 
+// the browser's own chrome (status bar, address bar) follows the page's
+// background: whenever the theme changes, the theme-color meta takes the
+// colour the html element resolved for --bg
+function syncThemeColor() {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) return;
+  meta.content = pageBackground();
+}
+
+// --bg is the theme's dark colour at --alpha-soft (30%) over black (style.css);
+// computed here as plain hex, which every phone browser accepts for theme-color
+function pageBackground() {
+  const dark = getComputedStyle(document.documentElement).getPropertyValue("--theme-dark").trim();
+  const match = /^#([0-9a-f]{6})/i.exec(dark);
+  if (!match) return "#00081f";
+  return "#" + [0, 2, 4].map(i => Math.round(parseInt(match[1].slice(i, i + 2), 16) * 0.30)
+    .toString(16).padStart(2, "0")).join("");
+}
+
 // the professions' descriptions from guildwars2.com/the-game/professions
 // (ArenaNet's text), shown once a profession is chosen
 const PROFESSION_LORE = {

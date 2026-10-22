@@ -117,6 +117,10 @@ try:
     labels = [d.text for d in driver.find_elements(By.CSS_SELECTOR, ".consumables dt")]
     check("consumables listed", {"Rune", "Relic", "Food", "Utility", "Infusions"} <= set(labels), str(labels))
     check("chat link shown", driver.find_element(By.CSS_SELECTOR, ".linkbox code").text.startswith("[&DQ"))
+    meta = driver.execute_script("return document.querySelector('meta[name=theme-color]').content")
+    dark = driver.execute_script("return getComputedStyle(document.documentElement).getPropertyValue('--theme-dark').trim()")
+    expected = "#" + "".join(f"{round(int(dark[i:i + 2], 16) * 0.30):02x}" for i in (1, 3, 5))
+    check("browser chrome colour follows the Mesmer page background", meta == expected and meta != "#00081f", f"{meta} vs {expected} ({dark})")
     optimizer_link = driver.find_element(By.CSS_SELECTOR, ".cta-link").get_attribute("href")
     check("optimizer link present", "/ceo?" in optimizer_link and "traits=" in optimizer_link)
 
