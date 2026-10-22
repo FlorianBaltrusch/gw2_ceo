@@ -87,7 +87,7 @@ def build_detail(slug):
     abort(404)
 
 
-@app.route("/theme.css")
+@app.route("/../theme.css")
 def theme_css():
     """CSS variables generated from gw2ceo/custom_colors.py (single source of truth)."""
     colors = {name: value for name, value in vars(custom_colors).items()
