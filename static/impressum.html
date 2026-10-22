@@ -14,7 +14,7 @@
 
   <header class="site-bar">
     <a class="site-brand" href="/"><span class="versal">C</span>ritical <span class="versal">E</span>ffect <span class="versal">O</span>ptimizer</a>
-    <a href="/" class="ghost-button" id="legal-back">&larr; Back</a>
+    <nav class="site-nav"><a href="/ceo">Optimizer</a><a href="/builds">Builds</a><a href="/">Home</a></nav>
   </header>
 
   <main class="builds-main legal">
@@ -138,15 +138,5 @@
   <footer class="site-footer">
     <a href="/">Home</a> · <a href="/impressum">Impressum &amp; Privacy</a>
   </footer>
-
-  <script>
-    // "Back" returns to the page you came from when it was one of ours,
-    // otherwise to the start page
-    document.getElementById("legal-back").addEventListener("click", (event) => {
-      let ours = false;
-      try { ours = history.length > 1 && new URL(document.referrer).origin === location.origin; } catch {}
-      if (ours) { event.preventDefault(); history.back(); }
-    });
-  </script>
 </body>
 </html>

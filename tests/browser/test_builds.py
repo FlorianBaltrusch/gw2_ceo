@@ -30,10 +30,10 @@ try:
     wait.until(lambda d: count(".legal") == 1)
     check("legal page serves the Impressum and the privacy policy, not in the main navigation",
           "Legal Notice" in driver.title and count("#impressum") == 1 and count("#privacy") == 1
-          and count(".site-nav") == 0 and driver.find_element(By.ID, "legal-back").text.endswith("Back"))
-    driver.find_element(By.ID, "legal-back").click()
+          and [a.text for a in driver.find_elements(By.CSS_SELECTOR, ".site-nav a")] == ["Optimizer", "Builds", "Home"])
+    driver.find_element(By.CSS_SELECTOR, ".site-nav a[href='/']").click()
     wait.until(lambda d: count(".door") == 2)
-    check("back button returns to the page you came from", driver.current_url.rstrip("/").endswith(BASE.rstrip("/")), driver.current_url)
+    check("Home returns to the start page", driver.current_url.rstrip("/").endswith(BASE.rstrip("/")), driver.current_url)
 
     # old optimizer deep links still work
     driver.get(BASE + "/?profession=Guardian&spec=Firebrand&mode=crit")
@@ -58,9 +58,10 @@ try:
           and specs.index("Necromancer") < specs.index("Reaper") < specs.index("Scourge")
           and specs.index("Guardian") < specs.index("Dragonhunter") < specs.index("Willbender"), str(specs))
 
-    home = driver.find_element(By.CSS_SELECTOR, ".site-bar .ghost-button")
-    check("builds page has a Home button", home.text.endswith("Home") and home.get_attribute("href").rstrip("/") == BASE.rstrip("/"),
-          home.get_attribute("href"))
+    nav = driver.find_elements(By.CSS_SELECTOR, ".site-nav a")
+    check("the same navigation as everywhere, Builds current, Home last without an arrow",
+          [a.text for a in nav] == ["Optimizer", "Builds", "Home"] and "active" in nav[1].get_attribute("class")
+          and nav[2].get_attribute("href").rstrip("/") == BASE.rstrip("/"), str([a.text for a in nav]))
 
     # category filter
     groups = driver.find_elements(By.CSS_SELECTOR, ".filter-group .control-label")
