@@ -29,6 +29,12 @@ def landing():
     return app.send_static_file("landing.html")
 
 
+@app.route("/favicon.ico")
+def favicon():
+    """Browsers ask for this path on their own, whatever the pages declare."""
+    return app.send_static_file("favicon.ico")
+
+
 @app.route("/ceo")
 def optimizer():
     return app.send_static_file("index.html")
