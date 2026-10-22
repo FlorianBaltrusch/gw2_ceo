@@ -665,6 +665,11 @@ a.ghost-button { text-decoration: none; }
 }
 .mode-bar .control-label { margin-bottom: 0; }
 .mode-bar .segmented { flex: 1; max-width: 420px; }
+@media (max-width: 600px) {           /* phones: the label above, the three modes across the full width */
+  .mode-bar { flex-wrap: wrap; gap: 8px 14px; }
+  .mode-bar .segmented { flex: 1 1 100%; max-width: none; }
+  .segmented button { padding: 8px 6px; font-size: .92rem; min-width: 0; }
+}
 
 /* boon mode: ranking tabs above the best/backup tabs */
 .rank-tabs { margin-bottom: 10px; }
