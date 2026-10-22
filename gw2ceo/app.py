@@ -48,6 +48,12 @@ def optimizer():
     return app.send_static_file("index.html")
 
 
+@app.route("/impressum")
+def impressum():
+    """Legal notice and privacy statement (German law: § 5 DDG, DSGVO)."""
+    return app.send_static_file("impressum.html")
+
+
 @app.route("/builds")
 @app.route("/builds/<slug>")
 def builds_page(slug=None):

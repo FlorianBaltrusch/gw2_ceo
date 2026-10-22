@@ -24,6 +24,17 @@ try:
     check("landing asks the question",
           "create your own build or browse ours" in driver.find_element(By.CSS_SELECTOR, ".question").text)
 
+    check("landing links to the legal notice",
+          any(a.get_attribute("href").endswith("/impressum") for a in driver.find_elements(By.CSS_SELECTOR, ".site-footer a")))
+    driver.get(BASE + "/impressum")
+    wait.until(lambda d: count(".legal") == 1)
+    check("legal page serves the Impressum and the privacy policy, not in the main navigation",
+          "Legal Notice" in driver.title and count("#impressum") == 1 and count("#privacy") == 1
+          and count(".site-nav") == 0 and driver.find_element(By.ID, "legal-back").text.endswith("Back"))
+    driver.find_element(By.ID, "legal-back").click()
+    wait.until(lambda d: count(".door") == 2)
+    check("back button returns to the page you came from", driver.current_url.rstrip("/").endswith(BASE.rstrip("/")), driver.current_url)
+
     # old optimizer deep links still work
     driver.get(BASE + "/?profession=Guardian&spec=Firebrand&mode=crit")
     wait.until(lambda d: visible(d, "main"))
