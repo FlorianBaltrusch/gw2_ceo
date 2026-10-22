@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+from gw2ceo.paths import ASSETS
+
 # the site's one profession order: light, medium, heavy armor, alphabetical
 # within each class (static/professions.js carries the same list for the pages)
 PROFESSION_ORDER = [
@@ -9,20 +11,20 @@ PROFESSION_ORDER = [
     "Guardian", "Revenant", "Warrior",         # heavy
 ]
 
-traits = pd.read_csv("assets/traits.csv")
-specializations = pd.read_csv("assets/specializations.csv")
+traits = pd.read_csv(ASSETS / "traits.csv")
+specializations = pd.read_csv(ASSETS / "specializations.csv")
 try:
     # per-piece rune bonuses; optional - enables the mixed-rune rescue
-    rune_tiers = pd.read_csv("assets/rune_tiers.csv")
+    rune_tiers = pd.read_csv(ASSETS / "rune_tiers.csv")
 except FileNotFoundError:
     rune_tiers = None
-general_buffs = pd.read_csv("assets/general_buffs.csv", index_col=0).wert
-gear_stats = pd.read_csv("assets/gear_stats.csv", index_col=[0, 1, 2, 3]).value
-runes = pd.read_csv("assets/runes.csv", index_col=0)
-food = pd.read_csv("assets/food.csv", index_col=0)
-boon_runes = pd.read_csv("assets/boon_runes.csv", index_col=0)
-boon_food = pd.read_csv("assets/boon_food.csv", index_col=0)
-heal_skills = pd.read_csv("assets/heal_skills.csv")
+general_buffs = pd.read_csv(ASSETS / "general_buffs.csv", index_col=0).wert
+gear_stats = pd.read_csv(ASSETS / "gear_stats.csv", index_col=[0, 1, 2, 3]).value
+runes = pd.read_csv(ASSETS / "runes.csv", index_col=0)
+food = pd.read_csv(ASSETS / "food.csv", index_col=0)
+boon_runes = pd.read_csv(ASSETS / "boon_runes.csv", index_col=0)
+boon_food = pd.read_csv(ASSETS / "boon_food.csv", index_col=0)
+heal_skills = pd.read_csv(ASSETS / "heal_skills.csv")
 names = [
     "Chest",
     "L/R",

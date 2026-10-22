@@ -34,8 +34,9 @@ import gw2ceo.general_data as gd
 from gw2ceo import buildgear
 from gw2ceo.api import get_api_data, get_api_data_bulk
 from gw2ceo.buildlink import PROFESSION_CODES
+from gw2ceo.paths import API_CACHE, ASSETS, BUILDS, ICONS, PACKAGE, ROOT
 
-BUILDS_DIR = "builds"
+BUILDS_DIR = str(BUILDS)
 
 # a build belongs to exactly one category; "event" and the like are tags
 CATEGORIES = {
@@ -81,7 +82,7 @@ def _icon_url(filename: str) -> str:
     """/icons/ URL stamped with the cached file's mtime, so a re-trimmed or
     re-downloaded image gets past the browser's one-hour image cache (a
     file not cached yet is served unstamped and downloaded on request)."""
-    path = os.path.join("assets", "icons", filename)
+    path = ICONS / filename
     if os.path.isfile(path):
         return f"/icons/{filename}?v={int(os.path.getmtime(path))}"
     return f"/icons/{filename}"
@@ -672,7 +673,7 @@ def load_build(path: str) -> dict:
     }
 
 
-CACHE_DIR = os.path.join("assets", "api-cache", "builds")
+CACHE_DIR = str(API_CACHE / "builds")
 
 
 def _data_version() -> str:
@@ -680,10 +681,10 @@ def _data_version() -> str:
     file: the solver's data tables and the code. Any change invalidates the
     cached builds (a deploy touches the files' mtimes, which is fine)."""
     parts = []
-    for pattern in ("assets/*.csv", "gw2ceo/*.py"):
+    for pattern in (str(ASSETS / "*.csv"), str(PACKAGE / "*.py")):
         for path in sorted(glob.glob(pattern)):
             stat = os.stat(path)
-            parts.append(f"{path}:{stat.st_mtime_ns}:{stat.st_size}")
+            parts.append(f"{os.path.relpath(path, ROOT)}:{stat.st_mtime_ns}:{stat.st_size}")
     return hashlib.sha1("\n".join(parts).encode()).hexdigest()
 
 

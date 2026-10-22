@@ -47,9 +47,18 @@ python3 -m venv .venv
 # one go (missing images also download themselves on first request)
 PYTHONPATH=. .venv/bin/python generate_traits.py
 
+# make the package importable from any directory (editable: follows git pull)
+.venv/bin/pip install -e .
+
 # smoke test, then Ctrl+C
 .venv/bin/gunicorn --bind 127.0.0.1:8000 gw2ceo.app:app
 ```
+
+The app finds its data (assets, builds, static, profession_images) relative
+to its own location, so the working directory does not matter. Any of these
+start it: `gunicorn gw2ceo.app:app` after the editable install, `gunicorn
+--chdir /opt/gw2_ceo gw2ceo.app:app` without it, or `gunicorn app:app` from
+inside the `gw2ceo` folder.
 
 ## 4. Run as a service
 
@@ -78,6 +87,7 @@ request (can take a few seconds).
 
 ```bash
 cd /opt/gw2_ceo
+git clean -f assets/icons      # icons the server downloaded itself would block the pull
 git pull
 .venv/bin/pip install -r requirements.txt          # only when it changed
 PYTHONPATH=. .venv/bin/python generate_traits.py --refresh   # after balance patches

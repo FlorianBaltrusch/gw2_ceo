@@ -1,3 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gw2ceo"
+version = "1.0"
+description = "GW2 Critical Effect Optimizer"
+requires-python = ">=3.11"
+dynamic = ["dependencies"]
+
+[tool.setuptools]
+packages = ["gw2ceo"]
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
 [tool.pyright]
 venvPath = "."
 venv = ".venv"

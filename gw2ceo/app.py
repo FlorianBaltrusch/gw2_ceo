@@ -1,5 +1,12 @@
 import os
+import sys
 import threading
+
+# the package must be importable whatever the working directory is, also
+# when a deployment starts "gunicorn app:app" from inside this folder
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
 import pandas as pd
 from flask import Flask, Response, abort, jsonify, redirect, request, send_from_directory
@@ -7,13 +14,14 @@ from flask import Flask, Response, abort, jsonify, redirect, request, send_from_
 import gw2ceo.general_data as gd
 from gw2ceo import buildlink, builds, custom_colors, theme
 from gw2ceo.icons import ensure_icon
+from gw2ceo.paths import ICONS, PROFESSION_IMAGES, STATIC
 from gw2ceo.solve import solve
 
 pd.options.mode.chained_assignment = None
 
 
 # the server is started from the repository root (like the CSV loading assumes)
-app = Flask(__name__, static_folder=os.path.abspath("static"), static_url_path="/static")
+app = Flask(__name__, static_folder=str(STATIC), static_url_path="/static")
 
 # only the (many, immutable-ish) game images get a long browser cache;
 # HTML/CSS/JS must always revalidate so updates show up on a normal refresh
@@ -124,7 +132,7 @@ def theme_css():
 
 @app.route("/profession-images/<folder>/<filename>")
 def profession_image(folder, filename):
-    return send_from_directory(os.path.abspath("profession_images"),
+    return send_from_directory(str(PROFESSION_IMAGES),
                                os.path.join(folder, filename),
                                max_age=IMAGE_CACHE_SECONDS)
 
@@ -148,7 +156,7 @@ def specializations():
         but always fetch a fresh copy when the image content changes. Missing
         files are downloaded first (fresh clones have an empty cache)."""
         ensure_icon(filename)
-        path = os.path.join("assets", "icons", filename)
+        path = ICONS / filename
         version = int(os.path.getmtime(path)) if os.path.isfile(path) else 0
         return f"/icons/{filename}?v={version}"
 
@@ -191,11 +199,11 @@ def heal_skills():
 
 @app.route("/icons/<filename>")
 def icon(filename):
-    """Locally cached game images; missing files are downloaded on demand
-    (the cache is gitignored, so fresh clones start empty)."""
+    """Locally cached game images (tracked in git); anything missing is
+    downloaded on demand."""
     if not ensure_icon(filename):
         return jsonify({"error": f"unknown or unreachable icon: {filename}"}), 404
-    return send_from_directory(os.path.abspath(os.path.join("assets", "icons")),
+    return send_from_directory(str(ICONS),
                                filename, max_age=IMAGE_CACHE_SECONDS)
 
 

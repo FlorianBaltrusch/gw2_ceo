@@ -3,6 +3,8 @@ import os
 
 import requests
 
+from gw2ceo.paths import API_CACHE
+
 # the disk cache is read once per process: the builds decode the same
 # traits, skills and professions over and over (thousands of small files)
 _memory: dict[str, object] = {}
@@ -13,7 +15,7 @@ def _read_cached(path: str):
     else from disk (and remembered); None when not cached yet."""
     if path in _memory:
         return _memory[path]
-    file_path = os.path.join("assets", "api-cache", *path.split("/"), "data.json")
+    file_path = os.path.join(API_CACHE, *path.split("/"), "data.json")
     if os.path.isfile(file_path):
         with open(file_path) as file:
             data = json.load(file)
@@ -23,7 +25,7 @@ def _read_cached(path: str):
 
 
 def _store(path: str, data) -> None:
-    dir_path = os.path.join("assets", "api-cache", *path.split("/"))
+    dir_path = os.path.join(API_CACHE, *path.split("/"))
     os.makedirs(dir_path, exist_ok=True)
     with open(os.path.join(dir_path, "data.json"), "w") as file:
         json.dump(data, file)

@@ -17,8 +17,9 @@ from PIL import Image
 
 import gw2ceo.general_data as gd
 from gw2ceo.api import get_api_data
+from gw2ceo.paths import ICONS
 
-ICON_DIR = os.path.join("assets", "icons")
+ICON_DIR = str(ICONS)
 WIKI_API = "https://wiki.guildwars2.com/api.php"
 
 # names the wiki has no tango icon for (avoids repeating lookups)

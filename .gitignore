@@ -2,3 +2,4 @@
 __pycache__
 assets/api-cache/builds
 .vscode
+*.egg-info
