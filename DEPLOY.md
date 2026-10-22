@@ -83,6 +83,35 @@ sudo systemctl reload caddy
 Open `https://ceo.example.com` - Caddy fetches the certificate on the first
 request (can take a few seconds).
 
+## Alternative: static site + small API
+
+Every page and every document the pages read is fixed per deploy; only
+`/calculate` and `/chatlink/*` need Python. `generate_site.py` writes the
+whole front end as files:
+
+```bash
+PYTHONPATH=. .venv/bin/python generate_site.py --out dist --api https://api.gw2ceo.com
+```
+
+`dist/` then holds the pages (one folder per build, so deep links need no
+rewrites), stylesheets, scripts, fonts, favicon, all images and the JSON
+documents under `data/`. Host it on anything that serves files: GitHub Pages
+(a workflow that runs the script and publishes `dist`), a Render static site
+whose build command runs the script, or any web server. The address given
+as `--api` is written into `static/config.js`; the pages call the API there.
+
+The API is this same Flask app, started as in section 4, with the site's
+origin allowed for cross-origin calls:
+
+```
+Environment=CEO_SITE_ORIGIN=https://gw2ceo.com
+```
+
+(without the variable it allows any origin, which is fine: the API holds
+nothing private and uses no cookies). Rebuild `dist` whenever a build file,
+a style or a script changes; the server-side variant in sections 3 to 5 does
+not need that step, which is why it stays the default.
+
 ## 6. Updating later
 
 ```bash

@@ -14,6 +14,8 @@ def test_pages(client):
     page = client.get("/impressum").data
     assert b'id="impressum"' in page and b'id="privacy"' in page and b"info@gw2ceo.com" in page
     assert client.get("/?profession=Guardian&spec=Firebrand").status_code == 302
+    missing = client.get("/no-such-page")
+    assert missing.status_code == 404 and b"no page under this address" in missing.data
     for path in ("/", "/ceo", "/builds", "/impressum"):
         head = client.get(path).data
         assert b'name="theme-color"' in head and b"viewport-fit=cover" in head, path
@@ -30,20 +32,22 @@ def test_static_and_images(client):
 
 
 def test_data_endpoints(client):
-    assert json.loads(client.get("/professions").data) == gd.PROFESSION_ORDER
-    specs = json.loads(client.get("/specializations?profession=Elementalist").data)
+    assert json.loads(client.get("/data/professions.json").data) == gd.PROFESSION_ORDER
+    specs = json.loads(client.get("/data/specializations/Elementalist.json").data)
     assert {s["name"] for s in specs if s["elite"]} >= {"Tempest", "Weaver", "Catalyst", "Evoker"}
-    traits = json.loads(client.get("/traits?profession=Thief").data)
+    traits = json.loads(client.get("/data/traits/Thief.json").data)
     assert traits and all(row["profession"] == "Thief" for row in traits)
+    heal = json.loads(client.get("/data/heal-skills/Guardian.json").data)
+    assert heal and all(row["profession"] in (None, "Guardian") for row in heal)
 
 
 def test_builds_api(client):
-    listing = json.loads(client.get("/api/builds").data)
+    listing = json.loads(client.get("/data/builds.json").data)
     assert len(listing) >= 28 and listing[0]["profession"] == "Elementalist"
-    detail = json.loads(client.get("/api/builds/ow-power-vindicator").data)
+    detail = json.loads(client.get("/data/builds/ow-power-vindicator.json").data)
     assert detail["legends"]["land"][0]["name"] == "Alliance"
     assert len(detail["lines"]) == 3 and detail["gear"]["mode"] == "crit"
-    assert client.get("/api/builds/does-not-exist").status_code == 404
+    assert client.get("/data/builds/does-not-exist.json").status_code == 404
 
 
 def test_chatlink_endpoints(client):
@@ -61,4 +65,5 @@ def test_calculate_hits_the_cap(client):
     result = json.loads(response.data)
     assert result["exact"] is True and abs(result["crit_pct"] - 100) < 1e-6
     assert result["equipment"] and result["rune"]
+    assert response.headers["Access-Control-Allow-Origin"] == "*"   # a static site elsewhere may call the API
     assert client.get("/calculate?mode=crit").status_code == 400

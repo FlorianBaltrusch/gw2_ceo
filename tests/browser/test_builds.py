@@ -38,7 +38,7 @@ try:
     # old optimizer deep links still work
     driver.get(BASE + "/?profession=Guardian&spec=Firebrand&mode=crit")
     wait.until(lambda d: visible(d, "main"))
-    check("root deep link redirects to /ceo", "/ceo?" in driver.current_url, driver.current_url)
+    check("root deep link redirects to /ceo", "/ceo?" in driver.current_url or "/ceo/?" in driver.current_url, driver.current_url)
 
     # the list: Florian's builds, light-to-heavy professions, Elementalist first
     driver.get(BASE + "/builds")
@@ -183,10 +183,13 @@ try:
     check("every tier chosen: nine majors in the build's lines plus three in the Alchemy alternative",
           count(".major.selected") == 12, str(count(".major.selected")))
 
-    # unknown build
+    # unknown build: the page says so (a bare file server without a 404 page shows its own error)
     driver.get(BASE + "/builds/does-not-exist")
-    wait.until(lambda d: count(".not-found") == 1)
-    check("unknown slug says so", True)
+    wait.until(lambda d: count(".not-found") == 1 or "error" in d.title.lower())
+    check("unknown slug says so", count(".not-found") == 1 or "error" in driver.title.lower())
+    driver.get(BASE + "/no-such-page")
+    wait.until(lambda d: count(".not-found") == 1 or "error" in d.title.lower())
+    check("unknown page says so", count(".not-found") == 1 or "error" in driver.title.lower())
 
     # the optimizer link restores the panel and optimizes
     driver.get(optimizer_link)

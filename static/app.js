@@ -12,6 +12,8 @@ const PROFESSIONS = PROFESSION_ORDER.map(name => ({ name, img: PROFESSION_IMAGES
 const professionImage = (profession) =>
   `/profession-images/freigestellt/${PROFESSIONS.find(p => p.name === profession).img}`;
 
+const API_BASE = window.CEO_API_BASE || "";   // /calculate and /chatlink/* live here
+
 const state = { profession: null, spec: null, mode: "crit" };
 
 // what the builder panel currently shows - survives navigating away, so
@@ -165,7 +167,7 @@ async function selectProfession(profession) {
   state.spec = null;
   applyTheme(profession);
 
-  const response = await fetch(`/specializations?profession=${encodeURIComponent(profession)}`);
+  const response = await fetch(`/data/specializations/${encodeURIComponent(profession)}.json`);
   const specs = await response.json();
 
   renderSpecGrid(profession, specs.filter(s => s.elite));
@@ -329,8 +331,8 @@ async function loadBuilder() {
   state.pendingMemory = null;
 
   const [traits, specs] = await Promise.all([
-    fetch(`/traits?profession=${encodeURIComponent(state.profession)}`).then(r => r.json()),
-    fetch(`/specializations?profession=${encodeURIComponent(state.profession)}`).then(r => r.json()),
+    fetch(`/data/traits/${encodeURIComponent(state.profession)}.json`).then(r => r.json()),
+    fetch(`/data/specializations/${encodeURIComponent(state.profession)}.json`).then(r => r.json()),
   ]);
   state.traitRows = traits;
   state.specRows = specs;
@@ -605,7 +607,7 @@ async function loadChatlink() {
   const errorBox = el("chatlink-error");
   if (!link) return;
 
-  const response = await fetch(`/chatlink/decode?link=${encodeURIComponent(link)}`);
+  const response = await fetch(`${API_BASE}/chatlink/decode?link=${encodeURIComponent(link)}`);
   const body = await response.json();
   if (!response.ok) {
     errorBox.textContent = body.error;
@@ -1005,7 +1007,7 @@ let kBounds = { min: 100, max: 40000 };
 async function loadHealSkills() {
   if (state.healSkillsFor === state.profession) return state.healSkills;
   state.healSkills = await fetch(
-    `/heal-skills?profession=${encodeURIComponent(state.profession)}`).then(r => r.json());
+    `/data/heal-skills/${encodeURIComponent(state.profession)}.json`).then(r => r.json());
   state.healSkillsFor = state.profession;
   const ks = state.healSkills.map(s => s.k);
   kBounds = { min: Math.min(...ks), max: Math.max(...ks) };
@@ -1208,7 +1210,7 @@ async function optimize() {
   button.textContent = "Optimizing…";
 
   try {
-    const response = await fetch(`/calculate?${params}`);
+    const response = await fetch(`${API_BASE}/calculate?${params}`);
     if (!response.ok) {
       const body = await response.json().catch(() => ({}));
       errorBox.textContent = body.error || `The optimizer failed (${response.status}).`;
@@ -1309,7 +1311,7 @@ function chatlinkButton() {
   copyButton.addEventListener("click", async () => {
     const params = new URLSearchParams({ profession: state.profession });
     for (const id of state.selectedTraits) params.append("traits[]", id);
-    const response = await fetch(`/chatlink/encode?${params}`);
+    const response = await fetch(`${API_BASE}/chatlink/encode?${params}`);
     const responseBody = await response.json();
     if (!response.ok) {
       copyButton.textContent = responseBody.error;

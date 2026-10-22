@@ -68,7 +68,7 @@ async function showList() {
   el("list-view").classList.remove("hidden");
   document.title = "Builds — GW2 Critical Effect Optimizer";
   if (!summaries) {
-    const response = await fetch("/api/builds");
+    const response = await fetch("/data/builds.json");
     summaries = response.ok ? await response.json() : [];
   }
   lastListUrl = listUrl();
@@ -277,7 +277,7 @@ async function showDetail(slug) {
   view.classList.remove("hidden");
   view.innerHTML = "";
 
-  const response = await fetch(`/api/builds/${encodeURIComponent(slug)}`);
+  const response = await fetch(`/data/builds/${encodeURIComponent(slug)}.json`);
   if (!response.ok) {
     const missing = document.createElement("p");
     missing.className = "not-found";

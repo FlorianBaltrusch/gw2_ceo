@@ -12,7 +12,7 @@ import pandas as pd
 from flask import Flask, Response, abort, jsonify, redirect, request, send_from_directory
 
 import gw2ceo.general_data as gd
-from gw2ceo import buildlink, builds, custom_colors, theme
+from gw2ceo import buildlink, builds, sitedata
 from gw2ceo.icons import ensure_icon
 from gw2ceo.paths import ICONS, PROFESSION_IMAGES, STATIC
 from gw2ceo.solve import solve
@@ -20,12 +20,31 @@ from gw2ceo.solve import solve
 pd.options.mode.chained_assignment = None
 
 
-# the server is started from the repository root (like the CSV loading assumes)
 app = Flask(__name__, static_folder=str(STATIC), static_url_path="/static")
+
+# a static front end hosted elsewhere calls /calculate and /chatlink/* across
+# origins: allow it (CEO_SITE_ORIGIN narrows it to that site; the API holds
+# nothing private and uses no cookies)
+SITE_ORIGIN = os.environ.get("CEO_SITE_ORIGIN", "*")
+
+
+@app.after_request
+def allow_site_origin(response):
+    response.headers.setdefault("Access-Control-Allow-Origin", SITE_ORIGIN)
+    return response
 
 # only the (many, immutable-ish) game images get a long browser cache;
 # HTML/CSS/JS must always revalidate so updates show up on a normal refresh
 IMAGE_CACHE_SECONDS = 3600
+
+@app.errorhandler(404)
+def not_found(error):
+    """Pages get the site's own not-found page; data and image paths keep
+    the plain 404 the scripts test for."""
+    if request.path.startswith(("/data/", "/icons/", "/profession-images/", "/static/", "/calculate", "/chatlink/")):
+        return error
+    return app.send_static_file("404.html"), 404
+
 
 @app.route("/")
 def landing():
@@ -94,46 +113,48 @@ def _warm_builds():
 threading.Thread(target=_warm_builds, name="warm-builds", daemon=True).start()
 
 
-@app.route("/api/builds")
+# ---------- the fixed-per-deploy documents (also written by generate_site.py) ----------
+
+def _json(text: str) -> Response:
+    return Response(text, mimetype="application/json")
+
+
+@app.route("/data/builds.json")
 def builds_list():
-    return jsonify([builds.summary(build) for build in build_library()])
+    return _json(sitedata.builds_list(build_library()))
 
 
-@app.route("/api/builds/<slug>")
+@app.route("/data/builds/<slug>.json")
 def build_detail(slug):
     for build in build_library():
         if build["slug"] == slug:
-            return jsonify(build)
+            return _json(sitedata.build_detail(build))
     abort(404)
+
+
+@app.route("/data/professions.json")
+def professions():
+    return _json(sitedata.professions())
+
+
+@app.route("/data/specializations/<profession>.json")
+def specializations(profession):
+    return _json(sitedata.specializations(profession))
+
+
+@app.route("/data/traits/<profession>.json")
+def traits(profession):
+    return _json(sitedata.traits(profession))
+
+
+@app.route("/data/heal-skills/<profession>.json")
+def heal_skills(profession):
+    return _json(sitedata.heal_skills(profession))
 
 
 @app.route("/theme.css")
 def theme_css():
-    """CSS variables generated from gw2ceo/custom_colors.py (single source of truth)."""
-    colors = {name: value for name, value in vars(custom_colors).items()
-              if isinstance(value, str) and value.startswith("#")}
-    lines = [f"  --{name.replace('_', '-')}: {value[:7]};" for name, value in colors.items()]
-    lines += ["  --alpha-strong: 70%;", "  --alpha-mid: 50%;", "  --alpha-soft: 30%;",
-              "  --alpha-faint: 10%;"]
-    # the three theme roles: dark (backgrounds), mid (buttons, borders),
-    # bright (text/headings) - the default until a profession is chosen
-    lines += ["  --theme-dark: var(--phthalo-blue);", "  --theme-mid: var(--ruby-red);",
-              "  --theme-bright: var(--aureus);"]
-    # the glow at the top of the page: the default mixes phthalo blue at the
-    # strong alpha; the classes' dark colours are near black, so their glow
-    # comes from the mid colour at the soft alpha instead
-    lines += ["  --theme-glow: var(--phthalo-blue);", "  --glow-mix: var(--alpha-strong);"]
-    css = ":root {\n" + "\n".join(lines) + "\n}\n"
-    # the hand-picked dyes, lifted in lightness only where a role would be
-    # unreadable (gw2ceo/theme.py); the comment documents every lift
-    for profession, palette in custom_colors.profession_palettes.items():
-        (dark, mid, bright), notes = theme.readable_palette(*palette)
-        comment = f"  /* {'; '.join(notes)} */\n" if notes else ""
-        css += (f':root[data-profession="{profession}"] {{\n{comment}'
-                f"  --theme-dark: {dark};\n  --theme-mid: {mid};\n"
-                f"  --theme-bright: {bright};\n"
-                f"  --theme-glow: {mid};\n  --glow-mix: var(--alpha-soft);\n}}\n")
-    return Response(css, mimetype="text/css")
+    return Response(sitedata.theme_css(), mimetype="text/css")
 
 
 @app.route("/profession-images/<folder>/<filename>")
@@ -141,66 +162,6 @@ def profession_image(folder, filename):
     return send_from_directory(str(PROFESSION_IMAGES),
                                os.path.join(folder, filename),
                                max_age=IMAGE_CACHE_SECONDS)
-
-
-@app.route("/professions")
-def professions():
-    known = set(gd.traits["profession"].unique())
-    return jsonify([name for name in gd.PROFESSION_ORDER if name in known])
-
-
-@app.route("/specializations")
-def specializations():
-    """Specializations with icon/background image paths, filtered by ?profession=..."""
-    table: pd.DataFrame = gd.specializations
-    profession = request.args.get("profession")
-    if profession:
-        table = table.loc[table["profession"].str.lower() == profession.lower()]
-
-    def versioned_icon(filename):
-        """Icon URL stamped with the file's mtime, so browsers can cache long
-        but always fetch a fresh copy when the image content changes. Missing
-        files are downloaded first (fresh clones have an empty cache)."""
-        ensure_icon(filename)
-        path = ICONS / filename
-        version = int(os.path.getmtime(path)) if os.path.isfile(path) else 0
-        return f"/icons/{filename}?v={version}"
-
-    def spec_icon(row):
-        # only elite specs (and professions) have wiki tango icons; core
-        # trait lines fall back to their hexagon icon directly
-        if row["elite"] and ensure_icon(f"tango_{row['name']}.png"):
-            return versioned_icon(f"tango_{row['name']}.png")
-        return versioned_icon(f"spec_{row['id']}.png")
-
-    table = table.assign(
-        icon=table.apply(spec_icon, axis=1),
-        background=table["id"].apply(lambda spec_id: versioned_icon(f"spec_bg_{spec_id}.png")),
-    )
-    return Response(table.to_json(orient="records"), mimetype="application/json")
-
-
-@app.route("/traits")
-def traits():
-    """Selectable traits/skills, optionally filtered by ?profession=..."""
-    table: pd.DataFrame = gd.traits
-    profession = request.args.get("profession")
-    if profession:
-        table = table.loc[table["profession"].str.lower() == profession.lower()]
-    return Response(table.to_json(orient="records"), mimetype="application/json")
-
-
-@app.route("/heal-skills")
-def heal_skills():
-    """Healing skills with their K = base/coefficient ratio for the boon
-    mode's healing-profile slider, filtered by ?profession=... (rows without
-    a profession, like the regeneration boon, apply to everyone)."""
-    table: pd.DataFrame = gd.heal_skills
-    profession = request.args.get("profession", "")
-    universal = table["profession"].fillna("") == ""
-    table = table.loc[universal
-                      | (table["profession"].str.lower() == profession.lower())]
-    return Response(table.to_json(orient="records"), mimetype="application/json")
 
 
 @app.route("/icons/<filename>")
