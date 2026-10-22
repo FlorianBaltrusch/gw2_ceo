@@ -13,7 +13,7 @@ pd.options.mode.chained_assignment = None
 
 
 # the server is started from the repository root (like the CSV loading assumes)
-app = Flask(__name__, static_folder=os.path.abspath("static"), static_url_path="/static")
+app = Flask(__name__)#, static_folder=os.path.abspath("static"), static_url_path="/static")
 
 # only the (many, immutable-ish) game images get a long browser cache;
 # HTML/CSS/JS must always revalidate so updates show up on a normal refresh
