@@ -50,10 +50,6 @@
 
 - Einer der Menüknöpfe double tap für Chat verbergen/anzeigen
 
-
-
-
-
 - Screenshot
 
 - Attack und maus clicks
@@ -61,6 +57,8 @@
 - Escape button auf den unteren shifts ist frei
 
 - L ist frei
+
+- Ich muss pingen können
 
 ![](/home/baltrusch/.var/app/com.github.marktext.marktext/config/marktext/images/2026-09-02-15-05-59-Eingefügtes%20Bild.png)
 
