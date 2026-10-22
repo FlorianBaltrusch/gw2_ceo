@@ -1,0 +1,5 @@
+# tools for development and tests (the app itself needs only requirements.txt)
+pytest
+selenium          # tests/browser (also needs Firefox + geckodriver)
+fonttools         # generate_icons.py
+brotli            # fonttools reading .woff2

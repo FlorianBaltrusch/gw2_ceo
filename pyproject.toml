@@ -15,6 +15,9 @@ packages = ["gw2ceo"]
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.txt"] }
 
+[tool.pytest.ini_options]
+testpaths = ["tests/unit"]
+
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
