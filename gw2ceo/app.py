@@ -4,10 +4,10 @@ import threading
 import pandas as pd
 from flask import Flask, Response, abort, jsonify, redirect, request, send_from_directory
 
-import gw2ceo.general_data as gd
-from gw2ceo import buildlink, builds, custom_colors, theme
-from gw2ceo.icons import ensure_icon
-from gw2ceo.solve import solve
+import general_data as gd
+import buildlink, builds, custom_colors, theme
+from icons import ensure_icon
+from solve import solve
 
 pd.options.mode.chained_assignment = None
 
@@ -27,12 +27,6 @@ def landing():
     if request.args.get("profession"):
         return redirect("/ceo?" + request.query_string.decode(), code=302)
     return app.send_static_file("landing.html")
-
-
-@app.route("/favicon.ico")
-def favicon():
-    """Browsers ask for this path on their own, whatever the pages declare."""
-    return app.send_static_file("favicon.ico")
 
 
 @app.route("/ceo")
