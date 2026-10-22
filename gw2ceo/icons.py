@@ -15,8 +15,8 @@ import numpy as np
 import requests
 from PIL import Image
 
-import gw2ceo.general_data as gd
-from gw2ceo.api import get_api_data
+import general_data as gd
+from api import get_api_data
 
 ICON_DIR = os.path.join("assets", "icons")
 WIKI_API = "https://wiki.guildwars2.com/api.php"

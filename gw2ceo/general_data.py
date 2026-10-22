@@ -9,20 +9,20 @@ PROFESSION_ORDER = [
     "Guardian", "Revenant", "Warrior",         # heavy
 ]
 
-traits = pd.read_csv("assets/traits.csv")
-specializations = pd.read_csv("assets/specializations.csv")
+traits = pd.read_csv("../assets/traits.csv")
+specializations = pd.read_csv("../assets/specializations.csv")
 try:
     # per-piece rune bonuses; optional - enables the mixed-rune rescue
-    rune_tiers = pd.read_csv("assets/rune_tiers.csv")
+    rune_tiers = pd.read_csv("../assets/rune_tiers.csv")
 except FileNotFoundError:
     rune_tiers = None
-general_buffs = pd.read_csv("assets/general_buffs.csv", index_col=0).wert
-gear_stats = pd.read_csv("assets/gear_stats.csv", index_col=[0, 1, 2, 3]).value
-runes = pd.read_csv("assets/runes.csv", index_col=0)
-food = pd.read_csv("assets/food.csv", index_col=0)
-boon_runes = pd.read_csv("assets/boon_runes.csv", index_col=0)
-boon_food = pd.read_csv("assets/boon_food.csv", index_col=0)
-heal_skills = pd.read_csv("assets/heal_skills.csv")
+general_buffs = pd.read_csv("../assets/general_buffs.csv", index_col=0).wert
+gear_stats = pd.read_csv("../assets/gear_stats.csv", index_col=[0, 1, 2, 3]).value
+runes = pd.read_csv("../assets/runes.csv", index_col=0)
+food = pd.read_csv("../assets/food.csv", index_col=0)
+boon_runes = pd.read_csv("../assets/boon_runes.csv", index_col=0)
+boon_food = pd.read_csv("../assets/boon_food.csv", index_col=0)
+heal_skills = pd.read_csv("../assets/heal_skills.csv")
 names = [
     "Chest",
     "L/R",

@@ -1,6 +1,6 @@
 import pandas as pd
 
-import gw2ceo.general_data as gd
+import general_data as gd
 
 CRIT_CHANCE_PRECISION_EQUIV = 21  # 21 precision = 1% critical chance at level 80
 BASE_TOUGHNESS = 1000

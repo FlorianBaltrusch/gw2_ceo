@@ -3,10 +3,10 @@ from itertools import combinations
 import numpy as np
 import pandas as pd
 
-import gw2ceo.general_data as gd
-from gw2ceo.dtypes import BuildConstraints
-from gw2ceo.gearselect import GearSelect
-from gw2ceo.profession import BASE_TOUGHNESS, Profession
+import general_data as gd
+from dtypes import BuildConstraints
+from gearselect import GearSelect
+from profession import BASE_TOUGHNESS, Profession
 
 TARGET = 2995  # precision-equivalent for 100% critical chance at level 80
 CRIT_FLOOR = 895  # precision at 0% critical chance; every 21 points add 1% up to TARGET

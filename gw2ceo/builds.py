@@ -30,12 +30,12 @@ try:
 except ModuleNotFoundError:  # Python < 3.11
     import tomli as tomllib  # type: ignore[no-redef]
 
-import gw2ceo.general_data as gd
-from gw2ceo import buildgear
-from gw2ceo.api import get_api_data, get_api_data_bulk
-from gw2ceo.buildlink import PROFESSION_CODES
+import general_data as gd
+import buildgear
+from api import get_api_data, get_api_data_bulk
+from buildlink import PROFESSION_CODES
 
-BUILDS_DIR = "builds"
+BUILDS_DIR = "../builds"
 
 # a build belongs to exactly one category; "event" and the like are tags
 CATEGORIES = {

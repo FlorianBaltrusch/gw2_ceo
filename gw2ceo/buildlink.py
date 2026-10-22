@@ -16,8 +16,8 @@ from base64 import b64decode, b64encode
 
 import pandas as pd
 
-import gw2ceo.general_data as gd
-from gw2ceo.api import get_api_data
+import general_data as gd
+from api import get_api_data
 
 # list index + 1 == in-game profession code
 PROFESSION_CODES = ["Guardian", "Warrior", "Engineer", "Ranger", "Thief",

@@ -14,9 +14,9 @@ from urllib.parse import parse_qs, urlsplit
 
 from werkzeug.datastructures import MultiDict
 
-import gw2ceo.general_data as gd
-from gw2ceo.api import get_api_data
-from gw2ceo.solve import solve
+import general_data as gd
+from api import get_api_data
+from solve import solve
 
 # solver keys -> item names (all verified against the wiki, 2026-09-21)
 RUNES = {

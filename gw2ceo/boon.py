@@ -45,9 +45,9 @@ from itertools import combinations
 import numpy as np
 import pandas as pd
 
-import gw2ceo.general_data as gd
-from gw2ceo.dtypes import BuildConstraints
-from gw2ceo.profession import BASE_TOUGHNESS, Profession
+import general_data as gd
+from dtypes import BuildConstraints
+from profession import BASE_TOUGHNESS, Profession
 
 # tie preferences (lower preferred): stacking effects are fragile, an empty
 # slot ("free") loses ties against any real sigil

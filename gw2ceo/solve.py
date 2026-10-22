@@ -9,12 +9,12 @@ from collections import Counter
 
 import numpy as np
 
-import gw2ceo.general_data as gd
-from gw2ceo import boon
-from gw2ceo.calculate import calc_ep, calc_power
-from gw2ceo.dtypes import BuildConstraints
-from gw2ceo.gearselect import GearSelect
-from gw2ceo.profession import Profession
+import general_data as gd
+import boon
+from calculate import calc_ep, calc_power
+from dtypes import BuildConstraints
+from gearselect import GearSelect
+from profession import Profession
 
 ARMOR_SLOTS = ["onehanded", "twohanded", "chest", "legs", "head", "shoulders",
                "gloves", "boots", "amulet", "ring", "accessory", "back-item"]

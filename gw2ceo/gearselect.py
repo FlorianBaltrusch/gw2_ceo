@@ -3,8 +3,8 @@ from functools import cache
 import numpy as np
 import pandas as pd
 
-from gw2ceo.dtypes import BuildConstraints
-from gw2ceo.general_data import gear_stats
+from dtypes import BuildConstraints
+from general_data import gear_stats
 
 
 class GearSelect:
