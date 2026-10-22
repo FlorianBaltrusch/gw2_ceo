@@ -82,6 +82,8 @@
 .legal h2 { font-weight: 500; font-size: 1.1rem; letter-spacing: .04em; margin: 22px 0 6px; }
 .legal h3 { font-weight: 500; font-size: 1rem; margin: 14px 0 4px; }
 .legal p, .legal address { line-height: 1.55; max-width: 75ch; margin: 0 0 10px; font-style: normal; }
+.legal a { color: var(--gold); text-decoration: none; }
+.legal a:hover { text-decoration: underline; }
 .legal mark {                              /* a placeholder still to be filled in */
   background: color-mix(in srgb, var(--gold) var(--alpha-soft, 30%), transparent);
   color: var(--text);
