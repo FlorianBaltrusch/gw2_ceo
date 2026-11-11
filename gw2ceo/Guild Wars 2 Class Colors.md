@@ -6,7 +6,7 @@
 
 - Color 2: Torment
 
-- Color 3: Glints Rebllion
+- Color 3: Glint's Rebellion
 
 ## Elementalist:
 
@@ -36,9 +36,9 @@
 
 - Color 1: Enameled Longevity
 
-- Color 2: Canopy
+- Color 2: Flame
 
-- Color 3: Flame
+- Color 3: Canopy
 
 ## Thief:
 
@@ -48,7 +48,7 @@
 
 - Color 3: Permafrost
 
-## Guradian:
+## Guardian:
 
 - Color 1: Shadow Blue
 
@@ -68,6 +68,6 @@
 
 - Color 1: Shadow Yellow
 
-- Color 2: Palisander
+- Color 2: Rosewood
 
 - Color 3: Sunfire Lava
