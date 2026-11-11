@@ -60,8 +60,8 @@
 
 - Ich muss pingen können
 
-![](/home/baltrusch/.var/app/com.github.marktext.marktext/config/marktext/images/2026-09-02-15-05-59-Eingefügtes%20Bild.png)
+![](images/controller-hogwarts-legacy.png)
 
-![](/home/baltrusch/.var/app/com.github.marktext.marktext/config/marktext/images/2026-09-02-15-07-18-Eingefügtes%20Bild%20(2).png)
+![](images/controller-eso.png)
 
 ![elden ring controls playstation 5 version 2](https://static0.fextralifeimages.com/file/eldenring/b/be/Elden_ring_controls_playstation_5_version_2.png)

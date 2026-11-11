@@ -1,7 +1,5 @@
 """
 Created on Thu Nov 14 14:20:38 2024
-
-@author: baltrusch
 """
 
 # %% Imports

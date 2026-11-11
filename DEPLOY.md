@@ -1,10 +1,11 @@
 # Deploying the Critical Effect Optimizer
 
-Everything is prepared; you only fill in three concrete values wherever you
+Everything is prepared; you only fill in four concrete values wherever you
 see them below:
 
 | Placeholder       | Meaning                                        |
 |-------------------|------------------------------------------------|
+| `<repository-url>`| the git URL of this repository (GitHub's "Code" button) |
 | `ceo.example.com` | your domain (or a subdomain of it)             |
 | `/opt/gw2_ceo`    | where the repository lives on the server       |
 | `deploy`          | the linux user that runs the app               |
@@ -38,7 +39,7 @@ to the app.
 
 ```bash
 sudo mkdir -p /opt/gw2_ceo && sudo chown deploy: /opt/gw2_ceo
-git clone https://github.com/FlorianBaltrusch/gw2_ceo.git /opt/gw2_ceo
+git clone <repository-url> /opt/gw2_ceo
 cd /opt/gw2_ceo
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt

@@ -40,7 +40,7 @@ try:
     wait.until(lambda d: visible(d, "main"))
     check("root deep link redirects to /ceo", "/ceo?" in driver.current_url, driver.current_url)
 
-    # the list: Florian's builds, light-to-heavy professions, Elementalist first
+    # the list: our builds, light-to-heavy professions, Elementalist first
     driver.get(BASE + "/builds")
     wait.until(lambda d: count(".build-card") >= 20)
     total = count(".build-card")
